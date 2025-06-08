@@ -67,26 +67,31 @@ Write-PioMessage -Message "Build successful!" -ContentColor Green
 
 $jobs = @()
 
+$cwd = Get-Location
+
 foreach ($p in $ports) {
     Write-PioMessage -Message "Starting upload job for port..." -ContentColor Blue -Port $p
     $job = Start-Job -ScriptBlock {
         param(
             $port_name,
-            $PioMessageCoreLogicFromParent
+            $PioMessageCoreLogicFromParent,
+            $workingDirectory
         )
 
         function Write-PioMessage {
             & $PioMessageCoreLogicFromParent @Args
         }
 
-        pio run -t nobuild -t upload -e main --upload-port $port_name *>$null
+        Set-Location -Path $workingDirectory
+
+        pio run -t nobuild -t upload -e main --upload-port $port_name
         $exitCode = $LASTEXITCODE
 
         [PSCustomObject]@{
             Port = $port_name
             ExitCode = $exitCode
         }
-    } -Name $p -ArgumentList $p, $PioMessageCoreLogic
+    } -Name $p -ArgumentList $p, $PioMessageCoreLogic, $cwd
     $jobs += $job
 }
 
