@@ -271,6 +271,77 @@ void processTerminal() {
                 Serial.print("TOA=");
                 Serial.println(Radio.TimeOnAir(MODEM_LORA, len));
             }
+        } else if (reader.with("AUTO")) {
+            if (reader.with('=')) {
+                if (reader.with("OFF")) {
+                    LoRaNode.Auto = OFF;
+                    Serial.println("AUTO=OFF");
+                } else if (reader.with("RANDOM")) {
+                    LoRaNode.Auto = RANDOM;
+                    Serial.println("AUTO=RANDOM");
+                } else if (reader.with("HEURISTIC")) {
+                    LoRaNode.Auto = HEURISTIC;
+                    Serial.println("AUTO=HEURISTIC");
+                } else {
+                    Serial.println("AUTO=ERR");
+                }
+            } else if (reader.with('?')) {
+                Serial.print("AUTO=");
+                switch (LoRaNode.Auto) {
+                case OFF:
+                    Serial.println("OFF");
+                    break;
+                case RANDOM:
+                    Serial.println("RANDOM");
+                    break;
+                case HEURISTIC:
+                    Serial.println("HEURISTIC");
+                    break;
+                default:
+                    Serial.println("UNKNOWN");
+                    break;
+                }
+            }
+        } else if (reader.with("INTERVAL")) {
+            if (reader.with('=')) {
+                long value = reader.untilEnd().toInt();
+                if (value >= 0 && value <= UINT32_MAX) {
+                    LoRaNode.msgDelay = (uint32_t)value;
+                    Serial.println("INTERVAL=OK");
+                } else {
+                    Serial.println("INTERVAL=ERR");
+                }
+            } else if (reader.with('?')) {
+                Serial.print("INTERVAL=");
+                Serial.println(LoRaNode.msgDelay);
+            }
+        } else if (reader.with("MINDELTA")) {
+            if (reader.with('=')) {
+                long value = reader.untilEnd().toInt();
+                if (value >= 0 && value <= UINT32_MAX) {
+                    LoRaNode.minDelta = (uint32_t)value;
+                    Serial.println("MINDELTA=OK");
+                } else {
+                    Serial.println("MINDELTA=ERR");
+                }
+            } else if (reader.with('?')) {
+                Serial.print("MINDELTA=");
+                Serial.println(LoRaNode.minDelta);
+            }
+        }  else if (reader.with("MAXDELTA"))
+        {
+            if (reader.with('=')) {
+                long value = reader.untilEnd().toInt();
+                if (value >= 0 && value <= UINT32_MAX) {
+                    LoRaNode.maxDelta = (uint32_t)value;
+                    Serial.println("MAXDELTA=OK");
+                } else {
+                    Serial.println("MAXDELTA=ERR");
+                }
+            } else if (reader.with('?')) {
+                Serial.print("MAXDELTA=");
+                Serial.println(LoRaNode.maxDelta);
+            }
         }
         LoRaTerminal.clear();
     }
@@ -278,6 +349,8 @@ void processTerminal() {
 
 void setup() {
     Serial.begin(115200);
+
+    randomSeed(analogRead(0));
 
     LoRaNode.Events.TxDone = OnTxDone;
     LoRaNode.Events.TxTimeout = OnTxTimeout;

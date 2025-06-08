@@ -3,6 +3,7 @@
 
 #include <LoRaWan_APP.h>
 #include <sx126x.h>
+#include "RandomGenerator.h"
 
 typedef struct {
     uint32_t Frequency;
@@ -23,6 +24,12 @@ typedef enum {
     TX = 2,
 } LoRaNodeMode;
 
+typedef enum {
+    OFF = 1,
+    RANDOM = 2,
+    HEURISTIC = 3,
+} LoRaNodeAuto;
+
 class LoRaNodeClass {
 public:
     LoRaNodeParams_t Params = {
@@ -40,11 +47,21 @@ public:
     };
     RadioEvents_t Events = {};
     LoRaNodeMode Mode = TX;
+    LoRaNodeAuto Auto = OFF;
     bool Idle = true;
 
     unsigned long rxLedOnTime; // Time when RX LED was turned on
     unsigned long rxLedOnDur;  // Duration for how long RX LED is turned on
     bool rxLedOn;
+
+    unsigned long lastSendTime; // Time when last msg has been sent using auto mode
+    unsigned long msgDelay;     // Amount of time to wait before sending next msg
+
+    bool firstMsg = true;
+    unsigned long minDelta;
+    unsigned long maxDelta;
+    unsigned long firstMsgDelay;// Amount of time to wait before sending next msg
+
 
     void Init();
     void Configure();

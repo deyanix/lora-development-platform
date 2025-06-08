@@ -7,6 +7,12 @@ void LoRaNodeClass::Init() {
     this->Configure();
     this->rxLedOn = false;
     this->rxLedOnDur = 500;
+
+    this->lastSendTime = millis();
+    this->msgDelay = 10000;
+
+    this->minDelta = 100;
+    this->maxDelta = 10000;
 }
 
 void LoRaNodeClass::Configure() {
@@ -23,6 +29,7 @@ void LoRaNodeClass::Configure() {
 
     this->Idle = true;
     Radio.Sleep();
+    turnOnRGB(0x000000, 0);
 }
 
 void LoRaNodeClass::Loop() {
@@ -36,6 +43,39 @@ void LoRaNodeClass::Loop() {
         if (millis() - this->rxLedOnTime >= this->rxLedOnDur) { // Check if Dur has passed
             turnOnRGB(0x000000, 0);      // Turn off the LED
             this->rxLedOn = false;                 // Reset the flag
+        }
+    }
+
+    if (this->Auto == RANDOM)
+    {
+        if (this->Mode == TX)
+        {
+            if (this->firstMsg)
+            {
+                // Assign random delay if not already assigned
+                if (this->firstMsgDelay == 0)
+                {
+                    RandomGenerator randomGenerator;
+                    this->firstMsgDelay = randomGenerator.generateUniform(this->minDelta, this->maxDelta);
+                    Serial.print("\nFirst message delay:");
+                    Serial.print(this->firstMsgDelay);
+                    Serial.println("");
+                }
+
+                if (millis() - this->lastSendTime - this->msgDelay >= this->firstMsgDelay)
+                {
+                    this->firstMsg = false;
+                    this->lastSendTime = millis();
+                }
+            }
+            else
+            {
+                if (millis() - this->lastSendTime >= this->msgDelay)
+                {
+                    this->Send((uint8_t*)("Sending MSG"), 11);
+                    this->lastSendTime = millis();
+                }
+            }
         }
     }
 
