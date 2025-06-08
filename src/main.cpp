@@ -2,6 +2,10 @@
 #include "lora/terminal.h"
 #include "lora/reader.h"
 
+#ifndef LoraWan_RGB
+#define LoraWan_RGB 0
+#endif
+
 #define RX_DATA_LEN (320)
 
 uint64_t chipID = getID();

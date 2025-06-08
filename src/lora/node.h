@@ -47,6 +47,7 @@ public:
     void Loop();
     void Send(uint8_t* data, size_t length);
     void Receive();
+    void Stop();
 
     void OnRxDone(uint8_t *payload, uint16_t size, int16_t rssi, int8_t snr);
     void OnRxTimeout();

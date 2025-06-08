@@ -41,29 +41,32 @@ void LoRaNodeClass::Receive() {
 void LoRaNodeClass::Send(uint8_t *data, size_t length) {
     Radio.Send(data, length);
     this->Idle = false;
+    turnOnRGB(COLOR_SEND, 0);
+}
+
+void LoRaNodeClass::Stop() {
+    Radio.Sleep();
+    this->Idle = true;
+    turnOffRGB();
 }
 
 void LoRaNodeClass::OnRxDone(uint8_t *payload, uint16_t size, int16_t rssi, int8_t snr) {
-    Radio.Sleep();
-    this->Idle = true;
+    this->Stop();
+    turnOnRGB(COLOR_RECEIVED, 1000);
 }
 
 void LoRaNodeClass::OnRxTimeout() {
-    Radio.Sleep();
-    this->Idle = true;
+    this->Stop();
 }
 
 void LoRaNodeClass::OnRxError() {
-    Radio.Sleep();
-    this->Idle = true;
+    this->Stop();
 }
 
 void LoRaNodeClass::OnTxDone() {
-    Radio.Sleep();
-    this->Idle = true;
+    this->Stop();
 }
 
 void LoRaNodeClass::OnTxTimeout() {
-    Radio.Sleep();
-    this->Idle = true;
+    this->Stop();
 }
