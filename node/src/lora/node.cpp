@@ -5,6 +5,8 @@ LoRaNodeClass LoRaNode;
 void LoRaNodeClass::Init() {
     Radio.Init(&Events);
     this->Configure();
+    this->rxLedOn = false;
+    this->rxLedOnDur = 500;
 }
 
 void LoRaNodeClass::Configure() {
@@ -30,12 +32,20 @@ void LoRaNodeClass::Loop() {
         }
     }
 
+    if (this->rxLedOn) {
+        if (millis() - this->rxLedOnTime >= this->rxLedOnDur) { // Check if Dur has passed
+            turnOnRGB(0x000000, 0);      // Turn off the LED
+            this->rxLedOn = false;                 // Reset the flag
+        }
+    }
+
     Radio.IrqProcess();
 }
 
 void LoRaNodeClass::Receive() {
     Radio.Rx(0);
     this->Idle = false;
+    //turnOnRGB(0x000000, 0); too short duration
 }
 
 void LoRaNodeClass::Send(uint8_t *data, size_t length) {
@@ -47,12 +57,14 @@ void LoRaNodeClass::Send(uint8_t *data, size_t length) {
 void LoRaNodeClass::Stop() {
     Radio.Sleep();
     this->Idle = true;
-    turnOffRGB();
+    turnOnRGB(0x000000, 0);
 }
 
 void LoRaNodeClass::OnRxDone(uint8_t *payload, uint16_t size, int16_t rssi, int8_t snr) {
     this->Stop();
-    turnOnRGB(COLOR_RECEIVED, 1000);
+    turnOnRGB(COLOR_RECEIVED, 0);
+    this->rxLedOnTime = millis();
+    this->rxLedOn = true;
 }
 
 void LoRaNodeClass::OnRxTimeout() {

@@ -6,6 +6,8 @@
 #define LoraWan_RGB 0
 #endif
 
+#define LoraWan_RGB 1
+
 #define RX_DATA_LEN (320)
 
 uint64_t chipID = getID();

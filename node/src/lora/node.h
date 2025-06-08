@@ -42,6 +42,10 @@ public:
     LoRaNodeMode Mode = TX;
     bool Idle = true;
 
+    unsigned long rxLedOnTime; // Time when RX LED was turned on
+    unsigned long rxLedOnDur;  // Duration for how long RX LED is turned on
+    bool rxLedOn;
+
     void Init();
     void Configure();
     void Loop();
