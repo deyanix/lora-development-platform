@@ -2,9 +2,9 @@
 
 LoRaTerminalClass LoRaTerminal;
 
-void LoRaTerminalClass::Read() {
-    if (IsTimeout()) {
-        ResetBuffer();
+void LoRaTerminalClass::read() {
+    if (isTimeout()) {
+        clear();
     }
 
     while (Serial.available() > 0) {
@@ -14,56 +14,42 @@ void LoRaTerminalClass::Read() {
         if (bufferRequest > 0) {
             buffer[bufferSize++] = value;
             bufferRequest--;
+            if (bufferRequest == 0) {
+                bufferFinished = true;
+                return;
+            }
         } else if (value != '\n' && value != '\r') {
             buffer[bufferSize++] = value;
+            if (value == ',') {
+                return;
+            }
         } else {
-            Handle();
+            bufferFinished = true;
+            return;
         }
 
         if (bufferSize == LORA_TERMINAL_BUFFER_CAPACITY) {
-            Handle();
-            ResetBuffer();
+            clear();
         }
     }
 }
 
-void LoRaTerminalClass::Handle() {
-
-    if (bufferSize == 0 || buffer[0] != '+')
-        return;
-
-    HandleCommand("FREQ=", HandleSetFrequency);
-    HandleCommand("FREQ?", HandleGetFrequency);
-    HandleCommand("CRC=", HandleSetCrc);
-    HandleCommand("CRC?", HandleGetCrc);
-    HandleCommand("IQINV=", HandleSetIqInverted);
-    HandleCommand("IQINV?", HandleGetIqInverted);
+void LoRaTerminalClass::request(size_t len) {
+    bufferRequest = len;
+    bufferFinished = false;
 }
 
-void LoRaTerminalClass::HandleCommand(const char *cmd, LoRaTerminalHandler handler) {
-    size_t cmdLen = strlen(cmd);
-    if (strncmp(cmd, buffer+1, cmdLen) == 0) {
-        bool result = handler(String(buffer+cmdLen+1));
-
-        Serial.print(cmd);
-        if (result) {
-            Serial.println("OK");
-        } else {
-            Serial.println("ERROR");
-        }
-    }
-}
-
-void LoRaTerminalClass::ResetBuffer() {
+void LoRaTerminalClass::clear() {
     if (bufferSize == 0)
         return;
 
     memset(buffer, 0, LORA_TERMINAL_BUFFER_CAPACITY);
     bufferSize = 0;
     bufferRequest = 0;
+    bufferFinished = false;
 }
 
-bool LoRaTerminalClass::IsTimeout() {
+bool LoRaTerminalClass::isTimeout() const {
     uint32_t now = millis();
     uint32_t time;
     if (now >= lastActivity) {
@@ -73,4 +59,16 @@ bool LoRaTerminalClass::IsTimeout() {
     }
 
     return time > LORA_TERMINAL_BUFFER_TIMEOUT;
+}
+
+String LoRaTerminalClass::getBuffer() const {
+    return buffer;
+}
+
+StringReader LoRaTerminalClass::getReader() const {
+    return StringReader(buffer);
+}
+
+bool LoRaTerminalClass::isFinished() const {
+    return bufferFinished;
 }
