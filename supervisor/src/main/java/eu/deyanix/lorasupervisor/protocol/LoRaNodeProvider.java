@@ -3,70 +3,66 @@ package eu.deyanix.lorasupervisor.protocol;
 import com.fazecast.jSerialComm.SerialPort;
 import com.fazecast.jSerialComm.SerialPortDataListener;
 import com.fazecast.jSerialComm.SerialPortEvent;
-import com.fazecast.jSerialComm.SerialPortMessageListener;
 import org.springframework.stereotype.Component;
 
-import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.TimeUnit;
+import java.util.Optional;
 
 @Component
 public class LoRaNodeProvider {
-	private final List<LoRaNode> nodes = new ArrayList<>();
+	private static final int NODE_VENDOR_ID = 0x10C4;
+	private static final int NODE_PRODUCT_ID = 0xEA60;
+	private final ArrayList<LoRaNode> nodes = new ArrayList<>();
 
 	public List<LoRaNode> getNodes() {
 		return nodes;
 	}
 
-	public static void detect() {
+	public Optional<LoRaNode> getNode(String id) {
+		return nodes.stream()
+				.filter(n -> n.getId().equals(id))
+				.findFirst();
+	}
+
+	public void detect() {
 		List<SerialPort> ports = Arrays.stream(SerialPort.getCommPorts())
-				.filter(port -> port.getVendorID() == 0x10C4)
-				.filter(port -> port.getProductID() == 0xEA60)
+				.filter(port -> port.getVendorID() == NODE_VENDOR_ID)
+				.filter(port -> port.getProductID() == NODE_PRODUCT_ID)
 				.toList();
 
 		for (SerialPort port : ports) {
-			if (!port.openPort()) {
-				continue;
+			LoRaNodePort nodePort = LoRaNodePort.openNode(port);
+			if (nodePort != null) {
+				LoRaNode node = new LoRaNode(port.getSystemPortName(), nodePort);
+				port.addDataListener(new LoRaNodeProviderListener(this));
+
+				nodes.add(node);
 			}
-			port.setBaudRate(115200);
-			port.setComPortTimeouts(SerialPort.TIMEOUT_NONBLOCKING, 0, 0);
-			port.addDataListener(new SerialPortMessageListener() {
-				@Override
-				public int getListeningEvents() {
-					return SerialPort.LISTENING_EVENT_DATA_RECEIVED;
-				}
+		}
 
-				@Override
-				public byte[] getMessageDelimiter() {
-					return new byte[] { (byte) '=' };
-				}
+		nodes.removeIf(n -> !n.getPort().getPort().isOpen());
+	}
 
-				@Override
-				public boolean delimiterIndicatesEndOfMessage() {
-					return true;
-				}
+	public class LoRaNodeProviderListener implements SerialPortDataListener {
+		private final LoRaNodeProvider provider;
 
-				@Override
-				public void serialEvent(SerialPortEvent event)
-				{
-					byte[] messageBytes = event.getReceivedData();
-					String message = new String(messageBytes);
+		public LoRaNodeProviderListener(LoRaNodeProvider provider) {
+			this.provider = provider;
+		}
 
-					System.out.println("Received data: " + message);
-				}
-			});
+		@Override
+		public int getListeningEvents() {
+			return SerialPort.LISTENING_EVENT_PORT_DISCONNECTED;
+		}
 
-			ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(1);
-			scheduler.scheduleAtFixedRate(() -> {
-				PrintStream output = new PrintStream(port.getOutputStream());
-				output.println("+ID?");
-			}, 0, 3, TimeUnit.SECONDS);
-
-			System.out.println("Sent ID?");
+		@Override
+		public void serialEvent(SerialPortEvent event) {
+			if (event.getEventType() == SerialPort.LISTENING_EVENT_PORT_DISCONNECTED) {
+				event.getSerialPort().closePort();
+				provider.detect();
+			}
 		}
 	}
 }

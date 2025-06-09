@@ -1,6 +1,19 @@
 package eu.deyanix.lorasupervisor.protocol.config;
 
 public class LoRaConfiguration {
+	public static final long FREQUENCY_MIN = 868_000_000;
+	public static final long FREQUENCY_MAX = 870_000_000;
+	public static final int SPREADING_FACTOR_MIN = 7;
+	public static final int SPREADING_FACTOR_MAX = 12;
+	public static final int POWER_MIN = -3;
+	public static final int POWER_MAX = 22;
+	public static final int PREAMBLE_LENGTH_MIN = 1;
+	public static final int PREAMBLE_LENGTH_MAX = 8;
+	public static final int TX_TIMEOUT_MIN = 0;
+	public static final int TX_TIMEOUT_MAX = 0xFFFFFFFF;
+	public static final int RX_TIMEOUT_MIN = 0;
+	public static final int RX_TIMEOUT_MAX = 0xFFFF;
+
 	private LoRaMode mode;
 	private long frequency;
 	private int power;
