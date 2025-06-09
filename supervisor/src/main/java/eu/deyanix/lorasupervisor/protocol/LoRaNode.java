@@ -2,9 +2,9 @@ package eu.deyanix.lorasupervisor.protocol;
 
 public class LoRaNode {
 	private final String id;
-	private final LoRaNodePort io;
+	private final LoRaPort io;
 
-	public LoRaNode(String id, LoRaNodePort io) {
+	public LoRaNode(String id, LoRaPort io) {
 		this.id = id;
 		this.io = io;
 	}
@@ -13,7 +13,7 @@ public class LoRaNode {
 		return id;
 	}
 
-	public LoRaNodePort getPort() {
+	public LoRaPort getPort() {
 		return io;
 	}
 }

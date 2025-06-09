@@ -1,19 +1,22 @@
 package eu.deyanix.lorasupervisor.protocol;
 
-import java.time.Duration;
-import java.time.LocalDateTime;
 
-public class LoRaPortConnection {
-	private final LoRaNodePort port;
-	private final int priority;
-	private int requestedData = 0;
+public abstract class LoRaPortConnection {
+	protected int priority = 0;
+	protected int requestedData = 0;
 
-	public LoRaPortConnection(LoRaNodePort port, int priority) {
-		this.port = port;
-		this.priority = priority;
+	public abstract void onInit(LoRaPort port);
+	public abstract boolean onReceiveData(LoRaPort port, String data);
+
+	public int getPriority() {
+		return priority;
 	}
 
-	public LoRaPortConnection(LoRaNodePort port) {
-		this(port, 0);
+	public boolean isCapturing() {
+		return requestedData > 0;
+	}
+
+	public int getRequestedData() {
+		return requestedData;
 	}
 }

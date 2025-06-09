@@ -3,12 +3,19 @@ package eu.deyanix.lorasupervisor.protocol;
 import com.fazecast.jSerialComm.SerialPort;
 import com.fazecast.jSerialComm.SerialPortDataListener;
 import com.fazecast.jSerialComm.SerialPortEvent;
+import eu.deyanix.lorasupervisor.protocol.connection.LoRaCommandConnection;
+import jakarta.annotation.PostConstruct;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
+import java.util.concurrent.TimeUnit;
+import java.util.stream.Stream;
 
 @Component
 public class LoRaNodeProvider {
@@ -33,25 +40,31 @@ public class LoRaNodeProvider {
 				.toList();
 
 		for (SerialPort port : ports) {
-			LoRaNodePort nodePort = LoRaNodePort.openNode(port);
+			LoRaPort nodePort = LoRaPort.openNode(port);
 			if (nodePort != null) {
+				nodePort.attachConnection(new LoRaCommandConnection(port.getSystemPortName().equals("COM17")));
+
 				LoRaNode node = new LoRaNode(port.getSystemPortName(), nodePort);
-				port.addDataListener(new LoRaNodeProviderListener(this));
+				port.addDataListener(new SerialPortDisconnectListener());
 
 				nodes.add(node);
 			}
 		}
 
-		nodes.removeIf(n -> !n.getPort().getPort().isOpen());
+		nodes.removeIf(n -> !n.getPort().getSerialPort().isOpen());
 	}
 
-	public class LoRaNodeProviderListener implements SerialPortDataListener {
-		private final LoRaNodeProvider provider;
+	@PostConstruct
+	protected void init() {
+		detect();
+	}
 
-		public LoRaNodeProviderListener(LoRaNodeProvider provider) {
-			this.provider = provider;
-		}
+	@Scheduled(fixedDelay = 1, timeUnit = TimeUnit.SECONDS)
+	protected void scheduledDetect() {
+		detect();
+	}
 
+	protected static class SerialPortDisconnectListener implements SerialPortDataListener {
 		@Override
 		public int getListeningEvents() {
 			return SerialPort.LISTENING_EVENT_PORT_DISCONNECTED;
@@ -59,9 +72,9 @@ public class LoRaNodeProvider {
 
 		@Override
 		public void serialEvent(SerialPortEvent event) {
+			SerialPort serialPort = event.getSerialPort();
 			if (event.getEventType() == SerialPort.LISTENING_EVENT_PORT_DISCONNECTED) {
-				event.getSerialPort().closePort();
-				provider.detect();
+				serialPort.closePort();
 			}
 		}
 	}

@@ -36,14 +36,14 @@ public class LoRaBufferReader {
 	}
 
 	public LoRaBufferData until(char delimiter) {
-		return untilTo(buffer.indexOf(delimiter));
+		return untilTo(buffer.indexOf(delimiter, offset) + 1);
 	}
 
 	public LoRaBufferData untilEndLine() {
-		int index = IntStream.range(0, buffer.length())
+		int index = IntStream.range(offset, buffer.length())
 				.filter(i -> LoRaBuffer.isDelimiter(buffer.charAt(i)))
 				.findFirst()
-				.orElse(-1);
+				.orElse(buffer.length());
 
 		return untilTo(index);
 	}
@@ -58,8 +58,16 @@ public class LoRaBufferReader {
 		}
 
 		int from = offset;
-		offset = buffer.length();
+		offset = newOffset;
 		return new LoRaBufferData(buffer.substring(from, offset));
+	}
+
+	public void skip(int len) {
+		if (offset+len <= buffer.length()) {
+			offset += len;
+		} else {
+			offset = buffer.length();
+		}
 	}
 
 	public void request(int request) {
