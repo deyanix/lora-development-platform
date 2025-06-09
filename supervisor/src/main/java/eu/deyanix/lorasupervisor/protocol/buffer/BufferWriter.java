@@ -4,7 +4,7 @@ import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.stream.IntStream;
 
-public class LoRaBuffer {
+public class BufferWriter {
 	public static final char[] BUFFER_DELIMITERS = {'\n', '\r'};
 
 	public static boolean isDelimiter(char character) {

@@ -7,6 +7,7 @@ public abstract class LoRaPortConnection {
 
 	public abstract void onInit(LoRaPort port);
 	public abstract boolean onReceiveData(LoRaPort port, String data);
+	public abstract void onTimeout(LoRaPort port);
 
 	public int getPriority() {
 		return priority;

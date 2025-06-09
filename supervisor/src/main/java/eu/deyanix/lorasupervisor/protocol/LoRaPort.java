@@ -3,8 +3,7 @@ package eu.deyanix.lorasupervisor.protocol;
 import com.fazecast.jSerialComm.SerialPort;
 import com.fazecast.jSerialComm.SerialPortDataListener;
 import com.fazecast.jSerialComm.SerialPortEvent;
-import eu.deyanix.lorasupervisor.protocol.buffer.LoRaBuffer;
-import eu.deyanix.lorasupervisor.protocol.buffer.LoRaBufferReader;
+import eu.deyanix.lorasupervisor.protocol.buffer.BufferWriter;
 
 import java.io.Closeable;
 import java.io.IOException;
@@ -12,7 +11,6 @@ import java.io.InputStream;
 import java.io.PrintStream;
 import java.time.Duration;
 import java.util.ArrayList;
-import java.util.Comparator;
 import java.util.List;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
@@ -33,7 +31,7 @@ public class LoRaPort implements Closeable {
 	private final PrintStream out;
 	private final Lock readLock = new ReentrantLock();
 	private final Lock writeLock = new ReentrantLock();
-	private final LoRaBuffer buffer = new LoRaBuffer();
+	private final BufferWriter buffer = new BufferWriter();
 	private int requestedData = 0;
 
 	private final LoRaBufferListener listener = new LoRaBufferListener();
@@ -85,11 +83,15 @@ public class LoRaPort implements Closeable {
 	protected void receive(String data) {
 		readLock.lock();
 		try {
+			LoRaPortConnection connection = getCapturingConnection();
+
 			if (buffer.isExpired()) {
 				buffer.clearAll();
+				if (connection != null) {
+					connection.onTimeout(this);
+				}
 			}
 
-			LoRaPortConnection connection = getCapturingConnection();
 
 			int offset = 0;
 			while (offset < data.length()) {
@@ -101,7 +103,7 @@ public class LoRaPort implements Closeable {
 					if (connection.getRequestedData() <= buffer.length()) {
 						connection.onReceiveData(this, buffer.getData());
 					}
-				} else if (!LoRaBuffer.isDelimiter(c)) {
+				} else if (!BufferWriter.isDelimiter(c)) {
 					buffer.append(c);
 				} else if (!buffer.isEmpty()) {
 					connection = broadcastData(buffer.getData());
