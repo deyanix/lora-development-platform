@@ -58,7 +58,7 @@ void LoRaNodeClass::Loop() {
                 {
                     RandomGenerator randomGenerator;
                     this->firstMsgDelay = randomGenerator.generateUniform(this->minDelta, this->maxDelta);
-                    Serial.print("\nFirst message delay:");
+                    Serial.print("\nDelay=");
                     Serial.print(this->firstMsgDelay);
                     Serial.println("");
                 }
@@ -100,6 +100,8 @@ void LoRaNodeClass::Send(uint8_t *data, size_t length) {
     Radio.Send(data, length);
     this->Idle = false;
     turnOnRGB(COLOR_SEND, 0);
+    memcpy(this->lastSentData, data, length);
+    this->lastSentData[length] = '\0';
 }
 
 void LoRaNodeClass::Stop() {
@@ -124,9 +126,15 @@ void LoRaNodeClass::OnRxError() {
 }
 
 void LoRaNodeClass::OnTxDone() {
+    Serial.print("TX=DONE,");
+    Serial.print(strlen(this->lastSentData));
+    Serial.print(",");
+    Serial.println(this->lastSentData);
+    memset(this->lastSentData, 0, MAX_MSG_BUFFER_LENGTH);
     this->Stop();
 }
 
 void LoRaNodeClass::OnTxTimeout() {
+    memset(this->lastSentData, 0, MAX_MSG_BUFFER_LENGTH);
     this->Stop();
 }

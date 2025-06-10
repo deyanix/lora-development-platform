@@ -34,7 +34,7 @@ void OnRxError() {
 }
 
 void OnTxDone() {
-    Serial.println("TX=DONE");
+    //Serial.print("TX=DONE");
     LoRaNode.OnTxDone();
 }
 

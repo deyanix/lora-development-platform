@@ -98,6 +98,7 @@ def read_from_port(port, win):
             break
 
 def initialize_port(port, idx, args, freq_map):
+    print(freq_map.get(idx, "868000000"))
     commands = [
         '+ID?\n',
         f'+FRQ={freq_map.get(idx, "868000000")}\n',
@@ -137,7 +138,7 @@ def initialize_port(port, idx, args, freq_map):
     ]
     for cmd in commands:
         port.write(cmd.encode('utf-8'))
-        time.sleep(0.1)
+        time.sleep(0.15)
 
 # ---
 ## Status Panel Update Function

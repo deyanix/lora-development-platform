@@ -5,6 +5,8 @@
 #include <sx126x.h>
 #include "RandomGenerator.h"
 
+#define MAX_MSG_BUFFER_LENGTH 128
+
 typedef struct {
     uint32_t Frequency;
     int8_t Power;
@@ -63,6 +65,7 @@ public:
     unsigned long firstMsgDelay;// Amount of time to wait before sending next msg
     int msgCounter;
 
+    char lastSentData[MAX_MSG_BUFFER_LENGTH];
 
     void Init();
     void Configure();
