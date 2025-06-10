@@ -23,4 +23,8 @@ public class Command {
 	public Argument[] getArguments() {
 		return arguments.toArray(new Argument[0]);
 	}
+
+	public Argument getArgument(int index) {
+		return arguments.get(index);
+	}
 }

@@ -10,6 +10,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.PrintStream;
 import java.time.Duration;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.locks.Lock;
@@ -32,10 +33,11 @@ public class LoRaPort implements Closeable {
 	private final Lock readLock = new ReentrantLock();
 	private final Lock writeLock = new ReentrantLock();
 	private final BufferWriter buffer = new BufferWriter();
-	private int requestedData = 0;
 
 	private final LoRaBufferListener listener = new LoRaBufferListener();
 	private final List<LoRaPortConnection> connections = new ArrayList<>();
+	private LocalDateTime expirationDate = null;
+	private int requestedData = 0;
 
 	public LoRaPort(SerialPort serialPort) {
 		this.serialPort = serialPort;
@@ -46,8 +48,11 @@ public class LoRaPort implements Closeable {
 	public void send(CharSequence data) {
 		writeLock.lock();
 		try {
+			Thread.sleep(1000);
 			System.out.println(serialPort.getSystemPortName() + " > " + data);
 			out.println(data);
+			Thread.sleep(1000);
+		} catch (InterruptedException ignored) {
 		} finally {
 			writeLock.unlock();
 		}
@@ -85,23 +90,24 @@ public class LoRaPort implements Closeable {
 		try {
 			LoRaPortConnection connection = getCapturingConnection();
 
-			if (buffer.isExpired()) {
+			if (isExpired()) {
 				buffer.clearAll();
 				if (connection != null) {
 					connection.onTimeout(this);
 				}
 			}
 
-
-			int offset = 0;
-			while (offset < data.length()) {
-				char c = data.charAt(offset++);
-
-				if (connection != null) {
+			for (char c : data.toCharArray()) {
+				if (connection != null && connection.isCapturing()) {
 					buffer.append(c);
 
 					if (connection.getRequestedData() <= buffer.length()) {
 						connection.onReceiveData(this, buffer.getData());
+					}
+
+					if (!connection.isCapturing()) {
+						connection = null;
+						buffer.clearAll();
 					}
 				} else if (!BufferWriter.isDelimiter(c)) {
 					buffer.append(c);
@@ -116,7 +122,7 @@ public class LoRaPort implements Closeable {
 				}
 			}
 
-			buffer.setTimeout(Duration.ofMillis(5)); // TODO: Hardcoded timeout
+			setTimeout(Duration.ofMillis(5)); // TODO: Hardcoded timeout
 		} finally {
 			readLock.unlock();
 		}
@@ -137,6 +143,22 @@ public class LoRaPort implements Closeable {
 			}
 		}
 		return null;
+	}
+
+	protected boolean isExpired() {
+		if (expirationDate == null) {
+			return false;
+		}
+
+		return expirationDate.isBefore(LocalDateTime.now());
+	}
+
+	protected void setTimeout(Duration timeout) {
+		if (timeout == null) {
+			this.expirationDate = null;
+		} else {
+			this.expirationDate = LocalDateTime.now().plus(timeout);
+		}
 	}
 
 	protected class LoRaBufferListener implements SerialPortDataListener {

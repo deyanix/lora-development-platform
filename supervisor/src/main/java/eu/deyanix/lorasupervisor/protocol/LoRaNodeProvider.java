@@ -42,7 +42,7 @@ public class LoRaNodeProvider {
 		for (SerialPort port : ports) {
 			LoRaPort nodePort = LoRaPort.openNode(port);
 			if (nodePort != null) {
-				nodePort.attachConnection(new LoRaCommandConnection(port.getSystemPortName().equals("COM17")));
+				nodePort.attachConnection(new LoRaCommandConnection(port.getSystemPortName().equals("COM4")));
 
 				LoRaNode node = new LoRaNode(port.getSystemPortName(), nodePort);
 				port.addDataListener(new SerialPortDisconnectListener());

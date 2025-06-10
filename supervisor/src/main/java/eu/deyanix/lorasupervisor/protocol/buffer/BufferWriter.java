@@ -18,7 +18,6 @@ public class BufferWriter {
 	}
 
 	private final StringBuffer buffer = new StringBuffer();
-	private LocalDateTime expirationDate = null;
 
 	public void append(char character) {
 		buffer.append(character);
@@ -44,19 +43,7 @@ public class BufferWriter {
 		buffer.setLength(0);
 	}
 
-	public boolean isExpired() {
-		if (expirationDate == null) {
-			return false;
-		}
-
-		return expirationDate.isBefore(LocalDateTime.now());
-	}
-
-	public void setTimeout(Duration timeout) {
-		if (timeout == null) {
-			this.expirationDate = null;
-		} else {
-			this.expirationDate = LocalDateTime.now().plus(timeout);
-		}
+	public void clear(int len) {
+		buffer.delete(0, len);
 	}
 }

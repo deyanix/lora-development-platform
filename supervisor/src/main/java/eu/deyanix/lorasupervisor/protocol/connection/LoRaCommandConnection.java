@@ -17,27 +17,26 @@ public class LoRaCommandConnection extends LoRaPortConnection {
 
 	@Override
 	public void onInit(LoRaPort port) {
+		port.send("+ID?");
 		port.send("+MODE=" + (enableTx ? "TX" : "RX"));
+//		port.send("+FRQ=869000000");
 		port.send("+PUSH");
+
 		if (enableTx) {
 			//port.send("+TX=15,\nAAB\nXXYY\r\nGH\n\r");
-			port.send("+TX=3,\nabc");
+			port.send("+TX=4,\nabc");
 		}
 	}
 
 	@Override
 	public boolean onReceiveData(LoRaPort port, String data) {
-		System.out.println(port.getSerialPort().getSystemPortName() + "] DATA = " + data.length() + ',' + data);
-		StringArgument rssiArg = new StringArgument();
-		StringArgument snrArg = new StringArgument();
-		ExtensibleStringArgument payloadArg = new ExtensibleStringArgument();
+		System.out.println(port.getSerialPort().getSystemPortName() + " < (" + data.length() + ") " + data);
 
 		Command command = new Command("RX")
 				.append(new StringArgument("DONE"))
-				.append(rssiArg)
-				.append(snrArg)
-				.append(payloadArg);
-
+				.append(new StringArgument())
+				.append(new StringArgument())
+				.append(new ExtensibleStringArgument());
 
 		BufferReader reader = new BufferReader(data);
 		String cmd = reader.untilEnd('=').orElse("");
@@ -57,10 +56,12 @@ public class LoRaCommandConnection extends LoRaPortConnection {
 			}
 		}
 		requestedData = 0;
-		System.out.println(port.getSerialPort().getSystemPortName() + "] MODE = DONE"); // TODO: too many!
-//		System.out.println("RSSI = " + rssiArg.getInteger().orElse(null));
-//		System.out.println("SNR = " + rssiArg.getInteger().orElse(null));
-//		System.out.println("PAYLOAD = " + payloadArg.getString().orElse(null));
+		System.out.print(port.getSerialPort().getSystemPortName() + " - ");
+		System.out.printf("RSSI=%d, SNR=%d, PAYLOAD=%d,%s",
+				command.getArgument(1).getInteger().orElse(null),
+				command.getArgument(2).getInteger().orElse(null),
+				command.getArgument(3).getString().map(String::length).orElse(null),
+				command.getArgument(3).getString().orElse(null));
 
 		return true;
 	}
