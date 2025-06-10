@@ -1,16 +1,12 @@
 package eu.deyanix.lorasupervisor.protocol.buffer;
 
-import java.time.Duration;
-import java.time.LocalDateTime;
-import java.util.stream.IntStream;
+import java.util.Set;
 
 public class BufferWriter {
-	public static final char[] BUFFER_DELIMITERS = {'\n', '\r'};
+	public static final Set<Character> BUFFER_DELIMITERS = Set.of('\n', '\r');
 
 	public static boolean isDelimiter(char character) {
-		return IntStream.range(0, BUFFER_DELIMITERS.length)
-				.mapToObj(i -> BUFFER_DELIMITERS[i])
-				.anyMatch(c -> c == character);
+		return BUFFER_DELIMITERS.contains(character);
 	}
 
 	public static boolean hasDelimiter(CharSequence text) {
@@ -18,7 +14,6 @@ public class BufferWriter {
 	}
 
 	private final StringBuffer buffer = new StringBuffer();
-	private LocalDateTime expirationDate = null;
 
 	public void append(char character) {
 		buffer.append(character);
@@ -44,19 +39,7 @@ public class BufferWriter {
 		buffer.setLength(0);
 	}
 
-	public boolean isExpired() {
-		if (expirationDate == null) {
-			return false;
-		}
-
-		return expirationDate.isBefore(LocalDateTime.now());
-	}
-
-	public void setTimeout(Duration timeout) {
-		if (timeout == null) {
-			this.expirationDate = null;
-		} else {
-			this.expirationDate = LocalDateTime.now().plus(timeout);
-		}
+	public void clear(int len) {
+		buffer.delete(0, len);
 	}
 }

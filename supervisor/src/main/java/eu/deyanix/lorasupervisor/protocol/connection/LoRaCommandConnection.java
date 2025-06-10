@@ -3,50 +3,68 @@ package eu.deyanix.lorasupervisor.protocol.connection;
 import eu.deyanix.lorasupervisor.protocol.LoRaPort;
 import eu.deyanix.lorasupervisor.protocol.LoRaPortConnection;
 import eu.deyanix.lorasupervisor.protocol.buffer.BufferReader;
+import eu.deyanix.lorasupervisor.protocol.buffer.BufferWriter;
 import eu.deyanix.lorasupervisor.protocol.command.Argument;
 import eu.deyanix.lorasupervisor.protocol.command.Command;
-import eu.deyanix.lorasupervisor.protocol.command.ExtensibleStringArgument;
-import eu.deyanix.lorasupervisor.protocol.command.StringArgument;
+
+import java.util.Iterator;
+import java.util.Optional;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 
 public class LoRaCommandConnection extends LoRaPortConnection {
-	private final boolean enableTx;
+	private final Command txCommand;
+	private final Command rxCommand;
+	private final CompletableFuture<Command> result = new CompletableFuture<>();
 
-	public LoRaCommandConnection(boolean enableTx) {
-		this.enableTx = enableTx;
+	public LoRaCommandConnection(Command txCommand, Command rxCommand) {
+		this.txCommand = txCommand;
+		this.rxCommand = rxCommand;
 	}
 
 	@Override
 	public void onInit(LoRaPort port) {
-		port.send("+MODE=" + (enableTx ? "TX" : "RX"));
-		port.send("+PUSH");
-		if (enableTx) {
-			//port.send("+TX=15,\nAAB\nXXYY\r\nGH\n\r");
-			port.send("+TX=3,\nabc");
+		if (txCommand == null) {
+			return;
 		}
+
+		BufferWriter buffer = new BufferWriter();
+		buffer.append('+');
+		buffer.append(txCommand.getName());
+
+		Iterator<Argument> args = txCommand.getArguments().iterator();
+		if (args.hasNext())
+			buffer.append('=');
+
+		while (args.hasNext()) {
+			args.next().write(buffer);
+
+			if (args.hasNext())
+				buffer.append(',');
+		}
+
+		if (txCommand.isQuery())
+			buffer.append('?');
+
+		port.send(buffer.getData());
 	}
 
 	@Override
 	public boolean onReceiveData(LoRaPort port, String data) {
-		System.out.println(port.getSerialPort().getSystemPortName() + "] DATA = " + data.length() + ',' + data);
-		StringArgument rssiArg = new StringArgument();
-		StringArgument snrArg = new StringArgument();
-		ExtensibleStringArgument payloadArg = new ExtensibleStringArgument();
-
-		Command command = new Command("RX")
-				.append(new StringArgument("DONE"))
-				.append(rssiArg)
-				.append(snrArg)
-				.append(payloadArg);
-
+		if (rxCommand == null) {
+			return false;
+		}
 
 		BufferReader reader = new BufferReader(data);
 		String cmd = reader.untilEnd('=').orElse("");
 
-		if (!cmd.equals(command.getName())) {
+		if (!cmd.equals(rxCommand.getName())) {
 			return false;
 		}
 
-		for (Argument arg : command.getArguments()) {
+		for (Argument arg : rxCommand.getArguments()) {
 			if (!arg.read(reader)) {
 				return false;
 			}
@@ -57,10 +75,7 @@ public class LoRaCommandConnection extends LoRaPortConnection {
 			}
 		}
 		requestedData = 0;
-		System.out.println(port.getSerialPort().getSystemPortName() + "] MODE = DONE"); // TODO: too many!
-//		System.out.println("RSSI = " + rssiArg.getInteger().orElse(null));
-//		System.out.println("SNR = " + rssiArg.getInteger().orElse(null));
-//		System.out.println("PAYLOAD = " + payloadArg.getString().orElse(null));
+		result.complete(rxCommand);
 
 		return true;
 	}
@@ -68,5 +83,13 @@ public class LoRaCommandConnection extends LoRaPortConnection {
 	@Override
 	public void onTimeout(LoRaPort port) {
 		requestedData = 0;
+	}
+
+	public Optional<Command> get(long timeMs) {
+		try {
+			return Optional.ofNullable(result.get(timeMs, TimeUnit.MILLISECONDS));
+		} catch (InterruptedException | ExecutionException | TimeoutException e) {
+			return Optional.empty();
+		}
 	}
 }

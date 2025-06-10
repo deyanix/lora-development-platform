@@ -1,14 +1,22 @@
 package eu.deyanix.lorasupervisor.protocol.command;
 
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Iterator;
 import java.util.List;
 
 public class Command {
 	private final String name;
+	private final boolean query;
 	private final List<Argument> arguments = new ArrayList<Argument>();
 
-	public Command(String name) {
+	public Command(String name, boolean query) {
 		this.name = name;
+		this.query = query;
+	}
+
+	public Command(String name) {
+		this(name, false);
 	}
 
 	public Command append(Argument argument) {
@@ -20,7 +28,19 @@ public class Command {
 		return name;
 	}
 
-	public Argument[] getArguments() {
-		return arguments.toArray(new Argument[0]);
+	public boolean isQuery() {
+		return query;
+	}
+
+	public List<Argument> getArguments() {
+		return Collections.unmodifiableList(arguments);
+	}
+
+	public Argument getArgument(int index) {
+		return arguments.get(index);
+	}
+
+	public boolean hasArguments() {
+		return !arguments.isEmpty();
 	}
 }

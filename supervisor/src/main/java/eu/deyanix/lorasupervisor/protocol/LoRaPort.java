@@ -10,6 +10,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.PrintStream;
 import java.time.Duration;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.locks.Lock;
@@ -32,10 +33,11 @@ public class LoRaPort implements Closeable {
 	private final Lock readLock = new ReentrantLock();
 	private final Lock writeLock = new ReentrantLock();
 	private final BufferWriter buffer = new BufferWriter();
-	private int requestedData = 0;
 
 	private final LoRaBufferListener listener = new LoRaBufferListener();
 	private final List<LoRaPortConnection> connections = new ArrayList<>();
+	private LocalDateTime expirationDate = null;
+	private int requestedData = 0;
 
 	public LoRaPort(SerialPort serialPort) {
 		this.serialPort = serialPort;
@@ -83,32 +85,31 @@ public class LoRaPort implements Closeable {
 	protected void receive(String data) {
 		readLock.lock();
 		try {
+			handleTimeout();
+
 			LoRaPortConnection connection = getCapturingConnection();
 
-			if (buffer.isExpired()) {
-				buffer.clearAll();
-				if (connection != null) {
-					connection.onTimeout(this);
-				}
-			}
+			for (int i = 0; i < data.length(); i++) {
+				char c = data.charAt(i);
 
-
-			int offset = 0;
-			while (offset < data.length()) {
-				char c = data.charAt(offset++);
-
-				if (connection != null) {
+				if (connection != null && connection.isCapturing()) {
 					buffer.append(c);
 
-					if (connection.getRequestedData() <= buffer.length()) {
-						connection.onReceiveData(this, buffer.getData());
+					int requestedData = connection.getRequestedData();
+					if (requestedData <= buffer.length()) {
+						connection.onReceiveData(this, buffer.getData().substring(0, requestedData));
+					}
+
+					if (!connection.isCapturing()) {
+						connection = null;
+						buffer.clear(requestedData);
 					}
 				} else if (!BufferWriter.isDelimiter(c)) {
 					buffer.append(c);
 				} else if (!buffer.isEmpty()) {
 					connection = broadcastData(buffer.getData());
 
-					if (connection != null) {
+					if (connection != null && connection.isCapturing()) {
 						buffer.append(c);
 					} else {
 						buffer.clearAll();
@@ -116,9 +117,20 @@ public class LoRaPort implements Closeable {
 				}
 			}
 
-			buffer.setTimeout(Duration.ofMillis(5)); // TODO: Hardcoded timeout
+			setTimeout(Duration.ofMillis(5)); // TODO: Hardcoded timeout
 		} finally {
 			readLock.unlock();
+		}
+	}
+
+	protected void handleTimeout() {
+		LoRaPortConnection connection = getCapturingConnection();
+
+		if (isExpired()) {
+			buffer.clearAll();
+			if (connection != null) {
+				connection.onTimeout(this);
+			}
 		}
 	}
 
@@ -137,6 +149,22 @@ public class LoRaPort implements Closeable {
 			}
 		}
 		return null;
+	}
+
+	protected boolean isExpired() {
+		if (expirationDate == null) {
+			return false;
+		}
+
+		return expirationDate.isBefore(LocalDateTime.now());
+	}
+
+	protected void setTimeout(Duration timeout) {
+		if (timeout == null) {
+			this.expirationDate = null;
+		} else {
+			this.expirationDate = LocalDateTime.now().plus(timeout);
+		}
 	}
 
 	protected class LoRaBufferListener implements SerialPortDataListener {
