@@ -14,6 +14,9 @@ void LoRaNodeClass::Init() {
     this->minDelta = 100;
     this->maxDelta = 10000;
     this->msgCounter = 0;
+
+    this->ackLifetime = 0;
+    this->ackReq = true;
 }
 
 void LoRaNodeClass::Configure() {
@@ -47,13 +50,27 @@ void LoRaNodeClass::Loop() {
         }
     }
 
-    if (this->Auto == RANDOM)
+    if (this->Mode == TX)
     {
-        if (this->Mode == TX)
+        if (this->Auto == RANDOM)
         {
-            if (this->firstMsg)
+            if (this->permanentDelta)
             {
-                // Assign random delay if not already assigned
+                if (millis() - this->lastSendTime >= this->msgDelay)
+                {
+                    uint64_t chipID = getID();
+
+                    char message[128];
+                    snprintf(message, sizeof(message), "%012llx-%d", chipID, msgCounter);
+
+                    this->Send((uint8_t*)message, strlen(message));
+
+                    this->lastSendTime = millis();
+                    msgCounter++;
+                }
+            }
+            else
+            {
                 if (this->firstMsgDelay == 0)
                 {
                     RandomGenerator randomGenerator;
@@ -65,23 +82,34 @@ void LoRaNodeClass::Loop() {
 
                 if (millis() - this->lastSendTime >= this->firstMsgDelay)
                 {
-                    this->firstMsg = false;
-                    this->lastSendTime = millis();
+                    if (!this->ackReq)
+                    {
+                        this->permanentDelta = true;
+                    }
+                    else
+                    {
+                        uint64_t chipID = getID();
+
+                        char message[128];
+                        snprintf(message, sizeof(message), "%012llx-%d-?", chipID, msgCounter);
+
+                        this->Send((uint8_t*)message, strlen(message));
+
+                        this->lastSendTime = millis();
+                        msgCounter++;
+
+                        RandomGenerator randomGenerator;
+                        this->firstMsgDelay = randomGenerator.generateUniform(this->minDelta, this->maxDelta);
+                        Serial.print("\nDelay1=");
+                        Serial.print(this->firstMsgDelay);
+                        Serial.println("");
+                    }
                 }
-            }
-            else
-            {
-                if (millis() - this->lastSendTime >= this->msgDelay)
+                else
                 {
-                    uint64_t chipID = getID();
-
-                    char message[32];
-                    snprintf(message, sizeof(message), "%llx-%d", chipID, msgCounter);
-
-                    this->Send((uint8_t*)message, strlen(message));
-
-                    this->lastSendTime = millis();
-                    msgCounter++;
+                    if (this->Idle) {
+                        this->Receive();
+                    }
                 }
             }
         }
@@ -115,6 +143,33 @@ void LoRaNodeClass::OnRxDone(uint8_t *payload, uint16_t size, int16_t rssi, int8
     turnOnRGB(COLOR_RECEIVED, 0);
     this->rxLedOnTime = millis();
     this->rxLedOn = true;
+
+    if (this->Auto == RANDOM)
+    {
+        if (this->ackReq)
+        {
+            if (this->Mode == RX)
+            {
+                if (validateStandardMessage(payload))
+                {
+                    char message[128];
+                    snprintf(message, sizeof(message), "%s-%s", "ACK", (char*)payload);
+                    if (strlen(message) >= 2 && message[strlen(message) - 2] == '-' && message[strlen(message) - 1] == '?') {
+                        message[strlen(message) - 2] = '\0';
+                    }
+                    this->Send((uint8_t*)message, strlen(message));
+                }
+            }
+            else if (this->Mode == TX)
+            {
+                uint64_t chipID = getID();
+                if (validateAckMessage(payload, chipID))
+                {
+                    this->permanentDelta = true;
+                }
+            }
+        }
+    }
 }
 
 void LoRaNodeClass::OnRxTimeout() {

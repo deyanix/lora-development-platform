@@ -31,11 +31,11 @@ def find_serial_ports(vendor_id, product_id):
 
 def read_from_port(port, win):
     height, width = win.getmaxyx()
-    inner_width = width - 2 # Account for left and right borders
+    inner_width = width # Account for left and right borders
 
     # Move cursor to the initial writing position for data:
     # Row 1, Column 1 (inside the box's content area)
-    win.move(1, 1)
+    #win.move(1, 1)
     win.refresh()
 
     while True:
@@ -70,15 +70,13 @@ def read_from_port(port, win):
                     else:
                         color_attr = curses.color_pair(COLOR_WHITE_ON_BLACK)
 
-                    current_y, current_x = win.getyx()
-                    if current_x != 1: # Cursor is at x=0 after newline, move to x=1
-                        win.move(current_y, 1)
+
 
                     win.clrtoeol() # Clear from current cursor position to end of line
                     win.addstr(display_line_to_print, color_attr)
                     win.addstr("\n") # Move cursor to next line, column 0, potentially scrolling
 
-                    win.box()
+                        #win.box()
                     win.refresh()
 
             except serial.SerialException as e:
@@ -98,7 +96,6 @@ def read_from_port(port, win):
             break
 
 def initialize_port(port, idx, args, freq_map):
-    print(freq_map.get(idx, "868000000"))
     commands = [
         '+ID?\n',
         f'+FRQ={freq_map.get(idx, "868000000")}\n',
@@ -113,10 +110,6 @@ def initialize_port(port, idx, args, freq_map):
         '+STO=0\n',
         '+TXTO=3000\n',
         f'+MODE={"RX" if idx == 0 else "TX"}\n',
-        f'+INTERVAL={args.interval}\n',
-        f'+MINDELTA={args.mindelta}\n',
-        f'+MAXDELTA={args.maxdelta}\n',
-        '+AUTO=RANDOM\n',
         '+FRQ?\n',
         '+BW?\n',
         '+SF?\n',
@@ -131,10 +124,14 @@ def initialize_port(port, idx, args, freq_map):
         '+MODE?\n',
         '+PUSH\n',
         '+TOA=4?\n',
-        '+AUTO?\n',
+        f'+INTERVAL={args.interval}\n',
+        f'+MINDELTA={args.mindelta}\n',
+        f'+MAXDELTA={args.maxdelta}\n',
+        '+AUTO=RANDOM\n',
         '+INTERVAL?\n',
         '+MINDELTA?\n',
         '+MAXDELTA?\n'
+        '+AUTO?\n'
     ]
     for cmd in commands:
         port.write(cmd.encode('utf-8'))
@@ -246,9 +243,14 @@ def curses_main(stdscr, args, freq_map):
             win.scrollok(True) # Enable scrolling for the window
             win.bkgd(curses.color_pair(COLOR_WHITE_ON_BLACK)) # Set background color for the window
             win.refresh()
-            windows.append(win)
 
-            threading.Thread(target=read_from_port, args=(ser, win), daemon=True).start()
+            inner_win = curses.newwin(main_content_height-2, col_width-2, win_y+1, (idx * col_width)+1)
+            inner_win.scrollok(True)
+            inner_win.refresh()
+
+            windows.append(inner_win)
+
+            threading.Thread(target=read_from_port, args=(ser, inner_win), daemon=True).start()
 
 
         except serial.SerialException as e:
@@ -267,7 +269,7 @@ def curses_main(stdscr, args, freq_map):
     status_win.addstr(0, (width - len(" Message Counts ")) // 2, " Message Counts ", curses.A_BOLD | curses.color_pair(COLOR_YELLOW_ON_BLACK))
     status_win.refresh()
 
-
+    time.sleep(1)
     for idx, port in enumerate(serial_ports):
         #threading.Thread(target=initialize_port, args=(port, idx), daemon=True).start()
         initialize_port(port, idx, args, freq_map)

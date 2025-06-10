@@ -4,6 +4,7 @@
 #include <LoRaWan_APP.h>
 #include <sx126x.h>
 #include "RandomGenerator.h"
+#include "validation.h"
 
 #define MAX_MSG_BUFFER_LENGTH 128
 
@@ -29,7 +30,7 @@ typedef enum {
 typedef enum {
     OFF = 1,
     RANDOM = 2,
-    HEURISTIC = 3,
+    TURNBASED = 3,
 } LoRaNodeAuto;
 
 class LoRaNodeClass {
@@ -59,11 +60,16 @@ public:
     unsigned long lastSendTime; // Time when last msg has been sent using auto mode
     unsigned long msgDelay;     // Amount of time to wait before sending next msg
 
-    bool firstMsg = true;
+    bool permanentDelta = false;
     unsigned long minDelta;
     unsigned long maxDelta;
-    unsigned long firstMsgDelay;// Amount of time to wait before sending next msg
+    unsigned long firstMsgDelay; // Amount of time to wait before sending next msg
     int msgCounter;
+
+    int ackLifetime;
+    bool ackReq = false;
+
+    uint64_t chipID;
 
     char lastSentData[MAX_MSG_BUFFER_LENGTH];
 

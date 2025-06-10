@@ -15,10 +15,13 @@ char rxpacket[RX_DATA_LEN];
 
 void OnRxDone(uint8_t *payload, uint16_t size, int16_t rssi, int8_t snr) {
     memset(rxpacket, 0, RX_DATA_LEN);
-    sprintf(rxpacket, "%d,%d,%d,%s", rssi, snr, size, payload);
+    int offset = sprintf(rxpacket, "%d,%d,%d,", rssi, snr, size);
+    memcpy(rxpacket+offset, payload, size);
 
     Serial.print("RX=DONE,");
     Serial.println(rxpacket);
+
+    payload[size] = '\0';
 
     LoRaNode.OnRxDone(payload, size, rssi, snr);
 }
@@ -279,9 +282,9 @@ void processTerminal() {
                 } else if (reader.with("RANDOM")) {
                     LoRaNode.Auto = RANDOM;
                     Serial.println("AUTO=RANDOM");
-                } else if (reader.with("HEURISTIC")) {
-                    LoRaNode.Auto = HEURISTIC;
-                    Serial.println("AUTO=HEURISTIC");
+                } else if (reader.with("TURNBASED")) {
+                    LoRaNode.Auto = TURNBASED;
+                    Serial.println("AUTO=TURNBASED");
                 } else {
                     Serial.println("AUTO=ERR");
                 }
@@ -294,8 +297,8 @@ void processTerminal() {
                 case RANDOM:
                     Serial.println("RANDOM");
                     break;
-                case HEURISTIC:
-                    Serial.println("HEURISTIC");
+                case TURNBASED:
+                    Serial.println("TURNBASED");
                     break;
                 default:
                     Serial.println("UNKNOWN");
