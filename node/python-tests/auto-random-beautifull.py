@@ -43,7 +43,7 @@ def read_from_port(port, win):
             try:
                 line = port.readline().decode('utf-8', errors="ignore").strip()
                 if line:
-                    timestamp = datetime.now().strftime("%H:%M:%S")
+                    timestamp = datetime.now().strftime("%H%M%S")
 
                     # Check for TX or RX in the raw line (case-insensitive)
                     is_tx = "tx=" in line.lower() or "=tx" in line.lower()
@@ -59,7 +59,7 @@ def read_from_port(port, win):
                             message_counts[port.port]['rx'] += 1
 
                     # Construct the full display line with timestamp
-                    display_content = f"{timestamp} | {line}"
+                    display_content = f"{timestamp}|{line}"
                     display_line_to_print = display_content[:inner_width] # Truncate
 
                     color_attr = curses.A_NORMAL # Default
