@@ -48,11 +48,8 @@ public class LoRaPort implements Closeable {
 	public void send(CharSequence data) {
 		writeLock.lock();
 		try {
-			Thread.sleep(1000);
 			System.out.println(serialPort.getSystemPortName() + " > " + data);
 			out.println(data);
-			Thread.sleep(1000);
-		} catch (InterruptedException ignored) {
 		} finally {
 			writeLock.unlock();
 		}
@@ -88,33 +85,31 @@ public class LoRaPort implements Closeable {
 	protected void receive(String data) {
 		readLock.lock();
 		try {
+			handleTimeout();
+
 			LoRaPortConnection connection = getCapturingConnection();
 
-			if (isExpired()) {
-				buffer.clearAll();
-				if (connection != null) {
-					connection.onTimeout(this);
-				}
-			}
+			for (int i = 0; i < data.length(); i++) {
+				char c = data.charAt(i);
 
-			for (char c : data.toCharArray()) {
 				if (connection != null && connection.isCapturing()) {
 					buffer.append(c);
 
-					if (connection.getRequestedData() <= buffer.length()) {
-						connection.onReceiveData(this, buffer.getData());
+					int requestedData = connection.getRequestedData();
+					if (requestedData <= buffer.length()) {
+						connection.onReceiveData(this, buffer.getData().substring(0, requestedData));
 					}
 
 					if (!connection.isCapturing()) {
 						connection = null;
-						buffer.clearAll();
+						buffer.clear(requestedData);
 					}
 				} else if (!BufferWriter.isDelimiter(c)) {
 					buffer.append(c);
 				} else if (!buffer.isEmpty()) {
 					connection = broadcastData(buffer.getData());
 
-					if (connection != null) {
+					if (connection != null && connection.isCapturing()) {
 						buffer.append(c);
 					} else {
 						buffer.clearAll();
@@ -125,6 +120,17 @@ public class LoRaPort implements Closeable {
 			setTimeout(Duration.ofMillis(5)); // TODO: Hardcoded timeout
 		} finally {
 			readLock.unlock();
+		}
+	}
+
+	protected void handleTimeout() {
+		LoRaPortConnection connection = getCapturingConnection();
+
+		if (isExpired()) {
+			buffer.clearAll();
+			if (connection != null) {
+				connection.onTimeout(this);
+			}
 		}
 	}
 

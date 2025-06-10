@@ -3,9 +3,10 @@ package eu.deyanix.lorasupervisor.protocol.command;
 import eu.deyanix.lorasupervisor.protocol.buffer.BufferReader;
 import eu.deyanix.lorasupervisor.protocol.buffer.BufferWriter;
 
-import java.util.Optional;
+import java.util.Objects;
 
 public class StringArgument extends Argument {
+	private boolean matching = false;
 
 	public StringArgument(String value) {
 		this.value = value;
@@ -18,8 +19,8 @@ public class StringArgument extends Argument {
 	@Override
 	public boolean read(BufferReader buffer) {
 		String data = buffer.untilEnd(',').orElse(null);
-		if (value != null) {
-			return value.equals(data);
+		if (matching) {
+			return Objects.equals(value, data);
 		} else if (data != null) {
 			value = data;
 			return true;

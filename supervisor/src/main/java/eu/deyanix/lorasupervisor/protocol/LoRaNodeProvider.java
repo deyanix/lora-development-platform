@@ -3,6 +3,9 @@ package eu.deyanix.lorasupervisor.protocol;
 import com.fazecast.jSerialComm.SerialPort;
 import com.fazecast.jSerialComm.SerialPortDataListener;
 import com.fazecast.jSerialComm.SerialPortEvent;
+import eu.deyanix.lorasupervisor.protocol.command.Command;
+import eu.deyanix.lorasupervisor.protocol.command.ExtensibleStringArgument;
+import eu.deyanix.lorasupervisor.protocol.command.StringArgument;
 import eu.deyanix.lorasupervisor.protocol.connection.LoRaCommandConnection;
 import jakarta.annotation.PostConstruct;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -10,12 +13,9 @@ import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
-import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
-import java.util.stream.Stream;
 
 @Component
 public class LoRaNodeProvider {
@@ -42,7 +42,17 @@ public class LoRaNodeProvider {
 		for (SerialPort port : ports) {
 			LoRaPort nodePort = LoRaPort.openNode(port);
 			if (nodePort != null) {
-				nodePort.attachConnection(new LoRaCommandConnection(port.getSystemPortName().equals("COM4")));
+
+				Command txCommand = new Command("FRQ")
+						.append(new StringArgument().setInteger(868000000));
+				Command rxCommand = new Command("FRQ")
+						.append(new StringArgument());
+				LoRaCommandConnection con = new LoRaCommandConnection(txCommand, rxCommand);
+				nodePort.attachConnection(con);
+
+				System.out.println(con.get(500)
+						.flatMap(cmd -> cmd.getArgument(0).getString())
+						.orElse(null));
 
 				LoRaNode node = new LoRaNode(port.getSystemPortName(), nodePort);
 				port.addDataListener(new SerialPortDisconnectListener());

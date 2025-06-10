@@ -1,16 +1,12 @@
 package eu.deyanix.lorasupervisor.protocol.buffer;
 
-import java.time.Duration;
-import java.time.LocalDateTime;
-import java.util.stream.IntStream;
+import java.util.Set;
 
 public class BufferWriter {
-	public static final char[] BUFFER_DELIMITERS = {'\n', '\r'};
+	public static final Set<Character> BUFFER_DELIMITERS = Set.of('\n', '\r');
 
 	public static boolean isDelimiter(char character) {
-		return IntStream.range(0, BUFFER_DELIMITERS.length)
-				.mapToObj(i -> BUFFER_DELIMITERS[i])
-				.anyMatch(c -> c == character);
+		return BUFFER_DELIMITERS.contains(character);
 	}
 
 	public static boolean hasDelimiter(CharSequence text) {
