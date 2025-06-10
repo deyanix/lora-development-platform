@@ -13,6 +13,7 @@ void LoRaNodeClass::Init() {
 
     this->minDelta = 100;
     this->maxDelta = 10000;
+    this->msgCounter = 0;
 }
 
 void LoRaNodeClass::Configure() {
@@ -62,7 +63,7 @@ void LoRaNodeClass::Loop() {
                     Serial.println("");
                 }
 
-                if (millis() - this->lastSendTime - this->msgDelay >= this->firstMsgDelay)
+                if (millis() - this->lastSendTime >= this->firstMsgDelay)
                 {
                     this->firstMsg = false;
                     this->lastSendTime = millis();
@@ -72,8 +73,15 @@ void LoRaNodeClass::Loop() {
             {
                 if (millis() - this->lastSendTime >= this->msgDelay)
                 {
-                    this->Send((uint8_t*)("Sending MSG"), 11);
+                    uint64_t chipID = getID();
+
+                    char message[32];
+                    snprintf(message, sizeof(message), "%llx-%d", chipID, msgCounter);
+
+                    this->Send((uint8_t*)message, strlen(message));
+
                     this->lastSendTime = millis();
+                    msgCounter++;
                 }
             }
         }

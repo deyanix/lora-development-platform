@@ -61,6 +61,7 @@ public:
     unsigned long minDelta;
     unsigned long maxDelta;
     unsigned long firstMsgDelay;// Amount of time to wait before sending next msg
+    int msgCounter;
 
 
     void Init();
