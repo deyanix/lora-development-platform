@@ -32,6 +32,7 @@ public class LoRaPort {
 	private final LoRaPortSender sender;
 	private final LoRaPortReceiver receiver;
 	private final List<LoRaConnection> connections = new ArrayList<>();
+	private final List<LoRaPortListener> listeners = new ArrayList<>();
 	private final Lock connectionLock = new ReentrantLock();
 	private final Condition disconnect = connectionLock.newCondition();
 
@@ -45,7 +46,7 @@ public class LoRaPort {
 		LoRaCommandConnection connection = new LoRaCommandConnection(tx, rx);
 		attachConnection(connection);
 
-		Optional<Command> result = connection.get(2000);
+		Optional<Command> result = connection.get(500);
 		detachConnection(connection);
 
 		return result;
@@ -53,6 +54,18 @@ public class LoRaPort {
 
 	public LoRaCommander createCommander() {
 		return new LoRaCommander(this);
+	}
+
+	public void addListener(LoRaPortListener listener) {
+		listeners.add(listener);
+	}
+
+	public void removeListener(LoRaPortListener listener) {
+		listeners.remove(listener);
+	}
+
+	public List<LoRaPortListener> getListeners() {
+		return Collections.unmodifiableList(listeners);
 	}
 
 	public SerialPort getSerialPort() {

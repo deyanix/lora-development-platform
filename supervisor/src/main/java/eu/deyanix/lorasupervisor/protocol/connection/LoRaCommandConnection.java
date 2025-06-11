@@ -47,6 +47,7 @@ public class LoRaCommandConnection extends LoRaSenderConnection {
 		if (txCommand.isQuery())
 			buffer.append('?');
 
+		buffer.append('\n');
 		port.getSender().send(buffer.getData());
 	}
 

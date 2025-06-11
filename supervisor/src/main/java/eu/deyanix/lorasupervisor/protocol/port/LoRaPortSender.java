@@ -14,11 +14,14 @@ public class LoRaPortSender {
 		this.out = new PrintStream(port.getSerialPort().getOutputStream());
 	}
 
-	public void send(CharSequence data) {
+	public void send(String data) {
 		writeLock.lock();
 		try {
-			System.out.println(port.getSerialPort().getSystemPortName() + " > " + data);
-			out.println(data);
+			out.print(data);
+
+			for (LoRaPortListener listener : port.getListeners()) {
+				listener.onSend(port, data);
+			}
 		} finally {
 			writeLock.unlock();
 		}

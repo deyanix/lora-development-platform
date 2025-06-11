@@ -30,9 +30,12 @@ public class LoRaPortReceiver {
 			handleTimeout();
 
 			LoRaConnection connection = getCapturingConnection();
+			BufferWriter localBuffer = new BufferWriter();
 			InputStream in = port.getSerialPort().getInputStream();
+
 			while (in.available() > 0) {
 				char c = (char) in.read();
+				localBuffer.append(c);
 
 				if (connection != null) {
 					buffer.append(c);
@@ -55,6 +58,10 @@ public class LoRaPortReceiver {
 				} else {
 					buffer.append(c);
 				}
+			}
+
+			for (LoRaPortListener listener : port.getListeners()) {
+				listener.onReceive(port, localBuffer.getData());
 			}
 
 			setTimeout(Duration.ofMillis(100)); // TODO: Hardcoded timeout

@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>Demo WebSocket (HTML/JS)</title>
+	<script src="https://cdn.tailwindcss.com"></script>
+	<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+	<style>
+		body {
+			font-family: 'Inter', sans-serif;
+		}
+		button {
+			transition: background-color 0.3s ease, transform 0.1s ease, box-shadow 0.3s ease;
+		}
+		button:hover {
+			transform: translateY(-1px);
+			box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+		}
+		button:active {
+			transform: translateY(0);
+			box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+		}
+	</style>
+</head>
+<body class="min-h-screen bg-gray-100 flex flex-col items-center justify-center p-4">
+
+<h1 class="text-3xl font-bold text-gray-800 mb-6">Demo WebSocket (HTML/JS)</h1>
+
+<div id="connectionStatus" class="p-3 rounded-md mb-4 w-full max-w-md text-center bg-red-200 text-red-800">
+	Status połączenia: Rozłączono
+</div>
+
+<div class="w-full max-w-md bg-white rounded-lg shadow-md p-6 mb-6">
+	<h2 class="text-xl font-semibold text-gray-700 mb-4">Wiadomości</h2>
+	<div id="messagesDisplay" class="border border-gray-300 rounded-md h-64 overflow-y-auto p-3 mb-4 bg-gray-50">
+		<p class="text-gray-500 italic">Brak wiadomości.</p>
+	</div>
+
+	<div class="flex flex-col space-y-3">
+		<input
+				type="text"
+				id="inputMessage"
+				class="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+				placeholder="Wpisz wiadomość..."
+		/>
+		<button
+				id="sendMessageBtn"
+				class="bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-md disabled:opacity-50 disabled:cursor-not-allowed shadow-md"
+		>
+			Wyślij do /app/hello (OnReceive)
+		</button>
+		<button
+				id="triggerOnSendBtn"
+				class="bg-purple-600 hover:bg-purple-700 text-white font-medium py-2 px-4 rounded-md disabled:opacity-50 disabled:cursor-not-allowed shadow-md"
+		>
+			Wyzwól OnSend (przez HTTP)
+		</button>
+		<button
+				id="triggerDirectSendBtn"
+				class="bg-green-600 hover:bg-green-700 text-white font-medium py-2 px-4 rounded-md disabled:opacity-50 disabled:cursor-not-allowed shadow-md"
+		>
+			Wyzwól bezpośrednie wysłanie (przez HTTP)
+		</button>
+	</div>
+</div>
+
+<p class="text-sm text-gray-500 mt-4">Upewnij się, że serwer Spring Boot działa na porcie 8080.</p>
+
+<script src="https://cdn.jsdelivr.net/npm/sockjs-client@1.6.1/dist/sockjs.min.js"></script>
+<script async src="https://ga.jspm.io/npm:es-module-shims@1.5.1/dist/es-module-shims.js" crossorigin="anonymous"></script>
+
+<script type="module">
+	import * as Stomp from '@stomp/stompjs';
+
+	// Referencje do elementów DOM
+	const connectionStatus = document.getElementById('connectionStatus');
+	const messagesDisplay = document.getElementById('messagesDisplay');
+	const inputMessage = document.getElementById('inputMessage');
+	const sendMessageBtn = document.getElementById('sendMessageBtn');
+	const triggerOnSendBtn = document.getElementById('triggerOnSendBtn');
+	const triggerDirectSendBtn = document.getElementById('triggerDirectSendBtn');
+
+	let stompClient = null;
+
+	// Funkcja do aktualizacji statusu połączenia
+	function updateConnectionStatus(connected) {
+		if (connected) {
+			connectionStatus.textContent = 'Status połączenia: Połączono';
+			connectionStatus.classList.remove('bg-red-200', 'text-red-800');
+			connectionStatus.classList.add('bg-green-200', 'text-green-800');
+			sendMessageBtn.disabled = false;
+		} else {
+			connectionStatus.textContent = 'Status połączenia: Rozłączono';
+			connectionStatus.classList.remove('bg-green-200', 'text-green-800');
+			connectionStatus.classList.add('bg-red-200', 'text-red-800');
+			sendMessageBtn.disabled = true; // Wyłącz przycisk wysyłania wiadomości WebSocket
+		}
+		// Pozostałe przyciski zawsze dostępne, bo używają HTTP
+		triggerOnSendBtn.disabled = false;
+		triggerDirectSendBtn.disabled = false;
+	}
+
+	// Funkcja do dodawania wiadomości do wyświetlacza
+	function addMessage(msg) {
+		// Usuń początkowy komunikat "Brak wiadomości." jeśli istnieje
+		if (messagesDisplay.querySelector('.italic')) {
+			messagesDisplay.innerHTML = '';
+		}
+		const p = document.createElement('p');
+		p.className = 'text-gray-800 break-words py-1 border-b last:border-b-0 border-gray-200';
+		p.textContent = msg;
+		messagesDisplay.appendChild(p);
+		// Przewiń do dołu
+		messagesDisplay.scrollTop = messagesDisplay.scrollHeight;
+	}
+
+	// Inicjalizacja połączenia WebSocket po załadowaniu okna
+	window.onload = function() {
+		// Upewnij się, że SockJS i Stomp są dostępne globalnie
+		if (typeof SockJS === 'undefined' || typeof Stomp === 'undefined') {
+			console.error('SockJS or STOMP.js not loaded. Please check CDN links.');
+			updateConnectionStatus(false);
+			return;
+		}
+
+		// Inicjalizacja klienta STOMP
+		const client = new Stomp.Client({
+			webSocketFactory: () => new SockJS('http://localhost:8080/ws'),
+			debug: (str) => {
+				console.log(new Date(), str);
+			},
+			reconnectDelay: 5000,
+			heartbeatIncoming: 4000,
+			heartbeatOutgoing: 4000,
+		});
+
+		client.onConnect = (frame) => {
+			console.log('Połączono z WebSocket!', frame);
+			updateConnectionStatus(true);
+
+			// Subskrybuj tematy
+			client.subscribe('/topic/greetings', (message) => {
+				const received = JSON.parse(message.body);
+				addMessage(`Pozdrowienie: ${received.content}`);
+			});
+
+			client.subscribe('/topic/receivedData', (message) => {
+				const received = JSON.parse(message.body);
+				addMessage(`OnReceive: ${received.content}`);
+			});
+
+			client.subscribe('/topic/sentData', (message) => {
+				const received = JSON.parse(message.body);
+				addMessage(`OnSend: ${received.content}`);
+			});
+
+			client.subscribe('/topic/directMessages', (message) => {
+				const received = JSON.parse(message.body);
+				addMessage(`Bezpośrednio: ${received.content}`);
+			});
+		};
+
+		client.onStompError = (frame) => {
+			console.error('Błąd STOMP:', frame);
+			updateConnectionStatus(false);
+		};
+
+		client.onWebSocketClose = () => {
+			console.log('Połączenie WebSocket zamknięte.');
+			updateConnectionStatus(false);
+		};
+
+		client.activate(); // Aktywuj połączenie
+		stompClient = client; // Przechowaj klienta w zmiennej globalnej
+
+		// Obsługa kliknięcia przycisku "Wyślij do /app/hello (OnReceive)"
+		sendMessageBtn.addEventListener('click', () => {
+			const messageContent = inputMessage.value.trim();
+			if (stompClient && stompClient.connected && messageContent) {
+				stompClient.publish({
+					destination: '/app/hello',
+					body: JSON.stringify({ content: messageContent }),
+				});
+				inputMessage.value = '';
+			} else if (!stompClient.connected) {
+				console.warn('Klient STOMP nie jest połączony.');
+			}
+		});
+
+		// Obsługa kliknięcia przycisku "Wyzwól OnSend (przez HTTP)"
+		triggerOnSendBtn.addEventListener('click', async () => {
+			const messageContent = inputMessage.value.trim();
+			if (messageContent) {
+				try {
+					const response = await fetch(`http://localhost:8080/trigger-send/${encodeURIComponent(messageContent)}`);
+					const text = await response.text();
+					addMessage(`HTTP trigger for OnSend: ${text}`);
+					inputMessage.value = '';
+				} catch (error) {
+					console.error('Błąd podczas wywoływania /trigger-send:', error);
+					addMessage(`Błąd HTTP trigger for OnSend: ${error.message}`);
+				}
+			}
+		});
+
+		// Obsługa kliknięcia przycisku "Wyzwól bezpośrednie wysłanie (przez HTTP)"
+		triggerDirectSendBtn.addEventListener('click', async () => {
+			const messageContent = inputMessage.value.trim();
+			if (messageContent) {
+				try {
+					const response = await fetch(`http://localhost:8080/send-direct/${encodeURIComponent(messageContent)}`);
+					const text = await response.text();
+					addMessage(`HTTP trigger for Direct Send: ${text}`);
+					inputMessage.value = '';
+				} catch (error) {
+					console.error('Błąd podczas wywoływania /send-direct:', error);
+					addMessage(`Błąd HTTP trigger for Direct Send: ${error.message}`);
+				}
+			}
+		});
+
+		// Walidacja pola input, aby wyłączać przycisk, gdy jest puste
+		inputMessage.addEventListener('input', () => {
+			const messageContent = inputMessage.value.trim();
+			sendMessageBtn.disabled = !stompClient.connected || !messageContent;
+			triggerOnSendBtn.disabled = !messageContent;
+			triggerDirectSendBtn.disabled = !messageContent;
+		});
+		// Ustaw początkowy stan przycisków
+		inputMessage.dispatchEvent(new Event('input'));
+	};
+</script>
+</body>
+</html>
