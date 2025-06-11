@@ -8,6 +8,7 @@ import eu.deyanix.lorasupervisor.protocol.command.DataArgument;
 import eu.deyanix.lorasupervisor.protocol.connection.LoRaCommandConnection;
 import eu.deyanix.lorasupervisor.protocol.connection.LoRaSenderConnection;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -32,6 +33,7 @@ public class LoRaPort {
 	private final LoRaPortSender sender;
 	private final LoRaPortReceiver receiver;
 	private final List<LoRaConnection> connections = new ArrayList<>();
+	private final List<LoRaPortListener> listeners = new ArrayList<>();
 	private final Lock connectionLock = new ReentrantLock();
 	private final Condition disconnect = connectionLock.newCondition();
 
@@ -41,18 +43,44 @@ public class LoRaPort {
 		this.receiver = new LoRaPortReceiver(this);
 	}
 
+	public Optional<Command> send(Command tx, Command rx, int retries) {
+		for (int i = 0; i < retries; i++) {
+			try {
+				LoRaCommandConnection connection = new LoRaCommandConnection(tx, rx);
+				attachConnection(connection);
+
+				Optional<Command> result = connection.get(500);
+				detachConnection(connection);
+
+				if (result.isPresent()) {
+					return result;
+				}
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+		}
+
+		return Optional.empty();
+	}
+
 	public Optional<Command> send(Command tx, Command rx) {
-		LoRaCommandConnection connection = new LoRaCommandConnection(tx, rx);
-		attachConnection(connection);
-
-		Optional<Command> result = connection.get(2000);
-		detachConnection(connection);
-
-		return result;
+		return send(tx, rx, 1);
 	}
 
 	public LoRaCommander createCommander() {
 		return new LoRaCommander(this);
+	}
+
+	public void addListener(LoRaPortListener listener) {
+		listeners.add(listener);
+	}
+
+	public void removeListener(LoRaPortListener listener) {
+		listeners.remove(listener);
+	}
+
+	public List<LoRaPortListener> getListeners() {
+		return Collections.unmodifiableList(listeners);
 	}
 
 	public SerialPort getSerialPort() {
@@ -68,7 +96,12 @@ public class LoRaPort {
 	}
 
 	public List<LoRaConnection> getConnections() {
-		return Collections.unmodifiableList(connections);
+		connectionLock.lock();
+		try {
+			return connections.stream().toList();
+		} finally {
+			connectionLock.unlock();
+		}
 	}
 
 	protected void attachConnection(LoRaConnection connection) {

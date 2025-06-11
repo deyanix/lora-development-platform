@@ -5,6 +5,15 @@ public enum LoRaBandwidth {
 	BW_250kHz(250, 1),
 	BW_500kHz(500, 2);
 
+	public static LoRaBandwidth valueOf(int value) {
+		for (LoRaBandwidth val : values()) {
+			if (val.getValue() == value) {
+				return val;
+			}
+		}
+		return null;
+	}
+
 	private final int bandwidth;
 	private final int value;
 
