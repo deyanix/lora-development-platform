@@ -329,6 +329,8 @@ void processTerminal() {
                     if (minDelta >= 0 && minDelta <= UINT32_MAX && maxDelta >= 0 && maxDelta <= UINT32_MAX && minDelta <= maxDelta) {
                         LoRaNode.minDelta = (uint32_t)minDelta;
                         LoRaNode.maxDelta = (uint32_t)maxDelta;
+                        RandomGenerator random_generator = RandomGenerator();
+                        LoRaNode.firstMsgDelay = random_generator.generateUniform(LoRaNode.minDelta, LoRaNode.maxDelta);
                         Serial.println("RTO=OK");
                     } else {
                         Serial.println("RTO=ERR");
@@ -348,7 +350,6 @@ void processTerminal() {
                 long value = reader.untilEnd().toInt();
                 if (value >= 0 && value <= UINT32_MAX) {
                     LoRaNode.ackLifetimeInit = (uint32_t)value;
-                    LoRaNode.ackLifetime = (uint32_t)value;
                     Serial.println("ACKLT=OK");
                 } else {
                     Serial.println("ACKLT=ERR");

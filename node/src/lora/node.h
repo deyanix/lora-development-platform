@@ -68,7 +68,7 @@ public:
     int msgCounter;
 
     unsigned long ackLifetimeInit;
-    unsigned long ackLifetime;
+    long ackLifetime;
     bool ackReq = false;
 
     bool ledState = false;

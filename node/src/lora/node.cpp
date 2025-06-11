@@ -52,75 +52,45 @@ void LoRaNodeClass::Loop() {
         }
     }
 
-    if (this->Mode == TX)
+    if (this->Mode == TX && this->Auto == RANDOM)
     {
-        if (this->Auto == RANDOM)
+        unsigned long interval = this->permanentDelta ? this->msgDelay: this->firstMsgDelay;
+        if (millis() - this->lastSendTime >= interval)
         {
-            if (this->permanentDelta)
+            char message[128];
+            if (this->ackReq && this->ackLifetime <= 0)
             {
-                if (millis() - this->lastSendTime >= this->msgDelay)
+                snprintf(message, sizeof(message), "%012llx-%d-?", getID(), msgCounter);
+
+                if(ackLifetime<0)
                 {
-                    uint64_t chipID = getID();
-
-                    char message[128];
-                    snprintf(message, sizeof(message), "%012llx-%d", chipID, msgCounter);
-
-                    this->Send((uint8_t*)message, strlen(message));
-
-                    this->lastSendTime = millis();
-                    msgCounter++;
-                    if (this->ackReq)
-                    {
-                        this->ackLifetime--;
-                        if (this->ackLifetime == 0)
-                        {
-                            this->permanentDelta = false;
-                        }
-                    }
+                    RandomGenerator randomGenerator;
+                    this->firstMsgDelay = randomGenerator.generateUniform(this->minDelta, this->maxDelta);
+                    this->permanentDelta = false;
                 }
             }
             else
             {
-                if (this->firstMsgDelay == 0)
-                {
-                    RandomGenerator randomGenerator;
-                    this->firstMsgDelay = randomGenerator.generateUniform(this->minDelta, this->maxDelta);
-                    Serial.print("\nDelay=");
-                    Serial.print(this->firstMsgDelay);
-                    Serial.println("");
-                }
+                snprintf(message, sizeof(message), "%012llx-%d", getID(), msgCounter);
+            }
+            if (this->ackReq)
+            {
+                this->ackLifetime--;
+            }
+            else
+            {
+                this->permanentDelta = true;
+            }
 
-                if (millis() - this->lastSendTime >= this->firstMsgDelay)
-                {
-                    if (!this->ackReq)
-                    {
-                        this->permanentDelta = true;
-                    }
-                    else
-                    {
-                        uint64_t chipID = getID();
+            this->Send((uint8_t*)message, strlen(message));
 
-                        char message[128];
-                        snprintf(message, sizeof(message), "%012llx-%d-?", chipID, msgCounter);
-
-                        this->Send((uint8_t*)message, strlen(message));
-
-                        this->lastSendTime = millis();
-                        msgCounter++;
-
-                        RandomGenerator randomGenerator;
-                        this->firstMsgDelay = randomGenerator.generateUniform(this->minDelta, this->maxDelta);
-                        Serial.print("\nDelay1=");
-                        Serial.print(this->firstMsgDelay);
-                        Serial.println("");
-                    }
-                }
-                else
-                {
-                    if (this->Idle) {
-                        this->Receive();
-                    }
-                }
+            this->lastSendTime = millis();
+            msgCounter++;
+        }
+        if (this->ackReq && this->ackLifetime < 0)
+        {
+            if (this->Idle) {
+                this->Receive();
             }
         }
     }
