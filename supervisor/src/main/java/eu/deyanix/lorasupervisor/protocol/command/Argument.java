@@ -5,7 +5,7 @@ import eu.deyanix.lorasupervisor.protocol.buffer.BufferReader;
 
 import java.util.Optional;
 
-public abstract class Argument {
+public abstract class Argument implements Cloneable {
 	protected String value;
 
 	public abstract boolean read(BufferReader buffer);
@@ -75,5 +75,14 @@ public abstract class Argument {
 
 	public boolean hasValue() {
 		return value != null;
+	}
+
+	@Override
+	public Argument clone() {
+		try {
+			return (Argument) super.clone();
+		} catch (CloneNotSupportedException e) {
+			throw new AssertionError();
+		}
 	}
 }
