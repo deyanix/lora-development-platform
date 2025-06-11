@@ -1,7 +1,9 @@
 package eu.deyanix.lorasupervisor.protocol;
 
 
-public abstract class LoRaPortConnection {
+import eu.deyanix.lorasupervisor.protocol.port.LoRaPort;
+
+public abstract class LoRaConnection {
 	protected int priority = 0;
 	protected int requestedData = 0;
 

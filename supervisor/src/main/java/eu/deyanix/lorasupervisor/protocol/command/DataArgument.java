@@ -5,14 +5,14 @@ import eu.deyanix.lorasupervisor.protocol.buffer.BufferWriter;
 
 import java.util.Objects;
 
-public class StringArgument extends Argument {
+public class DataArgument extends Argument {
 	private boolean matching = false;
 
-	public StringArgument(String value) {
+	public DataArgument(String value) {
 		this.value = value;
 	}
 
-	public StringArgument() {
+	public DataArgument() {
 		this(null);
 	}
 

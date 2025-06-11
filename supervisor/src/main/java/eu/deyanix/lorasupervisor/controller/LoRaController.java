@@ -1,5 +1,6 @@
 package eu.deyanix.lorasupervisor.controller;
 
+import eu.deyanix.lorasupervisor.protocol.LoRaNode;
 import eu.deyanix.lorasupervisor.protocol.LoRaNodeProvider;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -23,7 +24,7 @@ public class LoRaController {
 	public List<String> getNodes() {
 		return nodeProvider.getNodes()
 				.stream()
-				.map(n -> n.getPort().getSerialPort().getSystemPortName())
+				.map(LoRaNode::getId)
 				.collect(Collectors.toList());
 	}
 

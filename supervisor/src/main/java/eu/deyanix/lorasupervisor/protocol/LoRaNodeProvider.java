@@ -3,10 +3,12 @@ package eu.deyanix.lorasupervisor.protocol;
 import com.fazecast.jSerialComm.SerialPort;
 import com.fazecast.jSerialComm.SerialPortDataListener;
 import com.fazecast.jSerialComm.SerialPortEvent;
+import eu.deyanix.lorasupervisor.protocol.command.Argument;
 import eu.deyanix.lorasupervisor.protocol.command.Command;
-import eu.deyanix.lorasupervisor.protocol.command.ExtensibleStringArgument;
-import eu.deyanix.lorasupervisor.protocol.command.StringArgument;
+import eu.deyanix.lorasupervisor.protocol.command.CommandFactory;
+import eu.deyanix.lorasupervisor.protocol.command.DataArgument;
 import eu.deyanix.lorasupervisor.protocol.connection.LoRaCommandConnection;
+import eu.deyanix.lorasupervisor.protocol.port.LoRaPort;
 import jakarta.annotation.PostConstruct;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
@@ -42,22 +44,28 @@ public class LoRaNodeProvider {
 		for (SerialPort port : ports) {
 			LoRaPort nodePort = LoRaPort.openNode(port);
 			if (nodePort != null) {
+				LoRaCommandConnection nodeIdConn = nodePort.sendGetter("ID");
+				LoRaCommandConnection nodeFrequencyConn = nodePort.sendGetter("FRQ");
 
-				Command txCommand = new Command("FRQ")
-						.append(new StringArgument().setInteger(868000000));
-				Command rxCommand = new Command("FRQ")
-						.append(new StringArgument());
-				LoRaCommandConnection con = new LoRaCommandConnection(txCommand, rxCommand);
-				nodePort.attachConnection(con);
+				String nodeId = nodeIdConn.get(500)
+						.map(con -> con.getArgument(0))
+						.flatMap(Argument::getString)
+						.orElse(null);
+				System.out.println("ID = " + nodeId);
 
-				System.out.println(con.get(500)
-						.flatMap(cmd -> cmd.getArgument(0).getString())
-						.orElse(null));
+				Integer nodeFrequency = nodeFrequencyConn.get(500)
+						.map(con -> con.getArgument(0))
+						.flatMap(Argument::getInteger)
+						.orElse(null);
+				System.out.println("Frequency = " + nodeFrequency);
 
-				LoRaNode node = new LoRaNode(port.getSystemPortName(), nodePort);
-				port.addDataListener(new SerialPortDisconnectListener());
 
-				nodes.add(node);
+				if (nodeId != null) {
+					LoRaNode node = new LoRaNode(nodeId, nodePort);
+					port.addDataListener(new SerialPortDisconnectListener());
+
+					nodes.add(node);
+				}
 			}
 		}
 

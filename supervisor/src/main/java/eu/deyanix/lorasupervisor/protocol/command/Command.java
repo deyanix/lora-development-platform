@@ -2,7 +2,6 @@ package eu.deyanix.lorasupervisor.protocol.command;
 
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Iterator;
 import java.util.List;
 
 public class Command {
@@ -21,6 +20,11 @@ public class Command {
 
 	public Command append(Argument argument) {
 		this.arguments.add(argument);
+		return this;
+	}
+
+	public Command append(Argument... arguments) {
+		this.arguments.addAll(List.of(arguments));
 		return this;
 	}
 
