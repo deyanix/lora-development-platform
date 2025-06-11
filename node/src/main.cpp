@@ -76,7 +76,7 @@ void processTerminal() {
         } else if (reader.with("FRQ")) {
             if (reader.with('=')) {
                 long value = reader.untilEnd().toInt();
-                if (value >= 868000000 && value <= 870000000) {
+                if (value >= 864000000 && value <= 870000000) {
                     LoRaNode.Params.Frequency = (uint32_t)value;
                     Serial.println("FRQ=OK");
                 } else {
@@ -102,7 +102,7 @@ void processTerminal() {
         } else if (reader.with("SF")) {
             if (reader.with('=')) {
                 long value = reader.untilEnd().toInt();
-                if (value >= 7 && value <= 12) {
+                if (value >= 6 && value <= 12) {
                     LoRaNode.Params.SpreadingFactor = (uint32_t)value;
                     Serial.println("SF=OK");
                 } else {
