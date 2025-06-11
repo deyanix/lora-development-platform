@@ -1,19 +1,20 @@
 package eu.deyanix.lorasupervisor.protocol.port;
 
 import com.fazecast.jSerialComm.SerialPort;
-import eu.deyanix.lorasupervisor.protocol.LoRaConnection;
-import eu.deyanix.lorasupervisor.protocol.command.Argument;
+import eu.deyanix.lorasupervisor.protocol.connection.LoRaConnection;
 import eu.deyanix.lorasupervisor.protocol.command.Command;
 import eu.deyanix.lorasupervisor.protocol.command.CommandFactory;
 import eu.deyanix.lorasupervisor.protocol.command.DataArgument;
 import eu.deyanix.lorasupervisor.protocol.connection.LoRaCommandConnection;
+import eu.deyanix.lorasupervisor.protocol.connection.LoRaSenderConnection;
 
-import java.io.PrintStream;
-import java.sql.Connection;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.locks.Condition;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 
 public class LoRaPort {
 	public static LoRaPort openNode(SerialPort port) {
@@ -31,6 +32,8 @@ public class LoRaPort {
 	private final LoRaPortSender sender;
 	private final LoRaPortReceiver receiver;
 	private final List<LoRaConnection> connections = new ArrayList<>();
+	private final Lock connectionLock = new ReentrantLock();
+	private final Condition disconnect = connectionLock.newCondition();
 
 	public LoRaPort(SerialPort serialPort) {
 		this.serialPort = serialPort;
@@ -38,15 +41,18 @@ public class LoRaPort {
 		this.receiver = new LoRaPortReceiver(this);
 	}
 
-	public LoRaCommandConnection send(Command tx, Command rx) {
+	public Optional<Command> send(Command tx, Command rx) {
 		LoRaCommandConnection connection = new LoRaCommandConnection(tx, rx);
 		attachConnection(connection);
 
-		return connection;
+		Optional<Command> result = connection.get(2000);
+		detachConnection(connection);
+
+		return result;
 	}
 
-	public LoRaCommandConnection sendGetter(String name) {
-		return send(CommandFactory.createGetter(name), CommandFactory.createSetter(name, new DataArgument()));
+	public LoRaCommander createCommander() {
+		return new LoRaCommander(this);
 	}
 
 	public SerialPort getSerialPort() {
@@ -66,11 +72,34 @@ public class LoRaPort {
 	}
 
 	protected void attachConnection(LoRaConnection connection) {
-		connections.add(connection);
-		connection.onInit(this); // TODO: Stack!
+		connectionLock.lock();
+		try {
+			if (connection instanceof LoRaSenderConnection senderConnection) {
+				while (connections.stream().anyMatch(LoRaSenderConnection.class::isInstance)) {
+					disconnect.await();
+				}
+
+				connections.add(connection);
+				senderConnection.onSend(this);
+			} else {
+				connections.add(connection);
+			}
+		} catch (InterruptedException e) {
+			e.printStackTrace(); // TODO: Helper
+		} finally {
+			connectionLock.unlock();
+		}
 	}
 
 	protected void detachConnection(LoRaConnection connection) {
-		connections.remove(connection);
+		connectionLock.lock();
+		try {
+			if (connections.remove(connection)) {
+				connection.onClose(this);
+				disconnect.signal();
+			}
+		} finally {
+			connectionLock.unlock();
+		}
 	}
 }

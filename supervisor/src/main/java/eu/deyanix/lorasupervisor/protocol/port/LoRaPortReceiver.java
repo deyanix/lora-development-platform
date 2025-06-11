@@ -3,7 +3,7 @@ package eu.deyanix.lorasupervisor.protocol.port;
 import com.fazecast.jSerialComm.SerialPort;
 import com.fazecast.jSerialComm.SerialPortDataListener;
 import com.fazecast.jSerialComm.SerialPortEvent;
-import eu.deyanix.lorasupervisor.protocol.LoRaConnection;
+import eu.deyanix.lorasupervisor.protocol.connection.LoRaConnection;
 import eu.deyanix.lorasupervisor.protocol.buffer.BufferWriter;
 
 import java.io.IOException;
@@ -30,20 +30,18 @@ public class LoRaPortReceiver {
 			handleTimeout();
 
 			LoRaConnection connection = getCapturingConnection();
-
 			InputStream in = port.getSerialPort().getInputStream();
 			while (in.available() > 0) {
 				char c = (char) in.read();
 
-				if (connection != null && connection.isCapturing()) {
+				if (connection != null) {
 					buffer.append(c);
 
 					int requestedData = connection.getRequestedData();
-					if (requestedData <= buffer.length()) {
-						connection.onReceiveData(port, buffer.getData().substring(0, requestedData));
-					}
+					if (requestedData > buffer.length())
+						continue;
 
-					if (!connection.isCapturing()) {
+					if (!provideData(connection, buffer.getData().substring(0, requestedData))) {
 						connection = null;
 						buffer.clear(requestedData);
 					}
@@ -52,32 +50,24 @@ public class LoRaPortReceiver {
 						continue;
 
 					connection = broadcastData(buffer.getData());
-
-					if (connection != null && connection.isCapturing()) {
+					if (connection != null)
 						buffer.append(c);
-					} else {
-						buffer.clearAll();
-					}
 				} else {
 					buffer.append(c);
 				}
 			}
 
-			setTimeout(Duration.ofMillis(5)); // TODO: Hardcoded timeout
+			setTimeout(Duration.ofMillis(100)); // TODO: Hardcoded timeout
 		} finally {
 			lock.unlock();
 		}
 	}
 
 	protected void handleTimeout() {
-		LoRaConnection connection = getCapturingConnection();
+		if (!isExpired())
+			return;
 
-		if (isExpired()) {
-			buffer.clearAll();
-			if (connection != null) {
-				connection.onTimeout(port);
-			}
-		}
+		buffer.clearAll();
 	}
 
 	protected LoRaConnection getCapturingConnection() {
@@ -89,12 +79,27 @@ public class LoRaPortReceiver {
 
 	protected LoRaConnection broadcastData(String data) {
 		for (LoRaConnection connection : port.getConnections()) {
-			connection.onReceiveData(port, data);
-			if (connection.isCapturing()) {
+			if (provideData(connection, data)) {
 				return connection;
 			}
 		}
 		return null;
+	}
+
+	protected boolean provideData(LoRaConnection connection, String data) {
+		boolean received = connection.onReceive(port, data);
+		if (!received)
+			return false;
+
+		if (!connection.isCapturing()) {
+			if (data.length() == buffer.length()) {
+				buffer.clearAll();
+			} else {
+				buffer.clear(data.length());
+			}
+			return false;
+		}
+		return true;
 	}
 
 	protected boolean isExpired() {

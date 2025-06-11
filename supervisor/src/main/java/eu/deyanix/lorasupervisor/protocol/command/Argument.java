@@ -37,6 +37,23 @@ public abstract class Argument {
 		return this;
 	}
 
+	public Optional<Long> getLong() {
+		try {
+			return Optional.of(Long.parseLong(value));
+		} catch (NumberFormatException e) {
+			return Optional.empty();
+		}
+	}
+
+	public Argument setLong(Long value) {
+		if (value != null) {
+			this.value = value.toString();
+		} else {
+			this.value = null;
+		}
+		return this;
+	}
+
 	public Optional<Boolean> getBoolean() {
 		if ("1".equals(value)) {
 			return Optional.of(true);

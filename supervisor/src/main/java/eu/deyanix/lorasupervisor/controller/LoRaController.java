@@ -28,6 +28,15 @@ public class LoRaController {
 				.collect(Collectors.toList());
 	}
 
+	@GetMapping("/nodes/{id}")
+	public long getFrequency(@PathVariable String id) {
+		LoRaNode node = nodeProvider.getNode(id).orElseThrow();
+
+		return node.getPort()
+				.createCommander()
+				.getFrequency();
+	}
+
 //	@PostMapping("/nodes/detect")
 //	public void detect() {
 //		nodeProvider.detect();

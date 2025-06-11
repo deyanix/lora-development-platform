@@ -3,11 +3,7 @@ package eu.deyanix.lorasupervisor.protocol;
 import com.fazecast.jSerialComm.SerialPort;
 import com.fazecast.jSerialComm.SerialPortDataListener;
 import com.fazecast.jSerialComm.SerialPortEvent;
-import eu.deyanix.lorasupervisor.protocol.command.Argument;
-import eu.deyanix.lorasupervisor.protocol.command.Command;
-import eu.deyanix.lorasupervisor.protocol.command.CommandFactory;
-import eu.deyanix.lorasupervisor.protocol.command.DataArgument;
-import eu.deyanix.lorasupervisor.protocol.connection.LoRaCommandConnection;
+import com.fazecast.jSerialComm.SerialPortMessageListener;
 import eu.deyanix.lorasupervisor.protocol.port.LoRaPort;
 import jakarta.annotation.PostConstruct;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -44,27 +40,14 @@ public class LoRaNodeProvider {
 		for (SerialPort port : ports) {
 			LoRaPort nodePort = LoRaPort.openNode(port);
 			if (nodePort != null) {
-				LoRaCommandConnection nodeIdConn = nodePort.sendGetter("ID");
-				LoRaCommandConnection nodeFrequencyConn = nodePort.sendGetter("FRQ");
+				try {
+					String nodeId = nodePort.createCommander().getId();
 
-				String nodeId = nodeIdConn.get(500)
-						.map(con -> con.getArgument(0))
-						.flatMap(Argument::getString)
-						.orElse(null);
-				System.out.println("ID = " + nodeId);
-
-				Integer nodeFrequency = nodeFrequencyConn.get(500)
-						.map(con -> con.getArgument(0))
-						.flatMap(Argument::getInteger)
-						.orElse(null);
-				System.out.println("Frequency = " + nodeFrequency);
-
-
-				if (nodeId != null) {
 					LoRaNode node = new LoRaNode(nodeId, nodePort);
-					port.addDataListener(new SerialPortDisconnectListener());
-
+					port.addDataListener(new LoRaPortDisconnectListener());
 					nodes.add(node);
+				} catch (Exception ex) {
+					ex.printStackTrace();
 				}
 			}
 		}
@@ -82,7 +65,7 @@ public class LoRaNodeProvider {
 		detect();
 	}
 
-	protected static class SerialPortDisconnectListener implements SerialPortDataListener {
+	protected static class LoRaPortDisconnectListener implements SerialPortDataListener {
 		@Override
 		public int getListeningEvents() {
 			return SerialPort.LISTENING_EVENT_PORT_DISCONNECTED;
