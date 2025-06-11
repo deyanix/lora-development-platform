@@ -7,6 +7,7 @@
 #include "validation.h"
 
 #define MAX_MSG_BUFFER_LENGTH 128
+#define COLOR_FIND 0x200050
 
 typedef struct {
     uint32_t Frequency;
@@ -60,15 +61,17 @@ public:
     unsigned long lastSendTime; // Time when last msg has been sent using auto mode
     unsigned long msgDelay;     // Amount of time to wait before sending next msg
 
-    bool permanentDelta = false;
+    bool permanentDelta;
     unsigned long minDelta;
     unsigned long maxDelta;
-    unsigned long firstMsgDelay; // Amount of time to wait before sending next msg
+    unsigned long firstMsgDelay;
     int msgCounter;
 
     unsigned long ackLifetimeInit;
     unsigned long ackLifetime;
     bool ackReq = false;
+
+    bool ledState = false;
 
     uint64_t chipID;
 
@@ -86,6 +89,8 @@ public:
     void OnRxError();
     void OnTxDone();
     void OnTxTimeout();
+
+    void SwitchLed(bool state);
 };
 
 extern LoRaNodeClass LoRaNode;

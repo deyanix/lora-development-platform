@@ -99,6 +99,7 @@ def read_from_port(port, win):
 
 def initialize_port(port, idx, args, freq_map):
     commands = [
+        '+LED=1\n'
         '+ID?\n',
         f'+FRQ={freq_map.get(idx, "868000000")}\n',
         '+BW=3\n',
@@ -125,10 +126,11 @@ def initialize_port(port, idx, args, freq_map):
         '+TXTO?\n',
         '+MODE?\n',
         '+PUSH\n',
+        '+LED=0\n'
         '+TOA=4?\n',
         f'+INV={args.interval}\n',
         f'+RTO={args.mindelta},{args.maxdelta}\n',
-        '+ACKLT=4\n',
+        '+ACKLT=3\n',
         '+ACKRQ=1\n',
         '+AUTO=RANDOM\n',
         '+INV?\n',

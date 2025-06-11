@@ -17,6 +17,8 @@ void LoRaNodeClass::Init() {
 
     this->ackLifetime = 0;
     this->ackReq = true;
+
+    this->permanentDelta = false;
 }
 
 void LoRaNodeClass::Configure() {
@@ -152,30 +154,26 @@ void LoRaNodeClass::OnRxDone(uint8_t *payload, uint16_t size, int16_t rssi, int8
     this->rxLedOnTime = millis();
     this->rxLedOn = true;
 
-    if (this->Auto == RANDOM)
-    {
-        if (this->ackReq)
+    if (this->Auto == RANDOM && this->ackReq) {
+        if (this->Mode == RX)
         {
-            if (this->Mode == RX)
+            if (validateStandardMessage(payload))
             {
-                if (validateStandardMessage(payload))
-                {
-                    char message[128];
-                    snprintf(message, sizeof(message), "%s-%s", "ACK", (char*)payload);
-                    if (strlen(message) >= 2 && message[strlen(message) - 2] == '-' && message[strlen(message) - 1] == '?') {
-                        message[strlen(message) - 2] = '\0';
-                    }
-                    this->Send((uint8_t*)message, strlen(message));
+                char message[128];
+                snprintf(message, sizeof(message), "%s-%s", "ACK", (char*)payload);
+                if (strlen(message) >= 2 && message[strlen(message) - 2] == '-' && message[strlen(message) - 1] == '?') {
+                    message[strlen(message) - 2] = '\0';
                 }
+                this->Send((uint8_t*)message, strlen(message));
             }
-            else if (this->Mode == TX)
+        }
+        else if (this->Mode == TX)
+        {
+            uint64_t chipID = getID();
+            if (validateAckMessage(payload, chipID))
             {
-                uint64_t chipID = getID();
-                if (validateAckMessage(payload, chipID))
-                {
-                    this->permanentDelta = true;
-                    this->ackLifetime = this->ackLifetimeInit;
-                }
+                this->permanentDelta = true;
+                this->ackLifetime = this->ackLifetimeInit;
             }
         }
     }
@@ -201,4 +199,13 @@ void LoRaNodeClass::OnTxDone() {
 void LoRaNodeClass::OnTxTimeout() {
     memset(this->lastSentData, 0, MAX_MSG_BUFFER_LENGTH);
     this->Stop();
+}
+
+void LoRaNodeClass::SwitchLed(bool state) {
+    if (state) {
+        turnOnRGB(COLOR_FIND, 0);
+    }
+    else    {
+        turnOnRGB(0x000000, 0);
+    }
 }

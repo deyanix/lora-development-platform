@@ -370,6 +370,20 @@ void processTerminal() {
                 Serial.print("ACKRQ=");
                 Serial.println(LoRaNode.ackReq ? 1 : 0);
             }
+        } else if (reader.with("LED")) {
+            if (reader.with('=')) {
+                long value = reader.untilEnd().toInt();
+                if (value >= 0 && value <= 1) {
+                    LoRaNode.ledState = (bool)value;
+                    LoRaNode.SwitchLed(LoRaNode.ledState);
+                    Serial.println("LED=OK");
+                } else {
+                    Serial.println("LED=ERR");
+                }
+            } else if (reader.with('?')) {
+                Serial.print("LED=");
+                Serial.println(LoRaNode.ledState ? 1 : 0);
+            }
         } else
         {
             Serial.println("ERR");
