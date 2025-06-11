@@ -21,7 +21,7 @@ COLOR_YELLOW_ON_BLACK = 5 # For status panel text
 # Key: port_path, Value: {'tx': 0, 'rx': 0}
 message_counts = {}
 counts_lock = threading.Lock()
-
+print_lock = threading.Lock()
 def find_serial_ports(vendor_id, product_id):
     found_ports = []
     for port in serial.tools.list_ports.comports():
@@ -71,27 +71,29 @@ def read_from_port(port, win):
                         color_attr = curses.color_pair(COLOR_WHITE_ON_BLACK)
 
 
-
-                    win.clrtoeol() # Clear from current cursor position to end of line
-                    win.addstr(display_line_to_print, color_attr)
-                    win.addstr("\n") # Move cursor to next line, column 0, potentially scrolling
+                    with print_lock:
+                        win.clrtoeol() # Clear from current cursor position to end of line
+                        win.addstr(display_line_to_print, color_attr)
+                        win.addstr("\n") # Move cursor to next line, column 0, potentially scrolling
 
                         #win.box()
-                    win.refresh()
+                        win.refresh()
 
             except serial.SerialException as e:
                 error_message = f"Serial Error: {e}"[:inner_width].ljust(inner_width)
                 current_y, current_x = win.getyx()
-                win.addstr(height - 2, 1, error_message, curses.color_pair(COLOR_RED_ON_BLACK))
-                win.refresh()
-                win.move(current_y, current_x)
+                with print_lock:
+                    win.addstr(height - 2, 1, error_message, curses.color_pair(COLOR_RED_ON_BLACK))
+                    win.refresh()
+                    win.move(current_y, current_x)
                 break
             except Exception as e:
                 error_message = f"General Error: {e}"[:inner_width].ljust(inner_width)
                 current_y, current_x = win.getyx()
-                win.addstr(height - 2, 1, error_message, curses.color_pair(COLOR_RED_ON_BLACK))
-                win.refresh()
-                win.move(current_y, current_x)
+                with print_lock:
+                    win.addstr(height - 2, 1, error_message, curses.color_pair(COLOR_RED_ON_BLACK))
+                    win.refresh()
+                    win.move(current_y, current_x)
         else:
             break
 
@@ -124,18 +126,20 @@ def initialize_port(port, idx, args, freq_map):
         '+MODE?\n',
         '+PUSH\n',
         '+TOA=4?\n',
-        f'+INTERVAL={args.interval}\n',
-        f'+MINDELTA={args.mindelta}\n',
-        f'+MAXDELTA={args.maxdelta}\n',
+        f'+INV={args.interval}\n',
+        f'+RTO={args.mindelta},{args.maxdelta}\n',
+        '+ACKLT=4\n',
+        '+ACKRQ=1\n',
         '+AUTO=RANDOM\n',
-        '+INTERVAL?\n',
-        '+MINDELTA?\n',
-        '+MAXDELTA?\n'
+        '+INV?\n',
+        '+RTO?\n',
+        '+ACKRQ?\n',
+        '+ACKLT?\n',
         '+AUTO?\n'
     ]
     for cmd in commands:
         port.write(cmd.encode('utf-8'))
-        time.sleep(0.15)
+        time.sleep(0.2)
 
 # ---
 ## Status Panel Update Function
@@ -144,10 +148,12 @@ def update_status_panel(stdscr, status_win, port_paths):
 
     # Clear the status window
     for i in range(1, status_height - 1):
-        status_win.addstr(i, 1, ' ' * (status_width - 2))
+        with print_lock:
+            status_win.addstr(i, 1, ' ' * (status_width - 2))
 
-    status_win.box() # Redraw the border
-    status_win.addstr(0, (status_width - len(" Message Counts ")) // 2, " Message Counts ", curses.A_BOLD | curses.color_pair(COLOR_YELLOW_ON_BLACK))
+    with print_lock:
+        status_win.box() # Redraw the border
+        status_win.addstr(0, (status_width - len(" Message Counts ")) // 2, " Message Counts ", curses.A_BOLD | curses.color_pair(COLOR_YELLOW_ON_BLACK))
 
     y_offset = 1
     with counts_lock:
@@ -161,13 +167,15 @@ def update_status_panel(stdscr, status_win, port_paths):
                 display_text = display_text[:status_width - 2]
 
                 if y_offset < status_height - 1: # Stay within inner bounds
-                    status_win.addstr(y_offset, 1, display_text, curses.color_pair(COLOR_YELLOW_ON_BLACK))
+                    with print_lock:
+                        status_win.addstr(y_offset, 1, display_text, curses.color_pair(COLOR_YELLOW_ON_BLACK))
                     y_offset += 1
 
             if y_offset >= status_height - 1: # Prevent writing outside the window
                 break # Stop if we run out of lines in the status window
 
-    status_win.refresh()
+    with print_lock:
+        status_win.refresh()
 
 # ---
 ## Main Curses Application
