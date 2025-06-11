@@ -130,8 +130,8 @@ def initialize_port(port, idx, args, freq_map):
         '+TOA=4?\n',
         f'+INV={args.interval}\n',
         f'+RTO={args.mindelta},{args.maxdelta}\n',
-        '+ACKLT=3\n',
-        '+ACKRQ=1\n',
+        f'+ACKLT={args.ack_lifetime}\n',
+        f'+ACKRQ={1 if args.ack_required else 0}\n',
         '+AUTO=RANDOM\n',
         '+INV?\n',
         '+RTO?\n',
@@ -281,8 +281,8 @@ def curses_main(stdscr, args, freq_map):
 
     time.sleep(1)
     for idx, port in enumerate(serial_ports):
-        #threading.Thread(target=initialize_port, args=(port, idx), daemon=True).start()
-        initialize_port(port, idx, args, freq_map)
+        threading.Thread(target=initialize_port, args=(port, idx, args, freq_map), daemon=True).start()
+        #initialize_port(port, idx, args, freq_map)
 
     try:
         while True:
@@ -305,6 +305,8 @@ if __name__ == "__main__":
     parser.add_argument("--interval", type=int, default=30000, help="Set +INTERVAL value (ms)")
     parser.add_argument("--mindelta", type=int, default=0, help="Set +MINDELTA value (ms)")
     parser.add_argument("--maxdelta", type=int, default=30000, help="Set +MAXDELTA value (ms)")
+    parser.add_argument("--ack-required", type=bool, default=True, help="Set +ACKRQ value (true/false)")
+    parser.add_argument("--ack-lifetime", type=int, default=5, help="Set +ACKLT value")
     args = parser.parse_args()
 
     freq_map = {}
