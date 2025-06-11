@@ -76,10 +76,6 @@ public class LoRaNodeProvider {
 
 	}
 
-	public void removeClosed() {
-		nodes.removeIf(n -> !n.getPort().getSerialPort().isOpen());
-	}
-
 	@PostConstruct
 	protected void init() {
 		detect();

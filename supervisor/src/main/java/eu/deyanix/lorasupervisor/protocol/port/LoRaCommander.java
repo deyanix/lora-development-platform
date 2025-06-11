@@ -10,7 +10,6 @@ import eu.deyanix.lorasupervisor.protocol.config.LoRaConfiguration;
 import eu.deyanix.lorasupervisor.protocol.config.LoRaMode;
 
 import java.util.List;
-import java.util.Optional;
 import java.util.stream.IntStream;
 
 public class LoRaCommander {
@@ -75,16 +74,31 @@ public class LoRaCommander {
 				.orElseThrow();
 	}
 
+	public void setBandwidth(LoRaBandwidth value) {
+		sendDataSetter("BW",
+				new DataArgument().setInteger(value.getValue()));
+	}
+
 	public int getSpreadingFactor() {
 		return sendDataGetter("SF")
 				.getInteger()
 				.orElseThrow();
 	}
 
+	public void setSpreadingFactor(int value) {
+		sendDataSetter("SF",
+				new DataArgument().setInteger(value));
+	}
+
 	public int getPower() {
 		return sendDataGetter("PWR")
 				.getInteger()
 				.orElseThrow();
+	}
+
+	public void setPower(int value) {
+		sendDataSetter("PWR",
+				new DataArgument().setInteger(value));
 	}
 
 	public LoRaCodingRate getCodingRate() {
@@ -94,10 +108,20 @@ public class LoRaCommander {
 				.orElseThrow();
 	}
 
+	public void setCodingRate(LoRaCodingRate value) {
+		sendDataSetter("CRT",
+				new DataArgument().setInteger(value.getValue()));
+	}
+
 	public Integer getPreambleLength() {
 		return sendDataGetter("PRLEN")
 				.getInteger()
 				.orElseThrow();
+	}
+
+	public void setPreambleLength(int value) {
+		sendDataSetter("PRLEN",
+				new DataArgument().setInteger(value));
 	}
 
 	public Integer getPayloadLength() {
@@ -106,10 +130,20 @@ public class LoRaCommander {
 				.orElseThrow();
 	}
 
+	public void setPayloadLength(int value) {
+		sendDataSetter("PYLEN",
+				new DataArgument().setInteger(value));
+	}
+
 	public boolean isEnabledCrc() {
 		return sendDataGetter("CRC")
 				.getBoolean()
 				.orElseThrow();
+	}
+
+	public void setEnabledCrc(boolean value) {
+		sendDataSetter("CRC",
+				new DataArgument().setBoolean(value));
 	}
 
 	public boolean isIqInverted() {
@@ -118,16 +152,31 @@ public class LoRaCommander {
 				.orElseThrow();
 	}
 
+	public void setIqInverted(boolean value) {
+		sendDataSetter("IIQ",
+				new DataArgument().setBoolean(value));
+	}
+
 	public int getRxSymbolTimeout() {
 		return sendDataGetter("STO")
 				.getInteger()
 				.orElseThrow();
 	}
 
+	public void setRxSymbolTimeout(int value) {
+		sendDataSetter("STO",
+				new DataArgument().setInteger(value));
+	}
+
 	public int getTxTimeout() {
 		return sendDataGetter("TXTO")
 				.getInteger()
 				.orElseThrow();
+	}
+
+	public void setTxTimeout(int value) {
+		sendDataSetter("TXTO",
+				new DataArgument().setInteger(value));
 	}
 
 	public LoRaMode getMode() {
@@ -137,6 +186,11 @@ public class LoRaCommander {
 				.orElseThrow();
 	}
 
+	public void setMode(LoRaMode value) {
+		sendDataSetter("MODE",
+				new DataArgument().setString(value.name()));
+	}
+
 	public LoRaConfiguration getConfiguration() {
 		Command tx = CommandFactory.createGetter("RTO");
 		Command rx = CommandFactory.createSetter("RTO", new DataArgument(), new DataArgument());
@@ -144,13 +198,12 @@ public class LoRaCommander {
 		Integer minDelta = cmd.getArgument(0).getInteger().orElseThrow();
 		Integer maxDelta = cmd.getArgument(1).getInteger().orElseThrow();
 
-
 		return new LoRaConfiguration()
 				.setMode(getMode())
 				.setFrequency(getFrequency())
 				.setBandwidth(getBandwidth())
 				.setPower(getPower())
-				.setSpreadingFactory(getSpreadingFactor())
+				.setSpreadingFactor(getSpreadingFactor())
 				.setCodingRate(getCodingRate())
 				.setEnableCrc(isEnabledCrc())
 				.setIqInverted(isIqInverted())
@@ -160,6 +213,44 @@ public class LoRaCommander {
 				.setRxSymbolTimeout(getRxSymbolTimeout())
 				.setMinDelta(minDelta)
 				.setMaxDelta(maxDelta);
+	}
+
+	public void setConfiguration(LoRaConfiguration configuration) {
+		setMode(configuration.getMode());
+		setFrequency(configuration.getFrequency());
+		setBandwidth(configuration.getBandwidth());
+		setPower(configuration.getPower());
+		setSpreadingFactor(configuration.getSpreadingFactor());
+		setCodingRate(configuration.getCodingRate());
+		setEnabledCrc(configuration.isEnableCrc());
+		setIqInverted(configuration.isIqInverted());
+		setPreambleLength(configuration.getPreambleLength());
+		setPayloadLength(configuration.getPayloadLength());
+		setTxTimeout(configuration.getTxTimeout());
+		setRxSymbolTimeout(configuration.getRxSymbolTimeout());
+	}
+
+	public void setLed(boolean value) {
+		sendDataSetter("LED",
+				new DataArgument().setBoolean(value));
+	}
+
+	public boolean isLed() {
+		return sendDataGetter("LED")
+				.getBoolean()
+				.orElseThrow();
+	}
+
+	public void transmit(String data) {
+		Command tx = CommandFactory.createSetter("TX",
+				new DataArgument().setInteger(data.length()),
+				new DataArgument().setString(data));
+
+		Command rx = CommandFactory.createSetter("TX",
+				new DataArgument().setString("OK"),
+				new DataArgument().setInteger(data.length()));
+
+		port.send(tx, rx);
 	}
 
 	public LoRaPort getPort() {

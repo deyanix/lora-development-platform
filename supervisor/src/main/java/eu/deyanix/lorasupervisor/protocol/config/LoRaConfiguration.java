@@ -19,7 +19,7 @@ public class LoRaConfiguration {
 	private int power;
 	private LoRaBandwidth bandwidth;
 	private LoRaCodingRate codingRate;
-	private int spreadingFactory;
+	private int spreadingFactor;
 	private int payloadLength;
 	private int preambleLength;
 	private boolean enableCrc;
@@ -74,12 +74,12 @@ public class LoRaConfiguration {
 		return this;
 	}
 
-	public int getSpreadingFactory() {
-		return spreadingFactory;
+	public int getSpreadingFactor() {
+		return spreadingFactor;
 	}
 
-	public LoRaConfiguration setSpreadingFactory(int spreadingFactory) {
-		this.spreadingFactory = spreadingFactory;
+	public LoRaConfiguration setSpreadingFactor(int spreadingFactor) {
+		this.spreadingFactor = spreadingFactor;
 		return this;
 	}
 
