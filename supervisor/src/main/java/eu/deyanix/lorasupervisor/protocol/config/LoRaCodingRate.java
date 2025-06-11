@@ -6,6 +6,15 @@ public enum LoRaCodingRate {
 	RATE_4_7(4, 7, 3),
 	RATE_4_8(4, 8, 4);
 
+	public static LoRaCodingRate valueOf(int value) {
+		for (LoRaCodingRate val : values()) {
+			if (val.getValue() == value) {
+				return val;
+			}
+		}
+		return null;
+	}
+
 	private final int informationBits;
 	private final int bits;
 	private final int value;

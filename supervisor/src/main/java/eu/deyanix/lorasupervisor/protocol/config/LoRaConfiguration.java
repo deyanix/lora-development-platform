@@ -23,9 +23,11 @@ public class LoRaConfiguration {
 	private int payloadLength;
 	private int preambleLength;
 	private boolean enableCrc;
-	private boolean enableIqInverted;
+	private boolean iqInverted;
 	private int txTimeout;
 	private int rxSymbolTimeout;
+	private int minDelta;
+	private int maxDelta;
 
 	public LoRaMode getMode() {
 		return mode;
@@ -108,12 +110,12 @@ public class LoRaConfiguration {
 		return this;
 	}
 
-	public boolean isEnableIqInverted() {
-		return enableIqInverted;
+	public boolean isIqInverted() {
+		return iqInverted;
 	}
 
-	public LoRaConfiguration setEnableIqInverted(boolean enableIqInverted) {
-		this.enableIqInverted = enableIqInverted;
+	public LoRaConfiguration setIqInverted(boolean enableIqInverted) {
+		this.iqInverted = enableIqInverted;
 		return this;
 	}
 
@@ -132,6 +134,24 @@ public class LoRaConfiguration {
 
 	public LoRaConfiguration setRxSymbolTimeout(int rxSymbolTimeout) {
 		this.rxSymbolTimeout = rxSymbolTimeout;
+		return this;
+	}
+
+	public int getMinDelta() {
+		return minDelta;
+	}
+
+	public LoRaConfiguration setMinDelta(int minDelta) {
+		this.minDelta = minDelta;
+		return this;
+	}
+
+	public int getMaxDelta() {
+		return maxDelta;
+	}
+
+	public LoRaConfiguration setMaxDelta(int maxDelta) {
+		this.maxDelta = maxDelta;
 		return this;
 	}
 }

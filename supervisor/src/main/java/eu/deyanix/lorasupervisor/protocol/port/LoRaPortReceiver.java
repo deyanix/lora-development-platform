@@ -136,7 +136,7 @@ public class LoRaPortReceiver {
 			if (event.getEventType() == SerialPort.LISTENING_EVENT_DATA_AVAILABLE) {
 				try {
 					receive();
-				} catch (IOException e) {
+				} catch (Exception e) {
 					e.printStackTrace(); // TODO: Helper
 				}
 			}

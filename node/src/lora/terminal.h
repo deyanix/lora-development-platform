@@ -7,7 +7,7 @@
 #include "reader.h"
 
 #define LORA_TERMINAL_BUFFER_CAPACITY (256)
-#define LORA_TERMINAL_BUFFER_TIMEOUT (1000)
+#define LORA_TERMINAL_BUFFER_TIMEOUT (250)
 
 class LoRaTerminalClass {
     uint32_t lastActivity = 0;

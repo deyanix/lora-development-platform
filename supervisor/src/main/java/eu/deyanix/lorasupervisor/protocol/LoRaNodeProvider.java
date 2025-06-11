@@ -74,16 +74,14 @@ public class LoRaNodeProvider {
 			}
 		}
 
+	}
+
+	public void removeClosed() {
 		nodes.removeIf(n -> !n.getPort().getSerialPort().isOpen());
 	}
 
 	@PostConstruct
 	protected void init() {
-		detect();
-	}
-
-	@Scheduled(fixedDelay = 1, timeUnit = TimeUnit.SECONDS)
-	protected void scheduledDetect() {
 		detect();
 	}
 
@@ -98,6 +96,7 @@ public class LoRaNodeProvider {
 			SerialPort serialPort = event.getSerialPort();
 			if (event.getEventType() == SerialPort.LISTENING_EVENT_PORT_DISCONNECTED) {
 				serialPort.closePort();
+				System.out.println("DISCONNECTED PORT " + serialPort.getSystemPortName());
 			}
 		}
 	}

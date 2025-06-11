@@ -2,9 +2,12 @@ package eu.deyanix.lorasupervisor.controller;
 
 import eu.deyanix.lorasupervisor.protocol.LoRaNode;
 import eu.deyanix.lorasupervisor.protocol.LoRaNodeProvider;
+import eu.deyanix.lorasupervisor.protocol.config.LoRaConfiguration;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
@@ -28,18 +31,24 @@ public class LoRaController {
 	}
 
 	@GetMapping("/nodes/{id}")
-	public long getFrequency(@PathVariable String id) {
-		LoRaNode node = nodeProvider.getNode(id).orElseThrow();
+	public LoRaConfiguration getFrequency(@PathVariable String id) {
+		LoRaNode node = nodeProvider.getNode(id)
+				.orElseThrow();
 
 		return node.getPort()
 				.createCommander()
-				.getFrequency();
+				.getConfiguration();
 	}
 
-//	@PostMapping("/nodes/detect")
-//	public void detect() {
-//		nodeProvider.detect();
-//	}
+	@PostMapping("/nodes/detect")
+	public void detect() {
+		nodeProvider.detect();
+	}
+
+	@DeleteMapping("/nodes")
+	public void removeClosed() {
+		nodeProvider.removeClosed();
+	}
 
 //	@GetMapping("/nodes/{id}/buffer")
 //	public String getBuffer(@PathVariable String id) {
