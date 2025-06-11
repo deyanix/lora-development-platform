@@ -4,6 +4,7 @@ import eu.deyanix.lorasupervisor.protocol.command.Argument;
 import eu.deyanix.lorasupervisor.protocol.command.Command;
 import eu.deyanix.lorasupervisor.protocol.command.CommandFactory;
 import eu.deyanix.lorasupervisor.protocol.command.DataArgument;
+import eu.deyanix.lorasupervisor.protocol.command.ExtensibleStringArgument;
 import eu.deyanix.lorasupervisor.protocol.config.LoRaBandwidth;
 import eu.deyanix.lorasupervisor.protocol.config.LoRaCodingRate;
 import eu.deyanix.lorasupervisor.protocol.config.LoRaConfiguration;
@@ -192,11 +193,9 @@ public class LoRaCommander {
 	}
 
 	public LoRaConfiguration getConfiguration() {
-		Command tx = CommandFactory.createGetter("RTO");
-		Command rx = CommandFactory.createSetter("RTO", new DataArgument(), new DataArgument());
-		Command cmd = port.send(tx, rx, 3).orElseThrow();
-		Integer minDelta = cmd.getArgument(0).getInteger().orElseThrow();
-		Integer maxDelta = cmd.getArgument(1).getInteger().orElseThrow();
+		List<Argument> rtoArgs = sendDataGetter("RTO", 2);
+		Integer minDelta = rtoArgs.get(0).getInteger().orElseThrow();
+		Integer maxDelta = rtoArgs.get(1).getInteger().orElseThrow();
 
 		return new LoRaConfiguration()
 				.setMode(getMode())
@@ -243,8 +242,7 @@ public class LoRaCommander {
 
 	public void transmit(String data) {
 		Command tx = CommandFactory.createSetter("TX",
-				new DataArgument().setInteger(data.length()),
-				new DataArgument().setString(data));
+				new ExtensibleStringArgument().setString(data));
 
 		Command rx = CommandFactory.createSetter("TX",
 				new DataArgument().setString("OK"),
