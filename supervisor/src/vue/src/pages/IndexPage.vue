@@ -1,18 +1,19 @@
 <template>
   <q-page padding>
     <div>
-      Status połączenia: {{ isConnected ? 'Połączono' : 'Rozłączono' }}
+      Status połączenia:
+      <b :style="`color: ${isConnected ? 'green' : 'red'}`">
+        {{ isConnected ? 'Połączono' : 'Rozłączono' }}
+      </b>
     </div>
 
     <div class="console q-mt-md">
-      <q-scroll-area style="height: 200px; max-width: 100%;" >
-        <div v-if="messages.length === 0">Brak wiadomości.</div>
+      <q-scroll-area style="height: 200px; max-width: 100%">
         <div v-for="(msg, index) in messages" :key="index">
           {{ msg }}
         </div>
       </q-scroll-area>
     </div>
-
   </q-page>
 </template>
 
@@ -47,24 +48,24 @@ const initWebSocket = () => {
     client.brokerURL = brokerUrl;
   }
 
-  client.onConnect = (frame: any) => {
+  client.onConnect = (frame) => {
     console.log('Połączono z WebSocket!', frame);
     isConnected.value = true;
 
-    client.subscribe('/topic/receivedData', (message: any) => {
+    client.subscribe('/topic/receivedData', (message) => {
       const payload = JSON.parse(message.body);
       const msg = payload.message?.replace('\r', '\u240d').replace('\n', '\u2424');
       addMessage(`${payload.port} < ${msg}`);
     });
 
-    client.subscribe('/topic/sentData', (message: any) => {
+    client.subscribe('/topic/sentData', (message) => {
       const payload = JSON.parse(message.body);
       const msg = payload.message?.replace('\r', '\u240d').replace('\n', '\u2424');
       addMessage(`${payload.port} > ${msg}`);
     });
   };
 
-  client.onStompError = (frame: any) => {
+  client.onStompError = (frame) => {
     console.error('Błąd STOMP:', frame);
     isConnected.value = false;
   };
@@ -82,9 +83,9 @@ onMounted(() => {
   initWebSocket();
 });
 
-onBeforeUnmount(() => {
+onBeforeUnmount(async () => {
   if (stompClient.value) {
-    stompClient.value.deactivate();
+    await stompClient.value.deactivate();
     console.log('Klient STOMP zdezaktywowany.');
   }
 });

@@ -7,25 +7,16 @@ import java.util.List;
 public class Command {
 	private final String name;
 	private final boolean query;
-	private final List<Argument> arguments = new ArrayList<Argument>();
+	private final List<Argument> arguments;
 
-	public Command(String name, boolean query) {
+	public Command(String name, boolean query, Argument... arguments) {
 		this.name = name;
 		this.query = query;
+		this.arguments = List.of(arguments);
 	}
 
-	public Command(String name) {
-		this(name, false);
-	}
-
-	public Command append(Argument argument) {
-		this.arguments.add(argument);
-		return this;
-	}
-
-	public Command append(Argument... arguments) {
-		this.arguments.addAll(List.of(arguments));
-		return this;
+	public Command(String name, Argument... arguments) {
+		this(name, false, arguments);
 	}
 
 	public String getName() {
@@ -37,7 +28,7 @@ public class Command {
 	}
 
 	public List<Argument> getArguments() {
-		return Collections.unmodifiableList(arguments);
+		return arguments;
 	}
 
 	public Argument getArgument(int index) {

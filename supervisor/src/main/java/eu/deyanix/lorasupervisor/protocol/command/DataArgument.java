@@ -2,14 +2,20 @@ package eu.deyanix.lorasupervisor.protocol.command;
 
 import eu.deyanix.lorasupervisor.protocol.buffer.BufferReader;
 import eu.deyanix.lorasupervisor.protocol.buffer.BufferWriter;
+import eu.deyanix.lorasupervisor.protocol.port.LoRaPort;
 
 import java.util.Objects;
 
 public class DataArgument extends Argument {
 	private boolean matching = false;
 
-	public DataArgument(String value) {
+	public DataArgument(String value, boolean matching) {
 		this.value = value;
+		this.matching = matching;
+	}
+
+	public DataArgument(String value) {
+		this(value, true);
 	}
 
 	public DataArgument() {

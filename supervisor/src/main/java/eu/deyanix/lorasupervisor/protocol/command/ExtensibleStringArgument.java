@@ -6,8 +6,6 @@ import eu.deyanix.lorasupervisor.protocol.buffer.BufferWriter;
 import java.util.Optional;
 
 public class ExtensibleStringArgument extends Argument {
-	private String value = null;
-
 	public ExtensibleStringArgument() {
 	}
 
