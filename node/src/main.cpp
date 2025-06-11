@@ -278,13 +278,13 @@ void processTerminal() {
             if (reader.with('=')) {
                 if (reader.with("OFF")) {
                     LoRaNode.Auto = OFF;
-                    Serial.println("AUTO=OFF");
+                    Serial.println("AUTO=OK");
                 } else if (reader.with("RANDOM")) {
                     LoRaNode.Auto = RANDOM;
-                    Serial.println("AUTO=RANDOM");
+                    Serial.println("AUTO=OK");
                 } else if (reader.with("TURNBASED")) {
                     LoRaNode.Auto = TURNBASED;
-                    Serial.println("AUTO=TURNBASED");
+                    Serial.println("AUTO=OK");
                 } else {
                     Serial.println("AUTO=ERR");
                 }

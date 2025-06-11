@@ -28,6 +28,10 @@ public class LoRaConfiguration {
 	private int rxSymbolTimeout;
 	private int minDelta;
 	private int maxDelta;
+	private long interval;
+	private boolean ackRequired;
+	private int ackLifetime;
+	private LoRaAuto auto;
 
 	public LoRaMode getMode() {
 		return mode;
@@ -137,6 +141,15 @@ public class LoRaConfiguration {
 		return this;
 	}
 
+	public LoRaAuto getAuto() {
+		return auto;
+	}
+
+	public LoRaConfiguration setAuto(LoRaAuto auto) {
+		this.auto = auto;
+		return this;
+	}
+
 	public int getMinDelta() {
 		return minDelta;
 	}
@@ -152,6 +165,27 @@ public class LoRaConfiguration {
 
 	public LoRaConfiguration setMaxDelta(int maxDelta) {
 		this.maxDelta = maxDelta;
+		return this;
+	}
+
+	public boolean getAckRequired() {return ackRequired;}
+
+	public LoRaConfiguration setAckRequired(boolean ackRequired) {
+		this.ackRequired = ackRequired;
+		return this;
+	}
+
+	public int getAckLifetime() {return ackLifetime;}
+
+	public LoRaConfiguration setAckLifetime(int ackLifetime) {
+		this.ackLifetime = ackLifetime;
+		return this;
+	}
+
+	public long getInterval() {return interval;}
+
+	public LoRaConfiguration setInterval(long interval) {
+		this.interval = interval;
 		return this;
 	}
 }

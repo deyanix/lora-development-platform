@@ -9,6 +9,7 @@ import eu.deyanix.lorasupervisor.protocol.config.LoRaBandwidth;
 import eu.deyanix.lorasupervisor.protocol.config.LoRaCodingRate;
 import eu.deyanix.lorasupervisor.protocol.config.LoRaConfiguration;
 import eu.deyanix.lorasupervisor.protocol.config.LoRaMode;
+import eu.deyanix.lorasupervisor.protocol.config.LoRaAuto;
 
 import java.util.List;
 import java.util.stream.IntStream;
@@ -192,6 +193,52 @@ public class LoRaCommander {
 				new DataArgument().setString(value.name()));
 	}
 
+	public boolean getAckRequired() {
+		return sendDataGetter("ACKRQ")
+				.getBoolean()
+				.orElseThrow();
+	}
+
+	public void setAckRequired(boolean value) {
+		sendDataSetter("ACKRQ",
+				new DataArgument().setBoolean(value));
+	}
+
+	public int getAckLifetime() {
+		return sendDataGetter("ACKLT")
+				.getInteger()
+				.orElseThrow();
+	}
+
+	public void setAckLifetime(int value) {
+		sendDataSetter("ACKLT",
+				new DataArgument().setInteger(value));
+	}
+
+	public long getInterval() {
+		return sendDataGetter("INV")
+				.getLong()
+				.orElseThrow();
+	}
+
+	public void setInterval(long value) {
+		sendDataSetter("INV",
+				new DataArgument().setLong(value));
+	}
+
+	public LoRaAuto getAuto() {
+		return sendDataGetter("AUTO")
+				.getString()
+				.map(LoRaAuto::valueOf)
+				.orElseThrow();
+	}
+
+	public void setAuto(LoRaAuto value) {
+		sendDataSetter("AUTO",
+				new DataArgument().setString(value.name()));
+	}
+
+
 	public LoRaConfiguration getConfiguration() {
 		List<Argument> rtoArgs = sendDataGetter("RTO", 2);
 		Integer minDelta = rtoArgs.get(0).getInteger().orElseThrow();
@@ -211,7 +258,11 @@ public class LoRaCommander {
 				.setTxTimeout(getTxTimeout())
 				.setRxSymbolTimeout(getRxSymbolTimeout())
 				.setMinDelta(minDelta)
-				.setMaxDelta(maxDelta);
+				.setMaxDelta(maxDelta)
+				.setAckRequired(getAckRequired())
+				.setAckLifetime(getAckLifetime())
+				.setInterval(getInterval())
+				.setAuto(getAuto());
 	}
 
 	public void setConfiguration(LoRaConfiguration configuration) {
@@ -227,6 +278,10 @@ public class LoRaCommander {
 		setPayloadLength(configuration.getPayloadLength());
 		setTxTimeout(configuration.getTxTimeout());
 		setRxSymbolTimeout(configuration.getRxSymbolTimeout());
+		setAckRequired(configuration.getAckRequired());
+		setAckLifetime(configuration.getAckLifetime());
+		setInterval(configuration.getInterval());
+		setAuto(configuration.getAuto());
 	}
 
 	public void setLed(boolean value) {
