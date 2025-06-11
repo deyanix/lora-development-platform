@@ -4,11 +4,11 @@ import eu.deyanix.lorasupervisor.protocol.port.LoRaPort;
 
 public class LoRaNode {
 	private final String id;
-	private final LoRaPort io;
+	private final LoRaPort port;
 
-	public LoRaNode(String id, LoRaPort io) {
+	public LoRaNode(String id, LoRaPort port) {
 		this.id = id;
-		this.io = io;
+		this.port = port;
 	}
 
 	public String getId() {
@@ -16,6 +16,6 @@ public class LoRaNode {
 	}
 
 	public LoRaPort getPort() {
-		return io;
+		return port;
 	}
 }

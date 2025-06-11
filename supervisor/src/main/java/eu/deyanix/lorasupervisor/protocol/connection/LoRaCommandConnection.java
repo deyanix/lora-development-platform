@@ -1,7 +1,6 @@
 package eu.deyanix.lorasupervisor.protocol.connection;
 
 import eu.deyanix.lorasupervisor.protocol.port.LoRaPort;
-import eu.deyanix.lorasupervisor.protocol.LoRaConnection;
 import eu.deyanix.lorasupervisor.protocol.buffer.BufferReader;
 import eu.deyanix.lorasupervisor.protocol.buffer.BufferWriter;
 import eu.deyanix.lorasupervisor.protocol.command.Argument;
@@ -14,7 +13,7 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
-public class LoRaCommandConnection extends LoRaConnection {
+public class LoRaCommandConnection extends LoRaSenderConnection {
 	private final Command txCommand;
 	private final Command rxCommand;
 	private final CompletableFuture<Command> result = new CompletableFuture<>();
@@ -25,7 +24,7 @@ public class LoRaCommandConnection extends LoRaConnection {
 	}
 
 	@Override
-	public void onInit(LoRaPort port) {
+	public void onSend(LoRaPort port) {
 		if (txCommand == null) {
 			return;
 		}
@@ -52,7 +51,7 @@ public class LoRaCommandConnection extends LoRaConnection {
 	}
 
 	@Override
-	public boolean onReceiveData(LoRaPort port, String data) {
+	public boolean onReceive(LoRaPort port, String data) {
 		if (rxCommand == null) {
 			return false;
 		}
@@ -81,7 +80,7 @@ public class LoRaCommandConnection extends LoRaConnection {
 	}
 
 	@Override
-	public void onTimeout(LoRaPort port) {
+	public void onClose(LoRaPort port) {
 		requestedData = 0;
 	}
 
