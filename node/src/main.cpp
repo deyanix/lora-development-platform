@@ -305,46 +305,74 @@ void processTerminal() {
                     break;
                 }
             }
-        } else if (reader.with("INTERVAL")) {
+        } else if (reader.with("INV")) {
             if (reader.with('=')) {
                 long value = reader.untilEnd().toInt();
                 if (value >= 0 && value <= UINT32_MAX) {
                     LoRaNode.msgDelay = (uint32_t)value;
-                    Serial.println("INTERVAL=OK");
+                    Serial.println("INV=OK");
                 } else {
-                    Serial.println("INTERVAL=ERR");
+                    Serial.println("INV=ERR");
                 }
             } else if (reader.with('?')) {
-                Serial.print("INTERVAL=");
+                Serial.print("INV=");
                 Serial.println(LoRaNode.msgDelay);
             }
-        } else if (reader.with("MINDELTA")) {
-            if (reader.with('=')) {
-                long value = reader.untilEnd().toInt();
-                if (value >= 0 && value <= UINT32_MAX) {
-                    LoRaNode.minDelta = (uint32_t)value;
-                    Serial.println("MINDELTA=OK");
-                } else {
-                    Serial.println("MINDELTA=ERR");
-                }
-            } else if (reader.with('?')) {
-                Serial.print("MINDELTA=");
-                Serial.println(LoRaNode.minDelta);
-            }
-        }  else if (reader.with("MAXDELTA"))
+        } else if (reader.with("RTO"))
         {
             if (reader.with('=')) {
-                long value = reader.untilEnd().toInt();
-                if (value >= 0 && value <= UINT32_MAX) {
-                    LoRaNode.maxDelta = (uint32_t)value;
-                    Serial.println("MAXDELTA=OK");
+                String value = reader.untilEnd();
+                int commaIndex = value.indexOf(',');
+                if (commaIndex != -1) {
+                    long minDelta = value.substring(0, commaIndex).toInt();
+                    long maxDelta = value.substring(commaIndex + 1).toInt();
+                    if (minDelta >= 0 && minDelta <= UINT32_MAX && maxDelta >= 0 && maxDelta <= UINT32_MAX && minDelta <= maxDelta) {
+                        LoRaNode.minDelta = (uint32_t)minDelta;
+                        LoRaNode.maxDelta = (uint32_t)maxDelta;
+                        Serial.println("RTO=OK");
+                    } else {
+                        Serial.println("RTO=ERR");
+                    }
                 } else {
-                    Serial.println("MAXDELTA=ERR");
+                    Serial.println("RTO=ERR");
                 }
-            } else if (reader.with('?')) {
-                Serial.print("MAXDELTA=");
+            } else if (reader.with('?'))
+            {
+                Serial.print("RTO=");
+                Serial.print(LoRaNode.minDelta);
+                Serial.print(",");
                 Serial.println(LoRaNode.maxDelta);
             }
+        } else if (reader.with("ACKLT")) {
+            if (reader.with('=')) {
+                long value = reader.untilEnd().toInt();
+                if (value >= 0 && value <= UINT32_MAX) {
+                    LoRaNode.ackLifetimeInit = (uint32_t)value;
+                    LoRaNode.ackLifetime = (uint32_t)value;
+                    Serial.println("ACKLT=OK");
+                } else {
+                    Serial.println("ACKLT=ERR");
+                }
+            } else if (reader.with('?')) {
+                Serial.print("ACKLT=");
+                Serial.println(LoRaNode.ackLifetimeInit);
+            }
+        } else if (reader.with("ACKRQ")) {
+            if (reader.with('=')) {
+                long value = reader.untilEnd().toInt();
+                if (value >= 0 && value <= 1) {
+                    LoRaNode.ackReq = (bool)value;
+                    Serial.println("ACKRQ=OK");
+                } else {
+                    Serial.println("ACKRQ=ERR");
+                }
+            } else if (reader.with('?')) {
+                Serial.print("ACKRQ=");
+                Serial.println(LoRaNode.ackReq ? 1 : 0);
+            }
+        } else
+        {
+            Serial.println("ERR");
         }
         LoRaTerminal.clear();
     }

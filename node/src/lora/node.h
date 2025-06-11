@@ -66,7 +66,8 @@ public:
     unsigned long firstMsgDelay; // Amount of time to wait before sending next msg
     int msgCounter;
 
-    int ackLifetime;
+    unsigned long ackLifetimeInit;
+    unsigned long ackLifetime;
     bool ackReq = false;
 
     uint64_t chipID;

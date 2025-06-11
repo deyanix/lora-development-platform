@@ -67,6 +67,14 @@ void LoRaNodeClass::Loop() {
 
                     this->lastSendTime = millis();
                     msgCounter++;
+                    if (this->ackReq)
+                    {
+                        this->ackLifetime--;
+                        if (this->ackLifetime == 0)
+                        {
+                            this->permanentDelta = false;
+                        }
+                    }
                 }
             }
             else
@@ -166,6 +174,7 @@ void LoRaNodeClass::OnRxDone(uint8_t *payload, uint16_t size, int16_t rssi, int8
                 if (validateAckMessage(payload, chipID))
                 {
                     this->permanentDelta = true;
+                    this->ackLifetime = this->ackLifetimeInit;
                 }
             }
         }
