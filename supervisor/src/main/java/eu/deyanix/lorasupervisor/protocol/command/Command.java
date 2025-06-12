@@ -15,10 +15,6 @@ public class Command {
 		this.arguments = List.of(arguments);
 	}
 
-	public Command(String name, Argument... arguments) {
-		this(name, false, arguments);
-	}
-
 	public String getName() {
 		return name;
 	}

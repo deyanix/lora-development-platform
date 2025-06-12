@@ -1,14 +1,12 @@
 package eu.deyanix.lorasupervisor.protocol.port;
 
 import com.fazecast.jSerialComm.SerialPort;
+import eu.deyanix.lorasupervisor.protocol.command.CommandResult;
 import eu.deyanix.lorasupervisor.protocol.connection.LoRaConnection;
 import eu.deyanix.lorasupervisor.protocol.command.Command;
-import eu.deyanix.lorasupervisor.protocol.command.CommandFactory;
-import eu.deyanix.lorasupervisor.protocol.command.DataArgument;
 import eu.deyanix.lorasupervisor.protocol.connection.LoRaCommandConnection;
 import eu.deyanix.lorasupervisor.protocol.connection.LoRaSenderConnection;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -43,13 +41,13 @@ public class LoRaPort {
 		this.receiver = new LoRaPortReceiver(this);
 	}
 
-	public Optional<Command> send(Command tx, Command rx, int retries) {
+	public Optional<CommandResult> send(Command tx, Command rx, int retries) {
 		for (int i = 0; i < retries; i++) {
 			try {
 				LoRaCommandConnection connection = new LoRaCommandConnection(tx, rx);
 				attachConnection(connection);
 
-				Optional<Command> result = connection.get(500);
+				Optional<CommandResult> result = connection.get(500);
 				detachConnection(connection);
 
 				if (result.isPresent()) {
@@ -63,7 +61,7 @@ public class LoRaPort {
 		return Optional.empty();
 	}
 
-	public Optional<Command> send(Command tx, Command rx) {
+	public Optional<CommandResult> send(Command tx, Command rx) {
 		return send(tx, rx, 1);
 	}
 

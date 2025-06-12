@@ -46,7 +46,6 @@ public class LoRaPortReceiver {
 
 					if (!provideData(connection, buffer.getData().substring(0, requestedData))) {
 						connection = null;
-						buffer.clear(requestedData);
 					}
 				} else if (BufferWriter.isDelimiter(c)) {
 					if (buffer.isEmpty())

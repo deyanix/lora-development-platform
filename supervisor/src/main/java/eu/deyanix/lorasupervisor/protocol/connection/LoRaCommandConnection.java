@@ -1,12 +1,16 @@
 package eu.deyanix.lorasupervisor.protocol.connection;
 
+import eu.deyanix.lorasupervisor.protocol.command.ArgumentData;
+import eu.deyanix.lorasupervisor.protocol.command.CommandResult;
 import eu.deyanix.lorasupervisor.protocol.port.LoRaPort;
 import eu.deyanix.lorasupervisor.protocol.buffer.BufferReader;
 import eu.deyanix.lorasupervisor.protocol.buffer.BufferWriter;
 import eu.deyanix.lorasupervisor.protocol.command.Argument;
 import eu.deyanix.lorasupervisor.protocol.command.Command;
 
+import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
@@ -16,7 +20,7 @@ import java.util.concurrent.TimeoutException;
 public class LoRaCommandConnection extends LoRaSenderConnection {
 	private final Command txCommand;
 	private final Command rxCommand;
-	private final CompletableFuture<Command> result = new CompletableFuture<>();
+	private final CompletableFuture<CommandResult> result = new CompletableFuture<>();
 
 	public LoRaCommandConnection(Command txCommand, Command rxCommand) {
 		this.txCommand = txCommand;
@@ -64,8 +68,10 @@ public class LoRaCommandConnection extends LoRaSenderConnection {
 			return false;
 		}
 
+		List<ArgumentData> argumentsData = new ArrayList<>();
 		for (Argument arg : rxCommand.getArguments()) {
-			if (!arg.read(reader)) {
+			Optional<ArgumentData> argumentData = arg.read(reader);
+			if (argumentData.isEmpty()) {
 				return false;
 			}
 
@@ -73,9 +79,11 @@ public class LoRaCommandConnection extends LoRaSenderConnection {
 				requestedData = reader.getOffset();
 				return true;
 			}
+
+			argumentsData.add(argumentData.get());
 		}
 		requestedData = 0;
-		result.complete(rxCommand);
+		result.complete(new CommandResult(rxCommand, argumentsData));
 
 		return true;
 	}
@@ -85,7 +93,7 @@ public class LoRaCommandConnection extends LoRaSenderConnection {
 		requestedData = 0;
 	}
 
-	public Optional<Command> get(long timeMs) {
+	public Optional<CommandResult> get(long timeMs) {
 		try {
 			return Optional.ofNullable(result.get(timeMs, TimeUnit.MILLISECONDS));
 		} catch (InterruptedException | ExecutionException | TimeoutException e) {

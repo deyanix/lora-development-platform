@@ -1,9 +1,10 @@
 package eu.deyanix.lorasupervisor.protocol.port;
 
 import eu.deyanix.lorasupervisor.protocol.command.Argument;
+import eu.deyanix.lorasupervisor.protocol.command.ArgumentData;
 import eu.deyanix.lorasupervisor.protocol.command.Command;
 import eu.deyanix.lorasupervisor.protocol.command.CommandFactory;
-import eu.deyanix.lorasupervisor.protocol.command.DataArgument;
+import eu.deyanix.lorasupervisor.protocol.command.CommandResult;
 import eu.deyanix.lorasupervisor.protocol.command.ExtensibleStringArgument;
 import eu.deyanix.lorasupervisor.protocol.config.LoRaBandwidth;
 import eu.deyanix.lorasupervisor.protocol.config.LoRaCodingRate;
@@ -21,33 +22,33 @@ public class LoRaCommander {
 		this.port = port;
 	}
 
-	public List<Argument> sendDataGetter(String name, int args) {
+	public List<ArgumentData> sendDataGetter(String name, int args) {
 		Command tx = CommandFactory.createGetter(name);
-		Command rx = CommandFactory.createSetter(name, IntStream.range(0, args)
-				.mapToObj(i -> new DataArgument())
-				.toArray(DataArgument[]::new));
+		Command rx = CommandFactory.createSetterArgs(name, IntStream.range(0, args)
+				.mapToObj(i -> new Argument())
+				.toArray(Argument[]::new));
 
 		return port.send(tx, rx, 3)
-				.map(Command::getArguments)
+				.map(CommandResult::getArguments)
 				.orElseThrow(); // TODO: Internal exception
 	}
 
-	public Argument sendDataGetter(String name) {
-		Command tx = CommandFactory.createGetter(name);
-		Command rx = CommandFactory.createSetter(name, new DataArgument());
+	public ArgumentData sendDataGetter(String name) {
+		Command tx = CommandFactory.createGetterArgs(name);
+		Command rx = CommandFactory.createSetterArgs(name, new Argument());
 
 		return port.send(tx, rx, 3)
-				.map(cmd -> cmd.getArgument(0))
+				.flatMap(cmd -> cmd.getArgument(0))
 				.orElseThrow();
 	}
 
-	public void sendDataSetter(String name, Argument... args) {
+	public void sendDataSetter(String name, ArgumentData... args) {
 		Command tx = CommandFactory.createSetter(name, args);
-		Command rx = CommandFactory.createSetter(name, new DataArgument());
+		Command rx = CommandFactory.createSetterArgs(name, new Argument());
 
 		port.send(tx, rx)
-				.map(cmd -> cmd.getArgument(0))
-				.flatMap(Argument::getString)
+				.flatMap(cmd -> cmd.getArgument(0))
+				.flatMap(ArgumentData::getString)
 				.filter(val -> val.equals("OK"))
 				.orElseThrow();
 	}
@@ -66,7 +67,7 @@ public class LoRaCommander {
 
 	public void setFrequency(long value) {
 		sendDataSetter("FRQ",
-				new DataArgument().setLong(value));
+				new ArgumentData().setLong(value));
 	}
 
 	public LoRaBandwidth getBandwidth() {
@@ -78,7 +79,7 @@ public class LoRaCommander {
 
 	public void setBandwidth(LoRaBandwidth value) {
 		sendDataSetter("BW",
-				new DataArgument().setInteger(value.getValue()));
+				new ArgumentData().setInteger(value.getValue()));
 	}
 
 	public int getSpreadingFactor() {
@@ -89,7 +90,7 @@ public class LoRaCommander {
 
 	public void setSpreadingFactor(int value) {
 		sendDataSetter("SF",
-				new DataArgument().setInteger(value));
+				new ArgumentData().setInteger(value));
 	}
 
 	public int getPower() {
@@ -100,7 +101,7 @@ public class LoRaCommander {
 
 	public void setPower(int value) {
 		sendDataSetter("PWR",
-				new DataArgument().setInteger(value));
+				new ArgumentData().setInteger(value));
 	}
 
 	public LoRaCodingRate getCodingRate() {
@@ -112,7 +113,7 @@ public class LoRaCommander {
 
 	public void setCodingRate(LoRaCodingRate value) {
 		sendDataSetter("CRT",
-				new DataArgument().setInteger(value.getValue()));
+				new ArgumentData().setInteger(value.getValue()));
 	}
 
 	public Integer getPreambleLength() {
@@ -123,7 +124,7 @@ public class LoRaCommander {
 
 	public void setPreambleLength(int value) {
 		sendDataSetter("PRLEN",
-				new DataArgument().setInteger(value));
+				new ArgumentData().setInteger(value));
 	}
 
 	public Integer getPayloadLength() {
@@ -134,7 +135,7 @@ public class LoRaCommander {
 
 	public void setPayloadLength(int value) {
 		sendDataSetter("PYLEN",
-				new DataArgument().setInteger(value));
+				new ArgumentData().setInteger(value));
 	}
 
 	public boolean isEnabledCrc() {
@@ -145,7 +146,7 @@ public class LoRaCommander {
 
 	public void setEnabledCrc(boolean value) {
 		sendDataSetter("CRC",
-				new DataArgument().setBoolean(value));
+				new ArgumentData().setBoolean(value));
 	}
 
 	public boolean isIqInverted() {
@@ -156,7 +157,7 @@ public class LoRaCommander {
 
 	public void setIqInverted(boolean value) {
 		sendDataSetter("IIQ",
-				new DataArgument().setBoolean(value));
+				new ArgumentData().setBoolean(value));
 	}
 
 	public int getRxSymbolTimeout() {
@@ -167,7 +168,7 @@ public class LoRaCommander {
 
 	public void setRxSymbolTimeout(int value) {
 		sendDataSetter("STO",
-				new DataArgument().setInteger(value));
+				new ArgumentData().setInteger(value));
 	}
 
 	public int getTxTimeout() {
@@ -178,7 +179,7 @@ public class LoRaCommander {
 
 	public void setTxTimeout(int value) {
 		sendDataSetter("TXTO",
-				new DataArgument().setInteger(value));
+				new ArgumentData().setInteger(value));
 	}
 
 	public LoRaMode getMode() {
@@ -190,7 +191,7 @@ public class LoRaCommander {
 
 	public void setMode(LoRaMode value) {
 		sendDataSetter("MODE",
-				new DataArgument().setString(value.name()));
+				new ArgumentData().setString(value.name()));
 	}
 
 	public boolean getAckRequired() {
@@ -201,7 +202,7 @@ public class LoRaCommander {
 
 	public void setAckRequired(boolean value) {
 		sendDataSetter("ACKRQ",
-				new DataArgument().setBoolean(value));
+				new ArgumentData().setBoolean(value));
 	}
 
 	public int getAckLifetime() {
@@ -212,7 +213,7 @@ public class LoRaCommander {
 
 	public void setAckLifetime(int value) {
 		sendDataSetter("ACKLT",
-				new DataArgument().setInteger(value));
+				new ArgumentData().setInteger(value));
 	}
 
 	public long getInterval() {
@@ -223,7 +224,7 @@ public class LoRaCommander {
 
 	public void setInterval(long value) {
 		sendDataSetter("INV",
-				new DataArgument().setLong(value));
+				new ArgumentData().setLong(value));
 	}
 
 	public LoRaAuto getAuto() {
@@ -235,12 +236,12 @@ public class LoRaCommander {
 
 	public void setAuto(LoRaAuto value) {
 		sendDataSetter("AUTO",
-				new DataArgument().setString(value.name()));
+				new ArgumentData().setString(value.name()));
 	}
 
 
 	public LoRaConfiguration getConfiguration() {
-		List<Argument> rtoArgs = sendDataGetter("RTO", 2);
+		List<ArgumentData> rtoArgs = sendDataGetter("RTO", 2);
 		Integer minDelta = rtoArgs.get(0).getInteger().orElseThrow();
 		Integer maxDelta = rtoArgs.get(1).getInteger().orElseThrow();
 
@@ -286,7 +287,7 @@ public class LoRaCommander {
 
 	public void setLed(boolean value) {
 		sendDataSetter("LED",
-				new DataArgument().setBoolean(value));
+				new ArgumentData().setBoolean(value));
 	}
 
 	public boolean isLed() {
@@ -296,12 +297,12 @@ public class LoRaCommander {
 	}
 
 	public void transmit(String data) {
-		Command tx = CommandFactory.createSetter("TX",
-				new ExtensibleStringArgument().setString(data));
+		Command tx = CommandFactory.createSetterArgs("TX",
+				new ExtensibleStringArgument(data));
 
 		Command rx = CommandFactory.createSetter("TX",
-				new DataArgument().setString("OK"),
-				new DataArgument().setInteger(data.length()));
+				new ArgumentData().setString("OK"),
+				new ArgumentData().setInteger(data.length()));
 
 		port.send(tx, rx);
 	}

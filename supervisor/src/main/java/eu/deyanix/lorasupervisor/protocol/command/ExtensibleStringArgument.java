@@ -6,35 +6,43 @@ import eu.deyanix.lorasupervisor.protocol.buffer.BufferWriter;
 import java.util.Optional;
 
 public class ExtensibleStringArgument extends Argument {
+	public ExtensibleStringArgument(String value) {
+		super(value);
+	}
+
+	public ExtensibleStringArgument(ArgumentData data) {
+		super(data);
+	}
+
 	public ExtensibleStringArgument() {
 	}
 
 	@Override
-	public boolean read(BufferReader buffer) {
+	public Optional<ArgumentData> read(BufferReader buffer) {
 		String data = buffer.until(',').orElse(null);
 		if (data != null) {
 			try {
 				int size = Integer.parseInt(data);
-				value = buffer.take(size).orElse(null);
-				return true;
+				String dataValue = buffer.take(size).orElse(null);
+				return Optional.of(new ArgumentData(dataValue));
 			} catch (NumberFormatException e) {
-				return false;
+				return Optional.empty();
 			}
 		} else {
-			return false;
+			return Optional.empty();
 		}
 	}
 
 	@Override
-	public boolean write(BufferWriter buffer) {
+	public void write(BufferWriter buffer) {
 		if (value == null) {
-			return false;
+			buffer.append(String.valueOf(0));
+			buffer.append(',');
+		} else {
+			buffer.append(String.valueOf(value.length()));
+			buffer.append(',');
+			buffer.append(value);
 		}
-
-		buffer.append(String.valueOf(value.length()));
-		buffer.append(',');
-		buffer.append(value);
-		return true;
 	}
 
 	public Optional<String> getString() {
