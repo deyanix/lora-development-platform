@@ -5,7 +5,7 @@ import eu.deyanix.lorasupervisor.protocol.command.ArgumentData;
 import eu.deyanix.lorasupervisor.protocol.command.Command;
 import eu.deyanix.lorasupervisor.protocol.command.CommandFactory;
 import eu.deyanix.lorasupervisor.protocol.command.CommandResult;
-import eu.deyanix.lorasupervisor.protocol.command.ExtensibleStringArgument;
+import eu.deyanix.lorasupervisor.protocol.command.ExtensibleArgument;
 import eu.deyanix.lorasupervisor.protocol.config.LoRaBandwidth;
 import eu.deyanix.lorasupervisor.protocol.config.LoRaCodingRate;
 import eu.deyanix.lorasupervisor.protocol.config.LoRaConfiguration;
@@ -298,7 +298,7 @@ public class LoRaCommander {
 
 	public void transmit(String data) {
 		Command tx = CommandFactory.createSetterArgs("TX",
-				new ExtensibleStringArgument(data));
+				new ExtensibleArgument(data));
 
 		Command rx = CommandFactory.createSetter("TX",
 				new ArgumentData().setString("OK"),

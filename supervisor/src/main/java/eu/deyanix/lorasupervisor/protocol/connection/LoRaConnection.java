@@ -8,7 +8,10 @@ public abstract class LoRaConnection {
 	protected int requestedData = 0;
 
 	public abstract boolean onReceive(LoRaPort port, String data);
-	public abstract void onClose(LoRaPort port);
+
+	public void onClose(LoRaPort port) {
+		requestedData = 0;
+	}
 
 	public int getPriority() {
 		return priority;

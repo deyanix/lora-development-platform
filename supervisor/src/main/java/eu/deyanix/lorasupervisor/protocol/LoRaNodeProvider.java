@@ -53,12 +53,26 @@ public class LoRaNodeProvider {
 				nodePort.addListener(new LoRaPortListener() {
 					@Override
 					public void onSend(LoRaPort port, String data) {
-						webSocketService.sendMessage("/topic/receivedData", new LoRaPortMessage(port.getSerialPort().getSystemPortName(), data));
+						webSocketService.sendMessage("/topic/serial/tx",
+								new LoRaPortMessage(port.getSerialPort().getSystemPortName(), data));
 					}
 
 					@Override
 					public void onReceive(LoRaPort port, String data) {
-						webSocketService.sendMessage("/topic/sentData", new LoRaPortMessage(port.getSerialPort().getSystemPortName(), data));
+						webSocketService.sendMessage("/topic/serial/rx",
+								new LoRaPortMessage(port.getSerialPort().getSystemPortName(), data));
+					}
+
+					@Override
+					public void onRxDone(LoRaPort port, String data) {
+						webSocketService.sendMessage("/topic/lora/rx/done",
+								new LoRaPortMessage(port.getSerialPort().getSystemPortName(), data));
+					}
+
+					@Override
+					public void onTxDone(LoRaPort port, String data) {
+						webSocketService.sendMessage("/topic/lora/tx/done",
+								new LoRaPortMessage(port.getSerialPort().getSystemPortName(), data));
 					}
 				});
 
@@ -71,6 +85,8 @@ public class LoRaNodeProvider {
 				} catch (Exception ex) {
 					ex.printStackTrace();
 				}
+			} else {
+				port.closePort();
 			}
 		}
 

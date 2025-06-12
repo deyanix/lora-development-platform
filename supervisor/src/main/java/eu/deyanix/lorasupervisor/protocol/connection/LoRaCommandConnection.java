@@ -2,6 +2,7 @@ package eu.deyanix.lorasupervisor.protocol.connection;
 
 import eu.deyanix.lorasupervisor.protocol.command.ArgumentData;
 import eu.deyanix.lorasupervisor.protocol.command.CommandResult;
+import eu.deyanix.lorasupervisor.protocol.command.CommandTokenizer;
 import eu.deyanix.lorasupervisor.protocol.port.LoRaPort;
 import eu.deyanix.lorasupervisor.protocol.buffer.BufferReader;
 import eu.deyanix.lorasupervisor.protocol.buffer.BufferWriter;
@@ -18,13 +19,15 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
 public class LoRaCommandConnection extends LoRaSenderConnection {
-	private final Command txCommand;
-	private final Command rxCommand;
+	private final CommandTokenizer txCommand;
+	private final CommandTokenizer rxCommand;
 	private final CompletableFuture<CommandResult> result = new CompletableFuture<>();
 
 	public LoRaCommandConnection(Command txCommand, Command rxCommand) {
-		this.txCommand = txCommand;
-		this.rxCommand = rxCommand;
+		this.txCommand = txCommand != null ?
+				new CommandTokenizer(txCommand) : null;
+		this.rxCommand = rxCommand != null ?
+				new CommandTokenizer(rxCommand) : null;
 	}
 
 	@Override
@@ -34,24 +37,8 @@ public class LoRaCommandConnection extends LoRaSenderConnection {
 		}
 
 		BufferWriter buffer = new BufferWriter();
-		buffer.append('+');
-		buffer.append(txCommand.getName());
+		txCommand.write(buffer);
 
-		Iterator<Argument> args = txCommand.getArguments().iterator();
-		if (args.hasNext())
-			buffer.append('=');
-
-		while (args.hasNext()) {
-			args.next().write(buffer);
-
-			if (args.hasNext())
-				buffer.append(',');
-		}
-
-		if (txCommand.isQuery())
-			buffer.append('?');
-
-		buffer.append('\n');
 		port.getSender().send(buffer.getData());
 	}
 
@@ -62,35 +49,17 @@ public class LoRaCommandConnection extends LoRaSenderConnection {
 		}
 
 		BufferReader reader = new BufferReader(data);
-		String cmd = reader.untilEnd('=').orElse("");
-
-		if (!cmd.equals(rxCommand.getName())) {
+		CommandResult commandResult = rxCommand.read(reader);
+		if (commandResult == null) {
 			return false;
 		}
 
-		List<ArgumentData> argumentsData = new ArrayList<>();
-		for (Argument arg : rxCommand.getArguments()) {
-			Optional<ArgumentData> argumentData = arg.read(reader);
-			if (argumentData.isEmpty()) {
-				return false;
-			}
-
-			if (reader.getOffset() > reader.getBuffer().length()) {
-				requestedData = reader.getOffset();
-				return true;
-			}
-
-			argumentsData.add(argumentData.get());
+		if (reader.getOffset() > reader.getBuffer().length()) {
+			requestedData = reader.getOffset();
+		} else {
+			result.complete(commandResult);
 		}
-		requestedData = 0;
-		result.complete(new CommandResult(rxCommand, argumentsData));
-
 		return true;
-	}
-
-	@Override
-	public void onClose(LoRaPort port) {
-		requestedData = 0;
 	}
 
 	public Optional<CommandResult> get(long timeMs) {

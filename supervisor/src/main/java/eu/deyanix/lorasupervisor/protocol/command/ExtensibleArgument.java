@@ -5,16 +5,16 @@ import eu.deyanix.lorasupervisor.protocol.buffer.BufferWriter;
 
 import java.util.Optional;
 
-public class ExtensibleStringArgument extends Argument {
-	public ExtensibleStringArgument(String value) {
+public class ExtensibleArgument extends Argument {
+	public ExtensibleArgument(String value) {
 		super(value);
 	}
 
-	public ExtensibleStringArgument(ArgumentData data) {
+	public ExtensibleArgument(ArgumentData data) {
 		super(data);
 	}
 
-	public ExtensibleStringArgument() {
+	public ExtensibleArgument() {
 	}
 
 	@Override

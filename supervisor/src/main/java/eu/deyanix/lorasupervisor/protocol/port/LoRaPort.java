@@ -5,6 +5,7 @@ import eu.deyanix.lorasupervisor.protocol.command.CommandResult;
 import eu.deyanix.lorasupervisor.protocol.connection.LoRaConnection;
 import eu.deyanix.lorasupervisor.protocol.command.Command;
 import eu.deyanix.lorasupervisor.protocol.connection.LoRaCommandConnection;
+import eu.deyanix.lorasupervisor.protocol.connection.LoRaEventConnection;
 import eu.deyanix.lorasupervisor.protocol.connection.LoRaSenderConnection;
 
 import java.util.ArrayList;
@@ -21,6 +22,7 @@ public class LoRaPort {
 			return null;
 		}
 		LoRaPort nodePort = new LoRaPort(port);
+		nodePort.attachConnection(new LoRaEventConnection(nodePort));
 
 		port.setBaudRate(115200);
 		port.setComPortTimeouts(SerialPort.TIMEOUT_READ_SEMI_BLOCKING, 0, 0);

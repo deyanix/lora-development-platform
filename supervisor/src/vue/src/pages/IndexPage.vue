@@ -52,16 +52,22 @@ const initWebSocket = () => {
     console.log('Połączono z WebSocket!', frame);
     isConnected.value = true;
 
-    client.subscribe('/topic/receivedData', (message) => {
+    client.subscribe('/topic/serial/rx', (message) => {
       const payload = JSON.parse(message.body);
-      const msg = payload.message?.replace('\r', '\u240d').replace('\n', '\u2424');
+      const msg = payload.message?.replaceAll('\r', '\u240d').replaceAll('\n', '\u2424');
       addMessage(`${payload.port} < ${msg}`);
     });
 
-    client.subscribe('/topic/sentData', (message) => {
+    client.subscribe('/topic/serial/tx', (message) => {
       const payload = JSON.parse(message.body);
-      const msg = payload.message?.replace('\r', '\u240d').replace('\n', '\u2424');
+      const msg = payload.message?.replaceAll('\r', '\u240d').replaceAll('\n', '\u2424');
       addMessage(`${payload.port} > ${msg}`);
+    });
+
+    client.subscribe('/topic/lora/tx/done', (message) => {
+      const payload = JSON.parse(message.body);
+      const msg = payload.message?.replaceAll('\r', '\u240d').replaceAll('\n', '\u2424');
+      addMessage(`${payload.port} >> ${msg}`);
     });
   };
 
