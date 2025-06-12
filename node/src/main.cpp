@@ -394,6 +394,7 @@ void processTerminal() {
 }
 
 void setup() {
+    LoRaNode.SwitchLed(LoRaNode.ledState);
     Serial.begin(115200);
 
     randomSeed(analogRead(0));

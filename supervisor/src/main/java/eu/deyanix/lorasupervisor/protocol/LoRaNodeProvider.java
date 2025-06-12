@@ -76,10 +76,10 @@ public class LoRaNodeProvider {
 
 	}
 
-	@PostConstruct
-	protected void init() {
-		detect();
-	}
+//	@PostConstruct
+//	protected void init() {
+//		detect();
+//	}
 
 	protected static class LoRaPortDisconnectListener implements SerialPortDataListener {
 		@Override

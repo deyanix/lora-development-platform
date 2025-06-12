@@ -25,9 +25,7 @@ public class DataArgument extends Argument {
 	@Override
 	public boolean read(BufferReader buffer) {
 		String data = buffer.untilEnd(',').orElse(null);
-		if (matching) {
-			return Objects.equals(value, data);
-		} else if (data != null) {
+		if (data != null) {
 			value = data;
 			return true;
 		} else {
