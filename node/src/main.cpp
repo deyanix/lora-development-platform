@@ -375,8 +375,7 @@ void processTerminal() {
             if (reader.with('=')) {
                 long value = reader.untilEnd().toInt();
                 if (value >= 0 && value <= 1) {
-                    LoRaNode.ledState = (bool)value;
-                    LoRaNode.SwitchLed(LoRaNode.ledState);
+                    LoRaNode.SwitchLed(value, COLOR_FIND);
                     Serial.println("LED=OK");
                 } else {
                     Serial.println("LED=ERR");
@@ -394,7 +393,6 @@ void processTerminal() {
 }
 
 void setup() {
-    LoRaNode.SwitchLed(LoRaNode.ledState);
     Serial.begin(115200);
 
     randomSeed(analogRead(0));

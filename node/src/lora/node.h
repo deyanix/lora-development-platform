@@ -7,7 +7,8 @@
 #include "validation.h"
 
 #define MAX_MSG_BUFFER_LENGTH 128
-#define COLOR_FIND 0x200050
+#define COLOR_FIND 0x500050
+#define COLOR_BOOT 0x505000
 
 typedef struct {
     uint32_t Frequency;
@@ -90,7 +91,7 @@ public:
     void OnTxDone();
     void OnTxTimeout();
 
-    void SwitchLed(bool state);
+    void SwitchLed(bool state, uint32_t color);
 };
 
 extern LoRaNodeClass LoRaNode;

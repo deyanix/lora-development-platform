@@ -47,8 +47,16 @@ void LoRaNodeClass::Loop() {
 
     if (this->rxLedOn) {
         if (millis() - this->rxLedOnTime >= this->rxLedOnDur) { // Check if Dur has passed
-            turnOnRGB(0x000000, 0);      // Turn off the LED
-            this->rxLedOn = false;                 // Reset the flag
+            this->rxLedOn = false;
+            if (this->ledState)
+            {
+                turnOnRGB(COLOR_FIND, 0);
+            }
+            else
+            {
+                turnOnRGB(0x000000, 0);
+            }
+
         }
     }
 
@@ -115,7 +123,14 @@ void LoRaNodeClass::Send(uint8_t *data, size_t length) {
 void LoRaNodeClass::Stop() {
     Radio.Sleep();
     this->Idle = true;
-    turnOnRGB(0x000000, 0);
+    if (this->ledState)
+    {
+        turnOnRGB(COLOR_FIND, 0);
+    }
+    else
+    {
+        turnOnRGB(0x000000, 0);
+    }
 }
 
 void LoRaNodeClass::OnRxDone(uint8_t *payload, uint16_t size, int16_t rssi, int8_t snr) {
@@ -171,9 +186,10 @@ void LoRaNodeClass::OnTxTimeout() {
     this->Stop();
 }
 
-void LoRaNodeClass::SwitchLed(bool state) {
-    if (state) {
-        turnOnRGB(COLOR_FIND, 0);
+void LoRaNodeClass::SwitchLed(bool state, uint32_t color) {
+    this->ledState = state;
+    if (this->ledState) {
+        turnOnRGB(color, 0);
     }
     else    {
         turnOnRGB(0x000000, 0);
