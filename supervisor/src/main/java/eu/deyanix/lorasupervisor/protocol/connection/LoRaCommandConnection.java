@@ -19,15 +19,13 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
 public class LoRaCommandConnection extends LoRaSenderConnection {
-	private final CommandTokenizer txCommand;
-	private final CommandTokenizer rxCommand;
+	private final Command txCommand;
+	private final Command rxCommand;
 	private final CompletableFuture<CommandResult> result = new CompletableFuture<>();
 
 	public LoRaCommandConnection(Command txCommand, Command rxCommand) {
-		this.txCommand = txCommand != null ?
-				new CommandTokenizer(txCommand) : null;
-		this.rxCommand = rxCommand != null ?
-				new CommandTokenizer(rxCommand) : null;
+		this.txCommand = txCommand;
+		this.rxCommand = rxCommand;
 	}
 
 	@Override
@@ -36,8 +34,9 @@ public class LoRaCommandConnection extends LoRaSenderConnection {
 			return;
 		}
 
+		CommandTokenizer tokenizer = new CommandTokenizer(txCommand);
 		BufferWriter buffer = new BufferWriter();
-		txCommand.write(buffer);
+		tokenizer.write(buffer);
 
 		port.getSender().send(buffer.getData());
 	}
@@ -48,17 +47,17 @@ public class LoRaCommandConnection extends LoRaSenderConnection {
 			return false;
 		}
 
-		BufferReader reader = new BufferReader(data);
-		CommandResult commandResult = rxCommand.read(reader);
+		CommandResult commandResult = receive(rxCommand, data);
 		if (commandResult == null) {
 			return false;
 		}
 
-		if (reader.getOffset() > reader.getBuffer().length()) {
-			requestedData = reader.getOffset();
-		} else {
+		if (commandResult.isComplete()) {
 			result.complete(commandResult);
+		} else {
+			requestedData = commandResult.getOffset();
 		}
+
 		return true;
 	}
 

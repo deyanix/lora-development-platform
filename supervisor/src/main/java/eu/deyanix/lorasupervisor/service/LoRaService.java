@@ -1,7 +1,9 @@
 package eu.deyanix.lorasupervisor.service;
 
 import com.fazecast.jSerialComm.SerialPort;
+import eu.deyanix.lorasupervisor.model.LoRaPortEvent;
 import eu.deyanix.lorasupervisor.model.LoRaPortMessage;
+import eu.deyanix.lorasupervisor.model.LoRaPortReceivedMessage;
 import eu.deyanix.lorasupervisor.model.LoRaSerialPort;
 import eu.deyanix.lorasupervisor.protocol.LoRaNode;
 import eu.deyanix.lorasupervisor.protocol.port.LoRaCommander;
@@ -56,24 +58,23 @@ public class LoRaService {
 				LoRaNode node = getNodeById(nodeId).orElse(null);
 				if (node != null) {
 					node.setCommander(commander);
-					commander.setMode(node.getMode());
-					commander.setRadioConfiguration(node.getRadioConfiguration());
-					commander.setConfiguration(node.getAutoConfiguration());
-					commander.setLed(node.isFlashing());
+					node.synchronizeUp();
 				} else {
 					node = new LoRaNode(nodeId, port);
+					node.synchronizeDown();
 					nodes.add(node);
 				}
-				node.setMode(commander.getMode());
-				node.setRadioConfiguration(commander.getRadioConfiguration());
-				node.setAutoConfiguration(commander.getConfiguration());
-				node.setFlashing(commander.isLed());
+
+				webSocketService.sendMessage("/topic/port/connect",
+						new LoRaPortEvent(serialPort.getSystemPortName()));
 
 				return new LoRaSerialPort()
 						.setPort(serialPort.getSystemPortName())
 						.setNodeId(nodeId);
 			} catch (Exception ex) {
 				ex.printStackTrace();
+				serialPort.closePort();
+				disconnect(serialPort.getSystemPortName());
 			}
 		} else {
 			serialPort.closePort();
@@ -84,8 +85,14 @@ public class LoRaService {
 	public void disconnect(String port) {
 		LoRaNode node = getNodeByPort(port).orElse(null);
 		if (node != null) {
-			node.getPort().ifPresent(p -> p.getSerialPort().closePort());
+			node.getPort()
+					.map(LoRaPort::getSerialPort)
+					.ifPresent(SerialPort::closePort);
+
 			node.setCommander(null);
+
+			webSocketService.sendMessage("/topic/port/disconnect",
+					new LoRaPortEvent(port));
 		}
 	}
 
@@ -126,15 +133,33 @@ public class LoRaService {
 		}
 
 		@Override
-		public void onRxDone(LoRaPort port, String data) {
-			webSocketService.sendMessage("/topic/lora/rx/done",
-					new LoRaPortMessage(port.getSerialPort().getSystemPortName(), data));
+		public void onRxDone(LoRaPort port, int rssi, int snr, String data) {
+			webSocketService.sendMessage("/topic/port/rx/done",
+					new LoRaPortReceivedMessage(port.getSerialPort().getSystemPortName(), rssi, snr, data));
+		}
+
+		@Override
+		public void onRxTimeout(LoRaPort port) {
+			webSocketService.sendMessage("/topic/port/rx/timeout",
+					new LoRaPortEvent(port.getSerialPort().getSystemPortName()));
+		}
+
+		@Override
+		public void onRxError(LoRaPort port) {
+			webSocketService.sendMessage("/topic/port/rx/error",
+					new LoRaPortEvent(port.getSerialPort().getSystemPortName()));
 		}
 
 		@Override
 		public void onTxDone(LoRaPort port, String data) {
-			webSocketService.sendMessage("/topic/lora/tx/done",
+			webSocketService.sendMessage("/topic/port/tx/done",
 					new LoRaPortMessage(port.getSerialPort().getSystemPortName(), data));
+		}
+
+		@Override
+		public void onTxTimeout(LoRaPort port) {
+			webSocketService.sendMessage("/topic/port/tx/timeout",
+					new LoRaPortEvent(port.getSerialPort().getSystemPortName()));
 		}
 	}
 }

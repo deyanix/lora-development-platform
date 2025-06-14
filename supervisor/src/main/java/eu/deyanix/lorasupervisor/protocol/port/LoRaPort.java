@@ -17,6 +17,7 @@ import java.util.Optional;
 import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
+import java.util.function.Consumer;
 
 public class LoRaPort {
 	public static LoRaPort openNode(SerialPort port) {
@@ -86,6 +87,12 @@ public class LoRaPort {
 		return Collections.unmodifiableList(listeners);
 	}
 
+	public void invokeListener(Consumer<LoRaPortListener> action) {
+		for (LoRaPortListener listener : getListeners()) {
+			action.accept(listener);
+		}
+	}
+
 	public SerialPort getSerialPort() {
 		return serialPort;
 	}
@@ -131,7 +138,7 @@ public class LoRaPort {
 		connectionLock.lock();
 		try {
 			if (connections.remove(connection)) {
-				connection.onClose(this);
+				connection.onClear(this);
 				disconnect.signal();
 			}
 		} finally {
@@ -148,9 +155,7 @@ public class LoRaPort {
 		@Override
 		public void serialEvent(SerialPortEvent event) {
 			if (event.getEventType() == SerialPort.LISTENING_EVENT_PORT_DISCONNECTED) {
-				for (LoRaPortListener listener : getListeners()) {
-					listener.onDisconnect(LoRaPort.this);
-				}
+				invokeListener(listener -> listener.onDisconnect(LoRaPort.this));
 			}
 
 			if (event.getEventType() == SerialPort.LISTENING_EVENT_DATA_AVAILABLE) {

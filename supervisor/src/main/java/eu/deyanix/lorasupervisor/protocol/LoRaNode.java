@@ -1,8 +1,7 @@
 package eu.deyanix.lorasupervisor.protocol;
 
 import eu.deyanix.lorasupervisor.model.LoRaNodeState;
-import eu.deyanix.lorasupervisor.protocol.config.LoRaAutoConfiguration;
-import eu.deyanix.lorasupervisor.protocol.config.LoRaMode;
+import eu.deyanix.lorasupervisor.protocol.config.LoRaConfiguration;
 import eu.deyanix.lorasupervisor.protocol.config.LoRaRadioConfiguration;
 import eu.deyanix.lorasupervisor.protocol.port.LoRaCommander;
 import eu.deyanix.lorasupervisor.protocol.port.LoRaPort;
@@ -12,9 +11,8 @@ import java.util.Optional;
 public class LoRaNode {
 	private final String id;
 	private LoRaCommander commander;
-	private LoRaMode mode;
 	private LoRaRadioConfiguration radioConfiguration;
-	private LoRaAutoConfiguration autoConfiguration;
+	private LoRaConfiguration configuration;
 
 	private boolean flashing;
 
@@ -56,30 +54,23 @@ public class LoRaNode {
 		return this;
 	}
 
-	public LoRaMode getMode() {
-		return mode;
-	}
-
-	public LoRaNode setMode(LoRaMode mode) {
-		this.mode = mode;
-		return this;
-	}
-
 	public LoRaRadioConfiguration getRadioConfiguration() {
 		return radioConfiguration;
 	}
 
 	public LoRaNode setRadioConfiguration(LoRaRadioConfiguration radioConfiguration) {
-		this.radioConfiguration = radioConfiguration;
+		commander.setRadioConfiguration(radioConfiguration);
+		this.radioConfiguration = commander.getRadioConfiguration();
 		return this;
 	}
 
-	public LoRaAutoConfiguration getAutoConfiguration() {
-		return autoConfiguration;
+	public LoRaConfiguration getConfiguration() {
+		return configuration;
 	}
 
-	public LoRaNode setAutoConfiguration(LoRaAutoConfiguration autoConfiguration) {
-		this.autoConfiguration = autoConfiguration;
+	public LoRaNode setConfiguration(LoRaConfiguration configuration) {
+		commander.setConfiguration(configuration);
+		this.configuration = commander.getConfiguration();
 		return this;
 	}
 
@@ -100,15 +91,26 @@ public class LoRaNode {
 		return commander != null && commander.getPort().getSerialPort().isOpen();
 	}
 
+	public void synchronizeDown() {
+		this.radioConfiguration = commander.getRadioConfiguration();
+		this.configuration = commander.getConfiguration();
+		this.flashing = commander.isLed();
+	}
+
+	public void synchronizeUp() {
+		commander.setRadioConfiguration(radioConfiguration);
+		commander.setConfiguration(configuration);
+		commander.setLed(flashing);
+	}
+
 	public LoRaNodeState createState() {
 		return new LoRaNodeState()
 				.setId(id)
 				.setPortName(getPort()
 						.map(cmd -> cmd.getSerialPort().getSystemPortName())
 						.orElse(null))
-				.setMode(mode)
 				.setRadioConfiguration(radioConfiguration)
-				.setAutoConfiguration(autoConfiguration)
+				.setConfiguration(configuration)
 				.setFlashing(flashing)
 				.setConnected(isConnected());
 	}

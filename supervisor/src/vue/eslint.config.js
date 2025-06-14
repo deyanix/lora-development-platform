@@ -11,13 +11,6 @@ export default defineConfigWithVueTs(
   pluginQuasar.configs.recommended(),
   js.configs.recommended,
   pluginVue.configs['flat/essential'],
-
-  {
-    files: ['**/*.ts', '**/*.vue'],
-    rules: {
-      '@typescript-eslint/consistent-type-imports': ['error', { prefer: 'type-imports' }],
-    },
-  },
   vueTsConfigs.recommendedTypeChecked,
 
   {
@@ -40,7 +33,7 @@ export default defineConfigWithVueTs(
     rules: {
       'prefer-promise-reject-errors': 'off',
       'no-debugger': process.env.NODE_ENV === 'production' ? 'error' : 'off',
-      '@typescript-eslint/consistent-type-imports': 'off',
+      '@typescript-eslint/no-misused-promises': 'off',
     },
   },
 

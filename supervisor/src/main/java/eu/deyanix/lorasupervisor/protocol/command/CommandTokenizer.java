@@ -43,6 +43,7 @@ public class CommandTokenizer {
 			return null;
 		}
 
+		boolean complete = true;
 		List<ArgumentData> argumentsData = new ArrayList<>();
 		for (Argument arg : command.getArguments()) {
 			Optional<ArgumentData> argumentData = arg.read(buffer);
@@ -51,12 +52,13 @@ public class CommandTokenizer {
 			}
 
 			if (buffer.getOffset() > buffer.getBuffer().length()) {
+				complete = false;
 				break;
 			}
 
 			argumentsData.add(argumentData.get());
 		}
 
-		return new CommandResult(command, argumentsData);
+		return new CommandResult(command, argumentsData, complete, buffer.getOffset());
 	}
 }

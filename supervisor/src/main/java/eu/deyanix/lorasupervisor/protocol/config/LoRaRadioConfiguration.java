@@ -1,5 +1,7 @@
 package eu.deyanix.lorasupervisor.protocol.config;
 
+import java.util.Optional;
+
 public class LoRaRadioConfiguration {
 	public static final long FREQUENCY_MIN = 863_000_000;
 	public static final long FREQUENCY_MAX = 870_000_000;
@@ -8,7 +10,7 @@ public class LoRaRadioConfiguration {
 	public static final int POWER_MIN = -3;
 	public static final int POWER_MAX = 22;
 	public static final int PREAMBLE_LENGTH_MIN = 0x0001;
-	public static final int PREAMBLE_LENGTH_MAX = 0xFFFF;;
+	public static final int PREAMBLE_LENGTH_MAX = 0xFFFF;
 	public static final int PAYLOAD_LENGTH_MIN = 0x00;
 	public static final int PAYLOAD_LENGTH_MAX = 0xFF;
 	public static final int TX_TIMEOUT_MIN = 0;
@@ -16,38 +18,38 @@ public class LoRaRadioConfiguration {
 	public static final int RX_TIMEOUT_MIN = 0;
 	public static final int RX_TIMEOUT_MAX = 0xFFFF;
 
-	private long frequency;
-	private int power;
+	private Long frequency;
+	private Integer power;
 	private LoRaBandwidth bandwidth;
 	private LoRaCodingRate codingRate;
-	private int spreadingFactor;
-	private int payloadLength;
-	private int preambleLength;
-	private boolean enableCrc;
-	private boolean iqInverted;
-	private int txTimeout;
-	private int rxSymbolTimeout;
+	private Integer spreadingFactor;
+	private Integer payloadLength;
+	private Integer preambleLength;
+	private Boolean enableCrc;
+	private Boolean iqInverted;
+	private Integer txTimeout;
+	private Integer rxSymbolTimeout;
 
-	public long getFrequency() {
-		return frequency;
+	public Optional<Long> getFrequency() {
+		return Optional.ofNullable(frequency);
 	}
 
-	public LoRaRadioConfiguration setFrequency(long frequency) {
+	public LoRaRadioConfiguration setFrequency(Long frequency) {
 		this.frequency = frequency;
 		return this;
 	}
 
-	public int getPower() {
-		return power;
+	public Optional<Integer> getPower() {
+		return Optional.ofNullable(power);
 	}
 
-	public LoRaRadioConfiguration setPower(int power) {
+	public LoRaRadioConfiguration setPower(Integer power) {
 		this.power = power;
 		return this;
 	}
 
-	public LoRaBandwidth getBandwidth() {
-		return bandwidth;
+	public Optional<LoRaBandwidth> getBandwidth() {
+		return Optional.ofNullable(bandwidth);
 	}
 
 	public LoRaRadioConfiguration setBandwidth(LoRaBandwidth bandwidth) {
@@ -55,8 +57,8 @@ public class LoRaRadioConfiguration {
 		return this;
 	}
 
-	public LoRaCodingRate getCodingRate() {
-		return codingRate;
+	public Optional<LoRaCodingRate> getCodingRate() {
+		return Optional.ofNullable(codingRate);
 	}
 
 	public LoRaRadioConfiguration setCodingRate(LoRaCodingRate codingRate) {
@@ -64,65 +66,65 @@ public class LoRaRadioConfiguration {
 		return this;
 	}
 
-	public int getSpreadingFactor() {
-		return spreadingFactor;
+	public Optional<Integer> getSpreadingFactor() {
+		return Optional.ofNullable(spreadingFactor);
 	}
 
-	public LoRaRadioConfiguration setSpreadingFactor(int spreadingFactor) {
+	public LoRaRadioConfiguration setSpreadingFactor(Integer spreadingFactor) {
 		this.spreadingFactor = spreadingFactor;
 		return this;
 	}
 
-	public int getPayloadLength() {
-		return payloadLength;
+	public Optional<Integer> getPayloadLength() {
+		return Optional.ofNullable(payloadLength);
 	}
 
-	public LoRaRadioConfiguration setPayloadLength(int payloadLength) {
+	public LoRaRadioConfiguration setPayloadLength(Integer payloadLength) {
 		this.payloadLength = payloadLength;
 		return this;
 	}
 
-	public int getPreambleLength() {
-		return preambleLength;
+	public Optional<Integer> getPreambleLength() {
+		return Optional.ofNullable(preambleLength);
 	}
 
-	public LoRaRadioConfiguration setPreambleLength(int preambleLength) {
+	public LoRaRadioConfiguration setPreambleLength(Integer preambleLength) {
 		this.preambleLength = preambleLength;
 		return this;
 	}
 
-	public boolean isEnableCrc() {
-		return enableCrc;
+	public Optional<Boolean> isEnableCrc() {
+		return Optional.ofNullable(enableCrc);
 	}
 
-	public LoRaRadioConfiguration setEnableCrc(boolean enableCrc) {
+	public LoRaRadioConfiguration setEnableCrc(Boolean enableCrc) {
 		this.enableCrc = enableCrc;
 		return this;
 	}
 
-	public boolean isIqInverted() {
-		return iqInverted;
+	public Optional<Boolean> isIqInverted() {
+		return Optional.ofNullable(iqInverted);
 	}
 
-	public LoRaRadioConfiguration setIqInverted(boolean enableIqInverted) {
+	public LoRaRadioConfiguration setIqInverted(Boolean enableIqInverted) {
 		this.iqInverted = enableIqInverted;
 		return this;
 	}
 
-	public int getTxTimeout() {
-		return txTimeout;
+	public Optional<Integer> getTxTimeout() {
+		return Optional.ofNullable(txTimeout);
 	}
 
-	public LoRaRadioConfiguration setTxTimeout(int txTimeout) {
+	public LoRaRadioConfiguration setTxTimeout(Integer txTimeout) {
 		this.txTimeout = txTimeout;
 		return this;
 	}
 
-	public int getRxSymbolTimeout() {
-		return rxSymbolTimeout;
+	public Optional<Integer> getRxSymbolTimeout() {
+		return Optional.ofNullable(rxSymbolTimeout);
 	}
 
-	public LoRaRadioConfiguration setRxSymbolTimeout(int rxSymbolTimeout) {
+	public LoRaRadioConfiguration setRxSymbolTimeout(Integer rxSymbolTimeout) {
 		this.rxSymbolTimeout = rxSymbolTimeout;
 		return this;
 	}

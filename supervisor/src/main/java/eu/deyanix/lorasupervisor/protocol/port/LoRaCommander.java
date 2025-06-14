@@ -8,7 +8,7 @@ import eu.deyanix.lorasupervisor.protocol.command.CommandResult;
 import eu.deyanix.lorasupervisor.protocol.command.ExtensibleArgument;
 import eu.deyanix.lorasupervisor.protocol.config.LoRaBandwidth;
 import eu.deyanix.lorasupervisor.protocol.config.LoRaCodingRate;
-import eu.deyanix.lorasupervisor.protocol.config.LoRaAutoConfiguration;
+import eu.deyanix.lorasupervisor.protocol.config.LoRaConfiguration;
 import eu.deyanix.lorasupervisor.protocol.config.LoRaRadioConfiguration;
 import eu.deyanix.lorasupervisor.protocol.config.LoRaMode;
 import eu.deyanix.lorasupervisor.protocol.config.LoRaAuto;
@@ -48,7 +48,7 @@ public class LoRaCommander {
 		Command tx = CommandFactory.createSetter(name, args);
 		Command rx = CommandFactory.createSetterArgs(name, new Argument());
 
-		port.send(tx, rx)
+		port.send(tx, rx, 3)
 				.flatMap(cmd -> cmd.getArgument(0))
 				.flatMap(ArgumentData::getString)
 				.filter(val -> val.equals("OK"))
@@ -275,22 +275,23 @@ public class LoRaCommander {
 	}
 
 	public void setRadioConfiguration(LoRaRadioConfiguration configuration) {
-		setFrequency(configuration.getFrequency());
-		setBandwidth(configuration.getBandwidth());
-		setPower(configuration.getPower());
-		setSpreadingFactor(configuration.getSpreadingFactor());
-		setCodingRate(configuration.getCodingRate());
-		setEnabledCrc(configuration.isEnableCrc());
-		setIqInverted(configuration.isIqInverted());
-		setPreambleLength(configuration.getPreambleLength());
-		setPayloadLength(configuration.getPayloadLength());
-		setTxTimeout(configuration.getTxTimeout());
-		setRxSymbolTimeout(configuration.getRxSymbolTimeout());
+		configuration.getFrequency().ifPresent(this::setFrequency);
+		configuration.getBandwidth().ifPresent(this::setBandwidth);
+		configuration.getPower().ifPresent(this::setPower);
+		configuration.getSpreadingFactor().ifPresent(this::setSpreadingFactor);
+		configuration.getCodingRate().ifPresent(this::setCodingRate);
+		configuration.isEnableCrc().ifPresent(this::setEnabledCrc);
+		configuration.isIqInverted().ifPresent(this::setIqInverted);
+		configuration.getPreambleLength().ifPresent(this::setPreambleLength);
+		configuration.getPayloadLength().ifPresent(this::setPayloadLength);
+		configuration.getTxTimeout().ifPresent(this::setTxTimeout);
+		configuration.getRxSymbolTimeout().ifPresent(this::setRxSymbolTimeout);
 		push();
 	}
 
-	public LoRaAutoConfiguration getConfiguration() {
-		return new LoRaAutoConfiguration()
+	public LoRaConfiguration getConfiguration() {
+		return new LoRaConfiguration()
+				.setMode(getMode())
 				.setDelta(getDelta())
 				.setAckRequired(getAckRequired())
 				.setAckLifetime(getAckLifetime())
@@ -298,12 +299,13 @@ public class LoRaCommander {
 				.setAuto(getAuto());
 	}
 
-	public void setConfiguration(LoRaAutoConfiguration configuration) {
-		setDelta(configuration.getDelta());
-		setAckRequired(configuration.isAckRequired());
-		setAckLifetime(configuration.getAckLifetime());
-		setInterval(configuration.getInterval());
-		setAuto(configuration.getAuto());
+	public void setConfiguration(LoRaConfiguration configuration) {
+		configuration.getMode().ifPresent(this::setMode);
+		configuration.getDelta().ifPresent(this::setDelta);
+		configuration.getAuto().ifPresent(this::setAuto);
+		configuration.isAckRequired().ifPresent(this::setAckRequired);
+		configuration.getAckLifetime().ifPresent(this::setAckLifetime);
+		configuration.getInterval().ifPresent(this::setInterval);
 	}
 
 	public void setLed(boolean value) {

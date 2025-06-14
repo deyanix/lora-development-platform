@@ -23,9 +23,12 @@ public class LoRaPortReceiver {
 	protected void receive() throws IOException {
 		lock.lock();
 		try {
-			handleTimeout();
-
 			LoRaConnection connection = getCapturingConnection();
+			if (handleTimeout() && connection != null) {
+				connection.onClear(port);
+				connection = null;
+			}
+
 			BufferWriter localBuffer = new BufferWriter();
 			InputStream in = port.getSerialPort().getInputStream();
 
@@ -65,11 +68,12 @@ public class LoRaPortReceiver {
 		}
 	}
 
-	protected void handleTimeout() {
+	protected boolean handleTimeout() {
 		if (!isExpired())
-			return;
+			return false;
 
 		buffer.clearAll();
+		return true;
 	}
 
 	protected LoRaConnection getCapturingConnection() {

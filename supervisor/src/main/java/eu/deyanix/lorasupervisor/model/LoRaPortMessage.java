@@ -1,16 +1,11 @@
 package eu.deyanix.lorasupervisor.model;
 
-public class LoRaPortMessage {
-	private final String port;
+public class LoRaPortMessage extends LoRaPortEvent {
 	private final String message;
 
 	public LoRaPortMessage(String port, String message) {
-		this.port = port;
+		super(port);
 		this.message = message;
-	}
-
-	public String getPort() {
-		return port;
 	}
 
 	public String getMessage() {

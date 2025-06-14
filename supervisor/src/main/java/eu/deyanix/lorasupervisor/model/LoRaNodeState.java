@@ -1,15 +1,14 @@
 package eu.deyanix.lorasupervisor.model;
 
-import eu.deyanix.lorasupervisor.protocol.config.LoRaAutoConfiguration;
+import eu.deyanix.lorasupervisor.protocol.config.LoRaConfiguration;
 import eu.deyanix.lorasupervisor.protocol.config.LoRaMode;
 import eu.deyanix.lorasupervisor.protocol.config.LoRaRadioConfiguration;
 
 public class LoRaNodeState {
 	private String id;
 	private String portName;
-	private LoRaMode mode;
 	private LoRaRadioConfiguration radioConfiguration;
-	private LoRaAutoConfiguration autoConfiguration;
+	private LoRaConfiguration configuration;
 	private boolean flashing;
 	private boolean connected;
 
@@ -31,15 +30,6 @@ public class LoRaNodeState {
 		return this;
 	}
 
-	public LoRaMode getMode() {
-		return mode;
-	}
-
-	public LoRaNodeState setMode(LoRaMode mode) {
-		this.mode = mode;
-		return this;
-	}
-
 	public LoRaRadioConfiguration getRadioConfiguration() {
 		return radioConfiguration;
 	}
@@ -49,12 +39,12 @@ public class LoRaNodeState {
 		return this;
 	}
 
-	public LoRaAutoConfiguration getAutoConfiguration() {
-		return autoConfiguration;
+	public LoRaConfiguration getConfiguration() {
+		return configuration;
 	}
 
-	public LoRaNodeState setAutoConfiguration(LoRaAutoConfiguration autoConfiguration) {
-		this.autoConfiguration = autoConfiguration;
+	public LoRaNodeState setConfiguration(LoRaConfiguration configuration) {
+		this.configuration = configuration;
 		return this;
 	}
 

@@ -6,10 +6,14 @@ import java.util.Optional;
 public class CommandResult {
 	private final Command command;
 	private final List<ArgumentData> arguments;
+	private final boolean complete;
+	private final int offset;
 
-	public CommandResult(Command command, List<ArgumentData> arguments) {
+	public CommandResult(Command command, List<ArgumentData> arguments, boolean complete, int offset) {
 		this.command = command;
 		this.arguments = arguments;
+		this.complete = complete;
+		this.offset = offset;
 	}
 
 	public Command getCommand() {
@@ -25,5 +29,13 @@ public class CommandResult {
 			return Optional.empty();
 		}
 		return Optional.of(arguments.get(index));
+	}
+
+	public boolean isComplete() {
+		return complete;
+	}
+
+	public int getOffset() {
+		return offset;
 	}
 }

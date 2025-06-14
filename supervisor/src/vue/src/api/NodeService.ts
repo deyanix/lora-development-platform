@@ -5,6 +5,6 @@ export const NodeService = {
     await api.post(`/nodes/${id}/flashing`);
   },
   async transmit(id: string, text: string): Promise<void> {
-    await api.post(`/nodes/${id}/transmit`, text);
+    await api.post(`/nodes/${id}/transmit`, text, { headers: { 'Content-Type': 'text/plain' } });
   },
 };
