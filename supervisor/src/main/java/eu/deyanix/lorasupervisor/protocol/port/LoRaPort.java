@@ -1,6 +1,8 @@
 package eu.deyanix.lorasupervisor.protocol.port;
 
 import com.fazecast.jSerialComm.SerialPort;
+import com.fazecast.jSerialComm.SerialPortDataListener;
+import com.fazecast.jSerialComm.SerialPortEvent;
 import eu.deyanix.lorasupervisor.protocol.command.CommandResult;
 import eu.deyanix.lorasupervisor.protocol.connection.LoRaConnection;
 import eu.deyanix.lorasupervisor.protocol.command.Command;
@@ -21,12 +23,7 @@ public class LoRaPort {
 		if (!port.isOpen() && !port.openPort()) {
 			return null;
 		}
-		LoRaPort nodePort = new LoRaPort(port);
-		nodePort.attachConnection(new LoRaEventConnection(nodePort));
-
-		port.setBaudRate(115200);
-		port.setComPortTimeouts(SerialPort.TIMEOUT_READ_SEMI_BLOCKING, 0, 0);
-		return nodePort;
+		return new LoRaPort(port);
 	}
 
 	private final SerialPort serialPort;
@@ -41,6 +38,12 @@ public class LoRaPort {
 		this.serialPort = serialPort;
 		this.sender = new LoRaPortSender(this);
 		this.receiver = new LoRaPortReceiver(this);
+
+		this.serialPort.setBaudRate(115200);
+		this.serialPort.setComPortTimeouts(SerialPort.TIMEOUT_READ_SEMI_BLOCKING, 0, 0);
+		this.serialPort.addDataListener(new LoRaSerialPortListener());
+
+		attachConnection(new LoRaEventConnection());
 	}
 
 	public Optional<CommandResult> send(Command tx, Command rx, int retries) {
@@ -133,6 +136,30 @@ public class LoRaPort {
 			}
 		} finally {
 			connectionLock.unlock();
+		}
+	}
+
+	protected class LoRaSerialPortListener implements SerialPortDataListener {
+		@Override
+		public int getListeningEvents() {
+			return SerialPort.LISTENING_EVENT_DATA_AVAILABLE | SerialPort.LISTENING_EVENT_PORT_DISCONNECTED;
+		}
+
+		@Override
+		public void serialEvent(SerialPortEvent event) {
+			if (event.getEventType() == SerialPort.LISTENING_EVENT_PORT_DISCONNECTED) {
+				for (LoRaPortListener listener : getListeners()) {
+					listener.onDisconnect(LoRaPort.this);
+				}
+			}
+
+			if (event.getEventType() == SerialPort.LISTENING_EVENT_DATA_AVAILABLE) {
+				try {
+					receiver.receive();
+				} catch (Exception e) {
+					e.printStackTrace(); // TODO: Helper
+				}
+			}
 		}
 	}
 }

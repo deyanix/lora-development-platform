@@ -1,8 +1,5 @@
 package eu.deyanix.lorasupervisor.protocol.port;
 
-import com.fazecast.jSerialComm.SerialPort;
-import com.fazecast.jSerialComm.SerialPortDataListener;
-import com.fazecast.jSerialComm.SerialPortEvent;
 import eu.deyanix.lorasupervisor.protocol.connection.LoRaConnection;
 import eu.deyanix.lorasupervisor.protocol.buffer.BufferWriter;
 
@@ -21,7 +18,6 @@ public class LoRaPortReceiver {
 
 	public LoRaPortReceiver(LoRaPort port) {
 		this.port = port;
-		this.port.getSerialPort().addDataListener(new LoRaReceiverListener());
 	}
 
 	protected void receive() throws IOException {
@@ -121,24 +117,6 @@ public class LoRaPortReceiver {
 			this.expirationDate = null;
 		} else {
 			this.expirationDate = LocalDateTime.now().plus(timeout);
-		}
-	}
-
-	protected class LoRaReceiverListener implements SerialPortDataListener {
-		@Override
-		public int getListeningEvents() {
-			return SerialPort.LISTENING_EVENT_DATA_AVAILABLE;
-		}
-
-		@Override
-		public void serialEvent(SerialPortEvent event) {
-			if (event.getEventType() == SerialPort.LISTENING_EVENT_DATA_AVAILABLE) {
-				try {
-					receive();
-				} catch (Exception e) {
-					e.printStackTrace(); // TODO: Helper
-				}
-			}
 		}
 	}
 }

@@ -21,16 +21,10 @@ public class LoRaEventConnection extends LoRaConnection {
 			new Argument("DONE"),
 			new ExtensibleArgument());
 
-	private final LoRaPort port;
-
-	public LoRaEventConnection(LoRaPort port) {
-		this.port = port;
-	}
-
 	@Override
 	public boolean onReceive(LoRaPort port, String data) {
 		BufferReader reader = new BufferReader(data);
-		CommandResult commandResult = new CommandTokenizer(TX_DONE).read(reader);
+		CommandResult commandResult = new CommandTokenizer(RX_DONE).read(reader);
 		if (commandResult == null) {
 			return false;
 		}
@@ -39,11 +33,11 @@ public class LoRaEventConnection extends LoRaConnection {
 			requestedData = reader.getOffset();
 		} else {
 			String value = commandResult
-					.getArgument(1)
+					.getArgument(3)
 					.flatMap(ArgumentData::getString)
 					.orElse(null);
 			for (LoRaPortListener listener : port.getListeners()) {
-				listener.onTxDone(port, value);
+				listener.onRxDone(port, value);
 			}
 		}
 

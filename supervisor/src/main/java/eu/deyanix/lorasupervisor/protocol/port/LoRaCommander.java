@@ -8,9 +8,11 @@ import eu.deyanix.lorasupervisor.protocol.command.CommandResult;
 import eu.deyanix.lorasupervisor.protocol.command.ExtensibleArgument;
 import eu.deyanix.lorasupervisor.protocol.config.LoRaBandwidth;
 import eu.deyanix.lorasupervisor.protocol.config.LoRaCodingRate;
-import eu.deyanix.lorasupervisor.protocol.config.LoRaConfiguration;
+import eu.deyanix.lorasupervisor.protocol.config.LoRaAutoConfiguration;
+import eu.deyanix.lorasupervisor.protocol.config.LoRaRadioConfiguration;
 import eu.deyanix.lorasupervisor.protocol.config.LoRaMode;
 import eu.deyanix.lorasupervisor.protocol.config.LoRaAuto;
+import eu.deyanix.lorasupervisor.protocol.config.LoRaDelta;
 
 import java.util.List;
 import java.util.stream.IntStream;
@@ -177,6 +179,10 @@ public class LoRaCommander {
 				.orElseThrow();
 	}
 
+	public void push() {
+		sendDataSetter("PUSH");
+	}
+
 	public void setTxTimeout(int value) {
 		sendDataSetter("TXTO",
 				new ArgumentData().setInteger(value));
@@ -239,14 +245,22 @@ public class LoRaCommander {
 				new ArgumentData().setString(value.name()));
 	}
 
-
-	public LoRaConfiguration getConfiguration() {
+	public LoRaDelta getDelta() {
 		List<ArgumentData> rtoArgs = sendDataGetter("RTO", 2);
-		Integer minDelta = rtoArgs.get(0).getInteger().orElseThrow();
-		Integer maxDelta = rtoArgs.get(1).getInteger().orElseThrow();
+		int min = rtoArgs.get(0).getInteger().orElseThrow();
+		int max = rtoArgs.get(1).getInteger().orElseThrow();
+		return new LoRaDelta(min, max);
+	}
 
-		return new LoRaConfiguration()
-				.setMode(getMode())
+	public void setDelta(LoRaDelta delta) {
+		sendDataSetter("RTO",
+				new ArgumentData().setInteger(delta.getMin()),
+				new ArgumentData().setInteger(delta.getMax()));
+	}
+
+
+	public LoRaRadioConfiguration getRadioConfiguration() {
+		return new LoRaRadioConfiguration()
 				.setFrequency(getFrequency())
 				.setBandwidth(getBandwidth())
 				.setPower(getPower())
@@ -257,17 +271,10 @@ public class LoRaCommander {
 				.setPreambleLength(getPreambleLength())
 				.setPayloadLength(getPayloadLength())
 				.setTxTimeout(getTxTimeout())
-				.setRxSymbolTimeout(getRxSymbolTimeout())
-				.setMinDelta(minDelta)
-				.setMaxDelta(maxDelta)
-				.setAckRequired(getAckRequired())
-				.setAckLifetime(getAckLifetime())
-				.setInterval(getInterval())
-				.setAuto(getAuto());
+				.setRxSymbolTimeout(getRxSymbolTimeout());
 	}
 
-	public void setConfiguration(LoRaConfiguration configuration) {
-		setMode(configuration.getMode());
+	public void setRadioConfiguration(LoRaRadioConfiguration configuration) {
 		setFrequency(configuration.getFrequency());
 		setBandwidth(configuration.getBandwidth());
 		setPower(configuration.getPower());
@@ -279,7 +286,21 @@ public class LoRaCommander {
 		setPayloadLength(configuration.getPayloadLength());
 		setTxTimeout(configuration.getTxTimeout());
 		setRxSymbolTimeout(configuration.getRxSymbolTimeout());
-		setAckRequired(configuration.getAckRequired());
+		push();
+	}
+
+	public LoRaAutoConfiguration getConfiguration() {
+		return new LoRaAutoConfiguration()
+				.setDelta(getDelta())
+				.setAckRequired(getAckRequired())
+				.setAckLifetime(getAckLifetime())
+				.setInterval(getInterval())
+				.setAuto(getAuto());
+	}
+
+	public void setConfiguration(LoRaAutoConfiguration configuration) {
+		setDelta(configuration.getDelta());
+		setAckRequired(configuration.isAckRequired());
 		setAckLifetime(configuration.getAckLifetime());
 		setInterval(configuration.getInterval());
 		setAuto(configuration.getAuto());

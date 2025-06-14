@@ -4,7 +4,16 @@ const routes: RouteRecordRaw[] = [
   {
     path: '/',
     component: () => import('layouts/MainLayout.vue'),
-    children: [{ path: '', component: () => import('pages/IndexPage.vue') }],
+    children: [
+      {
+        path: '/',
+        component: () => import('pages/IndexPage.vue'),
+      },
+      {
+        path: '/dashboard',
+        component: () => import('pages/Dashboard/DashboardPage.vue'),
+      },
+    ],
   },
   {
     path: '/:catchAll(.*)*',
