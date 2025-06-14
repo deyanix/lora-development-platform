@@ -14,6 +14,8 @@
         </div>
       </q-scroll-area>
     </div>
+
+    <TimelineChart />
   </q-page>
 </template>
 
@@ -21,6 +23,7 @@
 import { ref, onMounted, onBeforeUnmount } from 'vue';
 import { Client } from '@stomp/stompjs';
 import SockJS from 'sockjs-client';
+import TimelineChart from 'pages/TimelineChart.vue';
 
 const messages = ref<string[]>([]);
 const isConnected = ref<boolean>(false);
