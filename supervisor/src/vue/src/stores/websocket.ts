@@ -25,11 +25,13 @@ export interface LoRaPortListener {
   onDisconnect?: LoRaPortListenerCallback<LoRaPortEvent>;
   onSerialTx?: LoRaPortListenerCallback<LoRaPortMessage>;
   onSerialRx?: LoRaPortListenerCallback<LoRaPortMessage>;
-  onTxDone?: LoRaPortListenerCallback<LoRaPortMessage>;
+  onTxDone?: LoRaPortListenerCallback<LoRaPortEvent>;
   onTxTimeout?: LoRaPortListenerCallback<LoRaPortEvent>;
   onRxDone?: LoRaPortListenerCallback<LoRaPortReceivedMessage>;
   onRxTimeout?: LoRaPortListenerCallback<LoRaPortEvent>;
   onRxError?: LoRaPortListenerCallback<LoRaPortEvent>;
+  onRxStart?: LoRaPortListenerCallback<LoRaPortEvent>;
+  onTxStart?: LoRaPortListenerCallback<LoRaPortMessage>;
 }
 
 export const useWebsocketStore = defineStore('websocket', () => {

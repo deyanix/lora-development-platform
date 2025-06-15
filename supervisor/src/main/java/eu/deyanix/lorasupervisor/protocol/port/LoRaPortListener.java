@@ -9,6 +9,8 @@ public interface LoRaPortListener {
 	void onRxDone(LoRaPort port, int rssi, int snr, String data);
 	void onRxTimeout(LoRaPort port);
 	void onRxError(LoRaPort port);
-	void onTxDone(LoRaPort port, String data);
+	void onTxDone(LoRaPort port);
 	void onTxTimeout(LoRaPort port);
+	void onTxStart(LoRaPort port, String data);
+	void onRxStart(LoRaPort port);
 }

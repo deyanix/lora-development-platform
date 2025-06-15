@@ -151,14 +151,26 @@ public class LoRaService {
 		}
 
 		@Override
-		public void onTxDone(LoRaPort port, String data) {
+		public void onTxDone(LoRaPort port) {
 			webSocketService.sendMessage("/topic/port/tx/done",
-					new LoRaPortMessage(port.getSerialPort().getSystemPortName(), data));
+					new LoRaPortEvent(port.getSerialPort().getSystemPortName()));
 		}
 
 		@Override
 		public void onTxTimeout(LoRaPort port) {
 			webSocketService.sendMessage("/topic/port/tx/timeout",
+					new LoRaPortEvent(port.getSerialPort().getSystemPortName()));
+		}
+
+		@Override
+		public void onTxStart(LoRaPort port, String data) {
+			webSocketService.sendMessage("/topic/port/tx/start",
+					new LoRaPortMessage(port.getSerialPort().getSystemPortName(), data));
+		}
+
+		@Override
+		public void onRxStart(LoRaPort port) {
+			webSocketService.sendMessage("/topic/port/rx/start",
 					new LoRaPortEvent(port.getSerialPort().getSystemPortName()));
 		}
 	}

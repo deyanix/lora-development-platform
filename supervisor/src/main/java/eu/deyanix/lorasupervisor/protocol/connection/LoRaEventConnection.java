@@ -26,10 +26,14 @@ public class LoRaEventConnection extends LoRaConnection {
 	private static final Command RX_ERROR = CommandFactory.createSetterArgs("RX",
 			new Argument("ERROR"));
 	private static final Command TX_DONE = CommandFactory.createSetterArgs("TX",
-			new Argument("DONE"),
-			new ExtensibleArgument());
+			new Argument("DONE"));
 	private static final Command TX_TIMEOUT = CommandFactory.createSetterArgs("TX",
 			new Argument("TIMEOUT"));
+	private static final Command TX_START= CommandFactory.createSetterArgs("TX",
+			new Argument("START"),
+			new ExtensibleArgument());
+	private static final Command RX_START= CommandFactory.createSetterArgs("RX",
+			new Argument("START"));
 
 	private final Map<Command, BiConsumer<LoRaPort, CommandResult>> commandHandlers = new HashMap<>();
 
@@ -57,15 +61,23 @@ public class LoRaEventConnection extends LoRaConnection {
 		});
 
 		commandHandlers.put(TX_DONE, (port, result) -> {
-			String eventData = result.getArgument(1)
-					.flatMap(ArgumentData::getString)
-					.orElse(null);
-
-			port.invokeListener(listener -> listener.onTxDone(port, eventData));
+			port.invokeListener(listener -> listener.onTxDone(port));
 		});
 
 		commandHandlers.put(TX_TIMEOUT, (port, result) -> {
 			port.invokeListener(listener -> listener.onTxTimeout(port));
+		});
+
+		commandHandlers.put(TX_START, (port, result) -> {
+			String eventData = result.getArgument(1)
+					.flatMap(ArgumentData::getString)
+					.orElse(null);
+
+			port.invokeListener(listener -> listener.onTxStart(port, eventData));
+		});
+
+		commandHandlers.put(RX_START, (port, result) -> {
+			port.invokeListener(listener -> listener.onRxStart(port));
 		});
 	}
 

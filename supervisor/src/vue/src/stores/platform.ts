@@ -37,6 +37,30 @@ export const usePlatformStore = defineStore('platform', () => {
         await fetch();
       }
     },
+    async onTxDone(){
+      console.log("txdone")
+      if (autoFetch.value) {
+        await fetch();
+      }
+    },
+    async onTxStart(){
+      console.log("txstart")
+      if (autoFetch.value) {
+        await fetch();
+      }
+    },
+    async onRxDone(){
+      console.log("rxdone")
+      if (autoFetch.value) {
+        await fetch();
+      }
+    },
+    async onRxStart(){
+      console.log("rxstart")
+      if (autoFetch.value) {
+        await fetch();
+      }
+    },
   });
 
   return { options, ports, nodes, autoFetch, fetch };
