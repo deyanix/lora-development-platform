@@ -38,7 +38,7 @@ public class LoRaService {
 	public List<LoRaSerialPort> getPorts() {
 		return getSerialPorts().stream()
 				.map(p -> new LoRaSerialPort()
-						.setPort(p.getSystemPortName())
+						.setPortName(p.getSystemPortName())
 						.setNodeId(getNodeByPort(p.getSystemPortName())
 								.map(LoRaNode::getId)
 								.orElse(null)))
@@ -69,7 +69,7 @@ public class LoRaService {
 						new LoRaPortEvent(serialPort.getSystemPortName()));
 
 				return new LoRaSerialPort()
-						.setPort(serialPort.getSystemPortName())
+						.setPortName(serialPort.getSystemPortName())
 						.setNodeId(nodeId);
 			} catch (Exception ex) {
 				ex.printStackTrace();

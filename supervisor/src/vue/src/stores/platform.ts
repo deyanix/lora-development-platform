@@ -4,6 +4,7 @@ import { onLoRaEvent } from 'src/composables/onLoRaEvent';
 import { PortModel, PortService } from 'src/api/PortService';
 
 export const usePlatformStore = defineStore('platform', () => {
+  const autoFetch = ref<boolean>(true);
   const ports = ref<PortModel[]>([]);
 
   async function fetch() {
@@ -16,12 +17,16 @@ export const usePlatformStore = defineStore('platform', () => {
 
   onLoRaEvent({
     async onConnect() {
-      await fetch();
+      if (autoFetch.value) {
+        await fetch();
+      }
     },
     async onDisconnect() {
-      await fetch();
+      if (autoFetch.value) {
+        await fetch();
+      }
     },
   });
 
-  return { ports, fetch };
+  return { ports, autoFetch, fetch };
 });

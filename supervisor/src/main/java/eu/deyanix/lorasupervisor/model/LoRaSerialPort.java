@@ -1,17 +1,15 @@
 package eu.deyanix.lorasupervisor.model;
 
-import eu.deyanix.lorasupervisor.protocol.LoRaNode;
-
 public class LoRaSerialPort {
-	private String port;
+	private String portName;
 	private String nodeId;
 
-	public String getPort() {
-		return port;
+	public String getPortName() {
+		return portName;
 	}
 
-	public LoRaSerialPort setPort(String port) {
-		this.port = port;
+	public LoRaSerialPort setPortName(String portName) {
+		this.portName = portName;
 		return this;
 	}
 
@@ -22,5 +20,9 @@ public class LoRaSerialPort {
 	public LoRaSerialPort setNodeId(String nodeId) {
 		this.nodeId = nodeId;
 		return this;
+	}
+
+	public boolean isConnected() {
+		return nodeId != null;
 	}
 }

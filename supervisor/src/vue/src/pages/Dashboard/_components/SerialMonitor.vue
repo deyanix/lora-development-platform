@@ -57,13 +57,13 @@ function processSerialBuffer(
 
 onLoRaEvent({
   onSerialTx(evt) {
-    if (evt.port === props.port.port) {
+    if (evt.portName === props.port.portName) {
       txBuffer.value += evt.message;
       processSerialBuffer(txBuffer, 'tx', messages);
     }
   },
   onSerialRx(evt) {
-    if (evt.port === props.port.port) {
+    if (evt.portName === props.port.portName) {
       rxBuffer.value += evt.message;
       processSerialBuffer(rxBuffer, 'rx', messages);
     }

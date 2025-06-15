@@ -1,8 +1,9 @@
 import { api } from 'boot/axios';
 
 export interface PortModel {
-  port: string;
+  portName: string;
   nodeId: string | null;
+  connected: boolean;
 }
 
 export const PortService = {

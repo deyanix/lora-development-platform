@@ -10,12 +10,10 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
-import java.util.stream.Collectors;
 
 @Tag(name = "LoRa")
 @RestController
@@ -27,11 +25,11 @@ public class LoRaController {
 	}
 
 	@GetMapping("/nodes")
-	public List<String> getNodes() {
+	public List<LoRaNodeState> getNodes() {
 		return loRaService.getNodes()
 				.stream()
-				.map(LoRaNode::getId)
-				.collect(Collectors.toList());
+				.map(LoRaNode::createState)
+				.toList();
 	}
 
 	@GetMapping("/nodes/{id}")

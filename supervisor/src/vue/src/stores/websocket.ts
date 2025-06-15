@@ -6,7 +6,7 @@ import SockJS from 'sockjs-client';
 const websocketUrl = 'http://localhost:8080/ws';
 
 export interface LoRaPortEvent {
-  port: string;
+  portName: string;
 }
 
 export interface LoRaPortMessage extends LoRaPortEvent {

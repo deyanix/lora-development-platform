@@ -34,6 +34,7 @@ export default defineConfigWithVueTs(
       'prefer-promise-reject-errors': 'off',
       'no-debugger': process.env.NODE_ENV === 'production' ? 'error' : 'off',
       '@typescript-eslint/no-misused-promises': 'off',
+      '@typescript-eslint/await-thenable': 'off',
     },
   },
 

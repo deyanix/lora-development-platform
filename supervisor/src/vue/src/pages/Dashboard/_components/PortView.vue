@@ -3,7 +3,7 @@
     <q-item>
       <q-item-section>
         <q-item-label>
-          {{ port.port }}
+          {{ port.portName }}
         </q-item-label>
         <q-item-label caption>
           <template v-if="port.nodeId">
@@ -35,11 +35,11 @@ import SerialMonitor from 'pages/Dashboard/_components/SerialMonitor.vue';
 const props = defineProps<{ port: PortModel }>();
 
 async function connect() {
-  await PortService.connect(props.port.port);
+  await PortService.connect(props.port.portName);
 }
 
 async function disconnect() {
-  await PortService.disconnect(props.port.port);
+  await PortService.disconnect(props.port.portName);
 }
 
 async function led() {

@@ -1,13 +1,13 @@
 package eu.deyanix.lorasupervisor.model;
 
 public class LoRaPortEvent {
-	private final String port;
+	private final String portName;
 
-	public LoRaPortEvent(String port) {
-		this.port = port;
+	public LoRaPortEvent(String portName) {
+		this.portName = portName;
 	}
 
-	public String getPort() {
-		return port;
+	public String getPortName() {
+		return portName;
 	}
 }
