@@ -32,6 +32,6 @@ public enum LoRaBandwidth {
 
 	@Override
 	public String toString() {
-		return bandwidth + "kHz";
+		return bandwidth + " kHz";
 	}
 }

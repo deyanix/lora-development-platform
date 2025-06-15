@@ -59,7 +59,7 @@ public class LoRaNode {
 	}
 
 	public LoRaNode setRadioConfiguration(LoRaRadioConfiguration radioConfiguration) {
-		commander.setRadioConfiguration(radioConfiguration);
+		getCommander().ifPresent(cmd -> cmd.setRadioConfiguration(radioConfiguration));
 		this.radioConfiguration = commander.getRadioConfiguration();
 		return this;
 	}
@@ -69,7 +69,7 @@ public class LoRaNode {
 	}
 
 	public LoRaNode setConfiguration(LoRaConfiguration configuration) {
-		commander.setConfiguration(configuration);
+		getCommander().ifPresent(cmd -> cmd.setConfiguration(configuration));
 		this.configuration = commander.getConfiguration();
 		return this;
 	}
@@ -79,12 +79,8 @@ public class LoRaNode {
 	}
 
 	public void setFlashing(boolean flashing) {
+		getCommander().ifPresent(cmd -> cmd.setLed(flashing));
 		this.flashing = flashing;
-	}
-
-	public void toggleFlashing() {
-		this.flashing = !this.flashing;
-		getCommander().ifPresent(cmd -> cmd.setLed(this.flashing));
 	}
 
 	public boolean isConnected() {

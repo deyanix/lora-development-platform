@@ -45,7 +45,7 @@ function processSerialBuffer(
     currentBuffer = currentBuffer.substring(terminatorIndex + 1).replace(/^[\r\n]+/, '');
     if (line.length === 0) continue;
 
-    allMessages.value.push({
+    allMessages.value.unshift({
       type: type,
       date: new Date(),
       message: line,
@@ -77,6 +77,5 @@ onLoRaEvent({
   color: white;
   font-family: 'Consolas', 'Noto Sans Mono', monospace;
   padding: 12px;
-  border-radius: 4px;
 }
 </style>

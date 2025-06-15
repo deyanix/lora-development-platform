@@ -1,5 +1,5 @@
 <template>
-  <q-page padding>
+  <q-page class="q-pa-lg">
     <div>
       Status połączenia:
       <b :style="`color: ${websocketStore.isConnected ? 'green' : 'red'}`">
@@ -9,7 +9,7 @@
 
     <div class="row q-col-gutter-md">
       <div v-for="port in platformStore.ports" :key="port.portName" class="col-12 col-md-6">
-        <PortView :port="port" />
+        <DashboardPortView :port="port" />
       </div>
     </div>
   </q-page>
@@ -17,7 +17,7 @@
 <script setup lang="ts">
 import { useWebsocketStore } from 'stores/websocket';
 import { usePlatformStore } from 'stores/platform';
-import PortView from 'pages/Dashboard/_components/PortView.vue';
+import DashboardPortView from 'pages/Dashboard/_components/DashboardPortView.vue';
 
 const websocketStore = useWebsocketStore();
 const platformStore = usePlatformStore();

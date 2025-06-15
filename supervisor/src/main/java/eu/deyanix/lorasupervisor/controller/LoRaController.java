@@ -1,5 +1,7 @@
 package eu.deyanix.lorasupervisor.controller;
 
+import eu.deyanix.lorasupervisor.model.LoRaFlashing;
+import eu.deyanix.lorasupervisor.model.LoRaNodeOptions;
 import eu.deyanix.lorasupervisor.model.LoRaNodeState;
 import eu.deyanix.lorasupervisor.protocol.LoRaNode;
 import eu.deyanix.lorasupervisor.protocol.config.LoRaConfiguration;
@@ -46,6 +48,11 @@ public class LoRaController {
 				.setRadioConfiguration(configuration);
 	}
 
+	@GetMapping("/nodes/any/options")
+	public LoRaNodeOptions getOptions() {
+		return new LoRaNodeOptions();
+	}
+
 	@PatchMapping("/nodes/{id}/configuration")
 	public void setConfiguration(@PathVariable String id, @RequestBody LoRaConfiguration configuration) {
 		loRaService.getNodeById(id)
@@ -54,10 +61,10 @@ public class LoRaController {
 	}
 
 	@PostMapping("/nodes/{id}/flashing")
-	public void toggleFlashing(@PathVariable String id) {
+	public void setFlashing(@PathVariable String id, @RequestBody LoRaFlashing flashing) {
 		loRaService.getNodeById(id)
 				.orElseThrow()
-				.toggleFlashing();
+				.setFlashing(flashing.isFlashing());
 	}
 
 	@PostMapping("/nodes/{id}/transmit")
