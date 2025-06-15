@@ -110,6 +110,16 @@ export const useWebsocketStore = defineStore('websocket', () => {
         const evt = JSON.parse(message.body);
         listeners.value.map((l) => l.onRxError?.(evt));
       });
+
+      client.subscribe('/topic/port/tx/start', (message) => {
+        const evt = JSON.parse(message.body);
+        listeners.value.map((l) => l.onTxStart?.(evt));
+      });
+
+      client.subscribe('/topic/port/rx/start', (message) => {
+        const evt = JSON.parse(message.body);
+        listeners.value.map((l) => l.onRxStart?.(evt));
+      });
     };
 
     client.onStompError = (frame) => {

@@ -23,12 +23,7 @@ public class LoRaPortReceiver {
 	protected void receive() throws IOException {
 		lock.lock();
 		try {
-			LoRaConnection connection = getCapturingConnection();
-			if (handleTimeout() && connection != null) {
-				connection.onClear(port);
-				connection = null;
-			}
-
+			LoRaConnection connection = handleTimeout();
 			BufferWriter localBuffer = new BufferWriter();
 			InputStream in = port.getSerialPort().getInputStream();
 
@@ -61,19 +56,26 @@ public class LoRaPortReceiver {
 			for (LoRaPortListener listener : port.getListeners()) {
 				listener.onReceive(port, localBuffer.getData());
 			}
-
-			setTimeout(Duration.ofMillis(100)); // TODO: Hardcoded timeout
 		} finally {
+			setTimeout(Duration.ofMillis(50));
 			lock.unlock();
 		}
 	}
 
-	protected boolean handleTimeout() {
-		if (!isExpired())
-			return false;
+	protected LoRaConnection handleTimeout() {
+		LoRaConnection connection = getCapturingConnection();
+		boolean expired = isExpired();
+		setTimeout(null);
 
-		buffer.clearAll();
-		return true;
+		if (expired) {
+			if (connection != null) {
+				connection.onClear(port, buffer.getData());
+			}
+			buffer.clearAll();
+			return null;
+		}
+
+		return connection;
 	}
 
 	protected LoRaConnection getCapturingConnection() {
@@ -118,9 +120,9 @@ public class LoRaPortReceiver {
 
 	protected void setTimeout(Duration timeout) {
 		if (timeout == null) {
-			this.expirationDate = null;
+			expirationDate = null;
 		} else {
-			this.expirationDate = LocalDateTime.now().plus(timeout);
+			expirationDate = LocalDateTime.now().plus(timeout);
 		}
 	}
 }

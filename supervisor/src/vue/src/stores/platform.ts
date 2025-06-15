@@ -37,17 +37,17 @@ export const usePlatformStore = defineStore('platform', () => {
         await fetch();
       }
     },
-    async onTxDone(){
-      console.log("txdone")
+    onTxDone(evt) {
+      console.log('TX DONE', evt.portName);
     },
-    async onTxStart(){
-      console.log("txstart")
+    onTxStart(evt) {
+      console.log('TX START', evt.portName, evt.message);
     },
-    async onRxDone(){
-      console.log("rxdone")
+    onRxDone(evt) {
+      console.log('RX DONE', evt.portName, evt.message);
     },
-    async onRxStart(){
-      console.log("rxstart")
+    onRxStart(evt) {
+      console.log('RX START', evt.portName);
     },
   });
 

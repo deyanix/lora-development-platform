@@ -8,18 +8,13 @@
 
 #define LoraWan_RGB 1
 
-#define RX_DATA_LEN (320)
-
 uint64_t chipID = getID();
-char rxpacket[RX_DATA_LEN];
 
 void OnRxDone(uint8_t *payload, uint16_t size, int16_t rssi, int8_t snr) {
-    memset(rxpacket, 0, RX_DATA_LEN);
-    int offset = sprintf(rxpacket, "%d,%d,%d,", rssi, snr, size);
-    memcpy(rxpacket+offset, payload, size);
-
     Serial.print("RX=DONE,");
-    Serial.println(rxpacket);
+    Serial.printf("%d,%d,%d,", rssi, snr, size);
+    Serial.write(payload, size);
+    Serial.println();
 
     payload[size] = '\0';
 

@@ -1,6 +1,6 @@
 <template>
   <q-list separator class="full-height">
-    <q-expansion-item group="node-panel" label="Konfiguracje radiowe">
+    <q-expansion-item group="node-panel" label="Konfiguracje radiowe" default-opened>
       <q-item>
         <q-item-section>
           <q-item-label caption> Częstotliwość </q-item-label>

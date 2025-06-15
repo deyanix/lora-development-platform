@@ -13,7 +13,11 @@ public abstract class LoRaConnection {
 
 	public abstract boolean onReceive(LoRaPort port, String data);
 
-	public void onClear(LoRaPort port) {
+	public void onClear(LoRaPort port, String data) {
+		requestedData = 0;
+	}
+
+	public void onClose(LoRaPort port) {
 		requestedData = 0;
 	}
 

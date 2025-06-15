@@ -138,7 +138,7 @@ public class LoRaPort {
 		connectionLock.lock();
 		try {
 			if (connections.remove(connection)) {
-				connection.onClear(this);
+				connection.onClose(this);
 				disconnect.signal();
 			}
 		} finally {

@@ -54,8 +54,7 @@ public class LoRaCommandConnection extends LoRaSenderConnection {
 
 		if (commandResult.isComplete()) {
 			result.complete(commandResult);
-		} else {
-			requestedData = commandResult.getOffset();
+			requestedData = 0;
 		}
 
 		return true;

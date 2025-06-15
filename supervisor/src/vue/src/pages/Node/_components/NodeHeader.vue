@@ -58,7 +58,7 @@ async function toggleFlashing() {
 async function send() {
   if (!props.node) return;
 
-  await NodeService.transmit(props.node.id, 'abcdef');
+  await NodeService.transmit(props.node.id, 'abc\ndef');
 }
 
 function openRadioConfiguration() {

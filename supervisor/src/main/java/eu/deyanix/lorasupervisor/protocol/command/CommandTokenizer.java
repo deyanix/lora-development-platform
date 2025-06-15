@@ -50,13 +50,12 @@ public class CommandTokenizer {
 			if (argumentData.isEmpty()) {
 				return null;
 			}
+			argumentsData.add(argumentData.get());
 
 			if (buffer.getOffset() > buffer.getBuffer().length()) {
 				complete = false;
 				break;
 			}
-
-			argumentsData.add(argumentData.get());
 		}
 
 		return new CommandResult(command, argumentsData, complete, buffer.getOffset());

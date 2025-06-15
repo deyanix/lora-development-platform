@@ -83,14 +83,25 @@ public class LoRaEventConnection extends LoRaConnection {
 
 	@Override
 	public boolean onReceive(LoRaPort port, String data) {
+		return receive(port, data, false);
+	}
+
+	@Override
+	public void onClear(LoRaPort port, String data) {
+		super.onClear(port, data);
+		receive(port, data, true);
+	}
+
+	private boolean receive(LoRaPort port, String data, boolean force) {
 		for (Map.Entry<Command, BiConsumer<LoRaPort, CommandResult>> entry : commandHandlers.entrySet()) {
 			Command command = entry.getKey();
 			BiConsumer<LoRaPort, CommandResult> handler = entry.getValue();
 
 			CommandResult result = receive(command, data);
 			if (result != null) {
-				if (result.isComplete()) {
+				if (result.isComplete() || force) {
 					handler.accept(port, result);
+					requestedData = 0;
 				}
 				return true;
 			}

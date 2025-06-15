@@ -242,7 +242,12 @@ public class LoRaCommander {
 
 	public void setAuto(LoRaAuto value) {
 		sendDataSetter("AUTO",
-				new ArgumentData().setString(value.name()));
+				new ArgumentData(value.name()));
+	}
+
+	public void resetAuto() {
+		sendDataSetter("AUTO",
+				new ArgumentData("RST"));
 	}
 
 	public LoRaDelta getDelta() {
