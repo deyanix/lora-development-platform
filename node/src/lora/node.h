@@ -32,7 +32,7 @@ typedef enum {
 typedef enum {
     OFF = 1,
     RANDOM = 2,
-    TURNBASED = 3,
+    TURNBASED = 3
 } LoRaNodeAuto;
 
 class LoRaNodeClass {
@@ -90,6 +90,8 @@ public:
     void OnRxError();
     void OnTxDone();
     void OnTxTimeout();
+    void OnRxStart();
+    void OnTxStart();
 
     void SwitchLed(bool state, uint32_t color);
 };

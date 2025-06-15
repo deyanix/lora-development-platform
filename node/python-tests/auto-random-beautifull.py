@@ -17,6 +17,9 @@ COLOR_WHITE_ON_BLACK = 3 # For general text
 COLOR_CYAN_ON_BLACK = 4 # For port number on top
 COLOR_YELLOW_ON_BLACK = 5 # For status panel text
 
+SPECIAL_COMMAND = "+AUTO=RST\n"
+SPECIAL_COMMAND_SENT = False # Flag to ensure command is sent only once
+
 # Shared data structure for message counts, protected by a lock
 # Key: port_path, Value: {'tx': 0, 'rx': 0}
 message_counts = {}
@@ -126,7 +129,6 @@ def initialize_port(port, idx, args, freq_map):
         '+TXTO?\n',
         '+MODE?\n',
         '+PUSH\n',
-        '+LED=0\n'
         '+TOA=4?\n',
         f'+INV={args.interval}\n',
         f'+RTO={args.mindelta},{args.maxdelta}\n',
@@ -182,6 +184,7 @@ def update_status_panel(stdscr, status_win, port_paths):
 # ---
 ## Main Curses Application
 def curses_main(stdscr, args, freq_map):
+    global SPECIAL_COMMAND_SENT
     curses.curs_set(0) # Hide the cursor
 
     # --- Initialize Colors ---
@@ -280,6 +283,7 @@ def curses_main(stdscr, args, freq_map):
     status_win.refresh()
 
     time.sleep(1)
+    start_time = time.time()
     for idx, port in enumerate(serial_ports):
         threading.Thread(target=initialize_port, args=(port, idx, args, freq_map), daemon=True).start()
         #initialize_port(port, idx, args, freq_map)
@@ -289,6 +293,12 @@ def curses_main(stdscr, args, freq_map):
             # Periodically update the status panel
             update_status_panel(stdscr, status_win, port_paths)
             time.sleep(0.5) # Refresh status panel every 0.5 seconds
+
+            if not SPECIAL_COMMAND_SENT and (time.time() - start_time >= 60):
+                SPECIAL_COMMAND_SENT = True
+                for port in serial_ports:
+                    port.write(SPECIAL_COMMAND.encode('utf-8'))
+
     except KeyboardInterrupt:
         pass
     finally:

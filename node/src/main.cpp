@@ -285,6 +285,11 @@ void processTerminal() {
                 } else if (reader.with("TURNBASED")) {
                     LoRaNode.Auto = TURNBASED;
                     Serial.println("AUTO=OK");
+                } else if (reader.with("RST")) {
+                    LoRaNode.msgCounter = 0;
+                    LoRaNode.ackLifetime = 0;
+                    LoRaNode.permanentDelta = false;
+                    Serial.println("AUTO=OK");
                 } else {
                     Serial.println("AUTO=ERR");
                 }
