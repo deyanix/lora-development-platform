@@ -2,6 +2,7 @@
   <q-layout class="main-layout" view="hHh Lpr lFf">
     <q-header bordered>
       <q-toolbar>
+        <q-btn icon="mdi-menu" flat round dense @click="opened = !opened" />
         <q-toolbar-title> LoRa Supervisor </q-toolbar-title>
 
         <q-btn icon="mdi-connection" round flat @click="openSerialConnector">
@@ -12,7 +13,7 @@
       </q-toolbar>
     </q-header>
 
-    <q-drawer bordered :model-value="true">
+    <q-drawer v-model="opened" bordered>
       <q-list>
         <q-item clickable :to="{ name: 'Dashboard' }" exact>
           <q-item-section avatar>
@@ -55,11 +56,12 @@
 import { Dialog } from 'quasar';
 import SerialConnectorDialog from 'layouts/_components/SerialConnectorDialog.vue';
 import { usePlatformStore } from 'stores/platform';
-import { computed } from 'vue';
+import { computed, ref } from 'vue';
 import StatusIndicator from 'components/StatusIndicator.vue';
 
 const platform = usePlatformStore();
 
+const opened = ref<boolean>(true);
 const portConnectedCount = computed(() => platform.ports.filter((p) => p.connected).length);
 
 function openSerialConnector() {

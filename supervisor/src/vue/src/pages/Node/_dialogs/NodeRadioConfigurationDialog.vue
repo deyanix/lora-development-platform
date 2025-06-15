@@ -28,7 +28,7 @@
             </div>
             <div class="col">
               <q-select
-                v-model.number="configuration.bandwidth"
+                v-model="configuration.bandwidth"
                 label="Pasmo"
                 :options="platform.options?.bandwidth"
                 option-label="name"

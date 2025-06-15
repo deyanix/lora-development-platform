@@ -81,13 +81,13 @@
       </q-item>
       <q-item>
         <q-item-section>
-          <q-item-label caption> Algorytm automatyczny </q-item-label>
+          <q-item-label caption> Algorytm </q-item-label>
           <q-item-label> {{ node.configuration.auto }} </q-item-label>
         </q-item-section>
       </q-item>
       <q-item>
         <q-item-section>
-          <q-item-label caption> Wymaganie ACK </q-item-label>
+          <q-item-label caption> Wymagane ACK </q-item-label>
           <q-item-label>
             {{ node.configuration.ackRequired ? 'Włączone' : 'Wyłączone' }}
           </q-item-label>

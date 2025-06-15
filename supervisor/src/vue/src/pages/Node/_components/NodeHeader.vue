@@ -29,7 +29,7 @@
         <q-btn icon="mdi-antenna" flat dense round :disable="!node" @click="openRadioConfiguration">
           <q-tooltip>Konfiguracje radiowe</q-tooltip>
         </q-btn>
-        <q-btn icon="mdi-cog" flat dense round :disable="!node">
+        <q-btn icon="mdi-cog" flat dense round :disable="!node" @click="openNodeConfiguration">
           <q-tooltip>Konfiguracje węzła</q-tooltip>
         </q-btn>
       </div>
@@ -41,6 +41,7 @@ import { NodeModel, NodeService } from 'src/api/NodeService';
 import { Dialog } from 'quasar';
 import NodeRadioConfigurationDialog from 'pages/Node/_dialogs/NodeRadioConfigurationDialog.vue';
 import { usePlatformStore } from 'stores/platform';
+import NodeConfigurationDialog from 'pages/Node/_dialogs/NodeConfigurationDialog.vue';
 
 const platform = usePlatformStore();
 const props = defineProps<{ node?: NodeModel }>();
@@ -63,6 +64,15 @@ async function send() {
 function openRadioConfiguration() {
   Dialog.create({
     component: NodeRadioConfigurationDialog,
+    componentProps: {
+      node: props.node,
+    },
+  });
+}
+
+function openNodeConfiguration() {
+  Dialog.create({
+    component: NodeConfigurationDialog,
     componentProps: {
       node: props.node,
     },

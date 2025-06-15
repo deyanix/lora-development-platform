@@ -65,6 +65,9 @@ export const NodeService = {
   async updateFlashing(id: string, flashing: boolean): Promise<void> {
     await api.post(`/nodes/${id}/flashing`, { flashing });
   },
+  async updateConfiguration(id: string, configuration: Partial<NodeConfiguration>) {
+    await api.patch(`/nodes/${id}/configuration`, configuration);
+  },
   async updateRadioConfiguration(id: string, configuration: Partial<NodeRadioConfiguration>) {
     await api.patch(`/nodes/${id}/radio`, configuration);
   },
