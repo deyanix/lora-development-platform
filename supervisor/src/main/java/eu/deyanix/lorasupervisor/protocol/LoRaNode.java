@@ -21,10 +21,6 @@ public class LoRaNode {
 		this.commander = commander;
 	}
 
-	public LoRaNode(String id, LoRaPort port) {
-		this(id, port.createCommander());
-	}
-
 	public String getId() {
 		return id;
 	}

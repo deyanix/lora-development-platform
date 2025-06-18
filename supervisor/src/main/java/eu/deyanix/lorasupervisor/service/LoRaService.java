@@ -8,7 +8,7 @@ import eu.deyanix.lorasupervisor.model.LoRaSerialPort;
 import eu.deyanix.lorasupervisor.protocol.LoRaNode;
 import eu.deyanix.lorasupervisor.protocol.port.LoRaCommander;
 import eu.deyanix.lorasupervisor.protocol.port.LoRaPort;
-import eu.deyanix.lorasupervisor.protocol.port.LoRaPortListener;
+import eu.deyanix.lorasupervisor.protocol.port.LoRaPortBasicListener;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
@@ -23,9 +23,11 @@ public class LoRaService {
 
 	private final ArrayList<LoRaNode> nodes = new ArrayList<>();
 	private final WebSocketService webSocketService;
+	private final LoRaStatisticService loraStatisticService;
 
-	public LoRaService(WebSocketService webSocketService) {
+	public LoRaService(WebSocketService webSocketService, LoRaStatisticService loraStatisticService) {
 		this.webSocketService = webSocketService;
+		this.loraStatisticService = loraStatisticService;
 	}
 
 	public List<SerialPort> getSerialPorts() {
@@ -51,6 +53,7 @@ public class LoRaService {
 		if (port != null) {
 			try {
 				port.addListener(new LoRaListener());
+				port.addListener(loraStatisticService.getPortListener());
 
 				LoRaCommander commander = port.createCommander();
 				String nodeId = commander.getId();
@@ -60,10 +63,11 @@ public class LoRaService {
 					node.setCommander(commander);
 					node.synchronizeUp();
 				} else {
-					node = new LoRaNode(nodeId, port);
+					node = new LoRaNode(nodeId, commander);
 					node.synchronizeDown();
 					nodes.add(node);
 				}
+				port.setNode(node);
 
 				webSocketService.sendMessage("/topic/port/connect",
 						new LoRaPortEvent(serialPort.getSystemPortName()));
@@ -114,7 +118,7 @@ public class LoRaService {
 				.findFirst();
 	}
 
-	protected class LoRaListener implements LoRaPortListener {
+	protected class LoRaListener extends LoRaPortBasicListener {
 		@Override
 		public void onDisconnect(LoRaPort port) {
 			disconnect(port.getSerialPort().getSystemPortName());

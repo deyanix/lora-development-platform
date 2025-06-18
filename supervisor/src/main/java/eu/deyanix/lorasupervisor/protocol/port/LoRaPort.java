@@ -3,6 +3,7 @@ package eu.deyanix.lorasupervisor.protocol.port;
 import com.fazecast.jSerialComm.SerialPort;
 import com.fazecast.jSerialComm.SerialPortDataListener;
 import com.fazecast.jSerialComm.SerialPortEvent;
+import eu.deyanix.lorasupervisor.protocol.LoRaNode;
 import eu.deyanix.lorasupervisor.protocol.command.CommandResult;
 import eu.deyanix.lorasupervisor.protocol.connection.LoRaConnection;
 import eu.deyanix.lorasupervisor.protocol.command.Command;
@@ -34,6 +35,7 @@ public class LoRaPort {
 	private final List<LoRaPortListener> listeners = new ArrayList<>();
 	private final Lock connectionLock = new ReentrantLock();
 	private final Condition disconnect = connectionLock.newCondition();
+	private LoRaNode node;
 
 	public LoRaPort(SerialPort serialPort) {
 		this.serialPort = serialPort;
@@ -144,6 +146,15 @@ public class LoRaPort {
 		} finally {
 			connectionLock.unlock();
 		}
+	}
+
+	public LoRaNode getNode() {
+		return node;
+	}
+
+	public LoRaPort setNode(LoRaNode node) {
+		this.node = node;
+		return this;
 	}
 
 	protected class LoRaSerialPortListener implements SerialPortDataListener {
