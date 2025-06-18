@@ -76,14 +76,13 @@ void LoRaNodeClass::Loop()
 
     if (this->Mode == TX && this->Auto == RANDOM)
     {
-        unsigned long interval = this->permanentDelta ? this->msgDelay : this->firstMsgDelay;
+        unsigned long interval = this->permanentDelta ? this->msgDelay : (this->firstMsgDelay + this->msgDelay);
         if (millis() - this->lastSendTime >= interval)
         {
             char message[128];
             if (this->ackReq && this->ackLifetime <= 0)
             {
                 snprintf(message, sizeof(message), "%012llx-%d-?", getID(), msgCounter);
-
                 if (ackLifetime < 0)
                 {
                     RandomGenerator randomGenerator;
@@ -167,9 +166,10 @@ void LoRaNodeClass::OnRxDone(uint8_t* payload, uint16_t size, int16_t rssi, int8
             {
                 char message[128];
                 snprintf(message, sizeof(message), "%s-%s", "ACK", (char*)payload);
-                if (strlen(message) >= 2 && message[strlen(message) - 2] == '-' && message[strlen(message) - 1] == '?')
+                unsigned int msgLen = strlen(message);
+                if (msgLen >= 2 && message[msgLen - 2] == '-' && message[msgLen - 1] == '?')
                 {
-                    message[strlen(message) - 2] = '\0';
+                    message[msgLen - 2] = '\0';
                 }
                 this->Send((uint8_t*)message, strlen(message));
             }
@@ -228,7 +228,14 @@ void LoRaNodeClass::OnRxStart()
 
 void LoRaNodeClass::OnTxStart()
 {
-    turnOnRGB(COLOR_SEND, 0);
+    if (this->ackReq && (this->ackLifetime + 1) <= 0)
+    {
+        turnOnRGB(COLOR_SACK, 0);
+    }
+    else
+    {
+        turnOnRGB(COLOR_SEND, 0);
+    }
     Serial.print("TX=START,");
     Serial.print(strlen(this->lastSentData));
     Serial.print(",");

@@ -7,7 +7,8 @@
 #include "validation.h"
 
 #define MAX_MSG_BUFFER_LENGTH 128
-#define COLOR_FIND 0x500050
+#define COLOR_FIND 0xff00ff
+#define COLOR_SACK 0x000050
 #define COLOR_BOOT 0x505000
 
 typedef struct {
@@ -70,9 +71,10 @@ public:
 
     unsigned long ackLifetimeInit;
     long ackLifetime;
-    bool ackReq = false;
+    bool ackReq;
 
     bool ledState = false;
+    bool isSendingAck = false;
 
     uint64_t chipID;
 
