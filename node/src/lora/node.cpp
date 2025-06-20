@@ -12,7 +12,6 @@ void LoRaNodeClass::Init()
     this->lastSendTime = millis();
     this->msgDelay = 10000;
 
-    this->minDelta = 100;
     this->maxDelta = 10000;
     this->msgCounter = 0;
 
@@ -86,7 +85,7 @@ void LoRaNodeClass::Loop()
                 if (ackLifetime < 0)
                 {
                     RandomGenerator randomGenerator;
-                    this->firstMsgDelay = randomGenerator.generateUniform(this->minDelta, this->maxDelta);
+                    this->firstMsgDelay = randomGenerator.generateUniform(0, this->maxDelta);
                     this->permanentDelta = false;
                 }
             }

@@ -64,7 +64,6 @@ public:
     unsigned long msgDelay;     // Amount of time to wait before sending next msg
 
     bool permanentDelta;
-    unsigned long minDelta;
     unsigned long maxDelta;
     unsigned long firstMsgDelay;
     int msgCounter;

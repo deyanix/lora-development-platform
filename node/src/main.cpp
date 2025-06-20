@@ -321,28 +321,19 @@ void processTerminal() {
         } else if (reader.with("RTO"))
         {
             if (reader.with('=')) {
-                String value = reader.untilEnd();
-                int commaIndex = value.indexOf(',');
-                if (commaIndex != -1) {
-                    long minDelta = value.substring(0, commaIndex).toInt();
-                    long maxDelta = value.substring(commaIndex + 1).toInt();
-                    if (minDelta >= 0 && minDelta <= UINT32_MAX && maxDelta >= 0 && maxDelta <= UINT32_MAX && minDelta <= maxDelta) {
-                        LoRaNode.minDelta = (uint32_t)minDelta;
-                        LoRaNode.maxDelta = (uint32_t)maxDelta;
-                        RandomGenerator random_generator = RandomGenerator();
-                        LoRaNode.firstMsgDelay = random_generator.generateUniform(LoRaNode.minDelta, LoRaNode.maxDelta);
-                        Serial.println("RTO=OK");
-                    } else {
-                        Serial.println("RTO=ERR");
-                    }
+                long maxDelta = reader.untilEnd().toInt();
+                if (maxDelta >= 0 && maxDelta <= UINT32_MAX) {
+                    LoRaNode.maxDelta = (uint32_t)maxDelta;
+
+                    RandomGenerator random_generator = RandomGenerator();
+                    LoRaNode.firstMsgDelay = random_generator.generateUniform(0, LoRaNode.maxDelta);
+                    Serial.println("RTO=OK");
                 } else {
                     Serial.println("RTO=ERR");
                 }
             } else if (reader.with('?'))
             {
                 Serial.print("RTO=");
-                Serial.print(LoRaNode.minDelta);
-                Serial.print(",");
                 Serial.println(LoRaNode.maxDelta);
             }
         } else if (reader.with("ACKLT")) {
