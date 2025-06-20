@@ -12,7 +12,6 @@ import eu.deyanix.lorasupervisor.protocol.config.LoRaConfiguration;
 import eu.deyanix.lorasupervisor.protocol.config.LoRaRadioConfiguration;
 import eu.deyanix.lorasupervisor.protocol.config.LoRaMode;
 import eu.deyanix.lorasupervisor.protocol.config.LoRaAuto;
-import eu.deyanix.lorasupervisor.protocol.config.LoRaDelta;
 
 import java.util.List;
 import java.util.stream.IntStream;
@@ -250,17 +249,15 @@ public class LoRaCommander {
 				new ArgumentData("RST"));
 	}
 
-	public LoRaDelta getDelta() {
-		List<ArgumentData> rtoArgs = sendDataGetter("RTO", 2);
-		int min = rtoArgs.get(0).getInteger().orElseThrow();
-		int max = rtoArgs.get(1).getInteger().orElseThrow();
-		return new LoRaDelta(min, max);
+	public int getDelta() {
+		return sendDataGetter("RTO")
+				.getInteger()
+				.orElseThrow();
 	}
 
-	public void setDelta(LoRaDelta delta) {
+	public void setDelta(int value) {
 		sendDataSetter("RTO",
-				new ArgumentData().setInteger(delta.getMin()),
-				new ArgumentData().setInteger(delta.getMax()));
+				new ArgumentData().setInteger(value));
 	}
 
 

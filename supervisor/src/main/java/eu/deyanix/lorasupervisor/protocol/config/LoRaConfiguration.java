@@ -7,8 +7,7 @@ import java.util.Optional;
 public class LoRaConfiguration {
 	private LoRaMode mode;
 	private LoRaAuto auto;
-	private Integer minDelta;
-	private Integer maxDelta;
+	private Integer delta;
 	private Long interval;
 	private Boolean ackRequired;
 	private Integer ackLifetime;
@@ -31,35 +30,12 @@ public class LoRaConfiguration {
 		return this;
 	}
 
-	public Optional<Integer> getMinDelta() {
-		return Optional.ofNullable(minDelta);
+	public Optional<Integer> getDelta() {
+		return Optional.ofNullable(delta);
 	}
 
-	public LoRaConfiguration setMinDelta(Integer minDelta) {
-		this.minDelta = minDelta;
-		return this;
-	}
-
-	public Optional<Integer> getMaxDelta() {
-		return Optional.ofNullable(maxDelta);
-	}
-
-	public LoRaConfiguration setMaxDelta(Integer maxDelta) {
-		this.maxDelta = maxDelta;
-		return this;
-	}
-
-	@JsonIgnore
-	public Optional<LoRaDelta> getDelta() {
-		if (minDelta == null || maxDelta == null) {
-			return Optional.empty();
-		}
-		return Optional.of(new LoRaDelta(minDelta, maxDelta));
-	}
-
-	public LoRaConfiguration setDelta(LoRaDelta delta) {
-		this.minDelta = delta.getMin();
-		this.maxDelta = delta.getMax();
+	public LoRaConfiguration setDelta(int delta) {
+		this.delta = delta;
 		return this;
 	}
 
