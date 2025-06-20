@@ -26,8 +26,8 @@ typedef struct {
 } LoRaNodeParams_t;
 
 typedef enum {
-    RX = 1,
-    TX = 2,
+    SNK = 1,
+    SRC = 2,
 } LoRaNodeMode;
 
 typedef enum {
@@ -52,7 +52,7 @@ public:
             .RxSymbolTimeout = 0,
     };
     RadioEvents_t Events = {};
-    LoRaNodeMode Mode = TX;
+    LoRaNodeMode Mode = SRC;
     LoRaNodeAuto Auto = OFF;
     bool Idle = true;
 

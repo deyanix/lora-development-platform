@@ -51,7 +51,7 @@ void LoRaNodeClass::Loop()
 {
     if (this->Idle)
     {
-        if (this->Mode == RX)
+        if (this->Mode == SNK)
         {
             this->Receive();
         }
@@ -74,7 +74,7 @@ void LoRaNodeClass::Loop()
         }
     }
 
-    if (this->Mode == TX && this->Auto == RANDOM)
+    if (this->Mode == SRC && this->Auto == RANDOM)
     {
         unsigned long interval = this->permanentDelta ? this->msgDelay : (this->firstMsgDelay + this->msgDelay);
         if (millis() - this->lastSendTime >= interval)
@@ -160,7 +160,7 @@ void LoRaNodeClass::OnRxDone(uint8_t* payload, uint16_t size, int16_t rssi, int8
 
     if (this->Auto == RANDOM && this->ackReq)
     {
-        if (this->Mode == RX)
+        if (this->Mode == SNK)
         {
             if (validateStandardMessage(payload))
             {
@@ -174,7 +174,7 @@ void LoRaNodeClass::OnRxDone(uint8_t* payload, uint16_t size, int16_t rssi, int8
                 this->Send((uint8_t*)message, strlen(message));
             }
         }
-        else if (this->Mode == TX)
+        else if (this->Mode == SRC)
         {
             uint64_t chipID = getID();
             if (validateAckMessage(payload, chipID))

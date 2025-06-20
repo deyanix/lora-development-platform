@@ -213,11 +213,11 @@ void processTerminal() {
             }
         } else if (reader.with("MODE")) {
             if (reader.with('=')) {
-                if (reader.with("RX")) {
-                    LoRaNode.Mode = RX;
+                if (reader.with("SNK")) {
+                    LoRaNode.Mode = SNK;
                     Serial.println("MODE=OK");
-                } else if (reader.with("TX")) {
-                    LoRaNode.Mode = TX;
+                } else if (reader.with("SRC")) {
+                    LoRaNode.Mode = SRC;
                     Serial.println("MODE=OK");
                 } else {
                     Serial.println("MODE=ERR");
@@ -225,12 +225,12 @@ void processTerminal() {
             } else if (reader.with('?')) {
                 Serial.print("MODE=");
                 switch (LoRaNode.Mode) {
-                    case RX:
-                        Serial.println("RX");
+                    case SNK:
+                        Serial.println("SNK");
                         break;
 
-                    case TX:
-                        Serial.println("TX");
+                    case SRC:
+                        Serial.println("SRC");
                         break;
 
                     default:
