@@ -115,7 +115,7 @@ def initialize_port(port, idx, args, freq_map):
         '+IIQ=1\n',
         '+STO=0\n',
         '+TXTO=3000\n',
-        f'+MODE={"RX" if idx == 0 else "TX"}\n',
+        f'+MODE={"SNK" if idx == 0 else "SRC"}\n',
         '+FRQ?\n',
         '+BW?\n',
         '+SF?\n',
