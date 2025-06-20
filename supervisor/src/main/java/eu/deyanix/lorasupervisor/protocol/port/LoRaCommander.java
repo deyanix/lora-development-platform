@@ -191,13 +191,13 @@ public class LoRaCommander {
 	public LoRaMode getMode() {
 		return sendDataGetter("MODE")
 				.getString()
-				.map(LoRaMode::valueOf)
+				.map(LoRaMode::getEnum)
 				.orElseThrow();
 	}
 
 	public void setMode(LoRaMode value) {
 		sendDataSetter("MODE",
-				new ArgumentData().setString(value.name()));
+				new ArgumentData().setString(value.getValue()));
 	}
 
 	public boolean getAckRequired() {
