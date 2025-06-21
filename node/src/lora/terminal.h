@@ -3,7 +3,7 @@
 
 #include <Arduino.h>
 #include "node.h"
-#include "commands.h"
+//#include "commands.h"
 #include "reader.h"
 
 #define LORA_TERMINAL_BUFFER_CAPACITY (256)
