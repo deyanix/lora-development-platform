@@ -107,9 +107,17 @@
       </q-item>
       <q-item>
         <q-item-section>
+          <q-item-label caption> Wydłużanie backoff </q-item-label>
+          <q-item-label>
+            {{ node.configuration.backOffIncrease ? 'Włączone' : 'Wyłączone' }}
+          </q-item-label>
+        </q-item-section>
+      </q-item>
+      <q-item>
+        <q-item-section>
           <q-item-label caption> Przesunięcie podstawy czasowej </q-item-label>
           <q-item-label>
-            {{ node.configuration.minDelta }} - {{ node.configuration.maxDelta }} ms
+            {{ node.configuration.delta }} ms
           </q-item-label>
         </q-item-section>
       </q-item>

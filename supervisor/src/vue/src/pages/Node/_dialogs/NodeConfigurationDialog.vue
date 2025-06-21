@@ -109,7 +109,7 @@
             <div class="col">
               <q-toggle
                 v-model="configuration.backOffIncrease"
-                label="Powiększanie backoff"
+                label="Wydłużanie backoff"
                 dense
                 :disable="!changed.backOffIncrease"
               />

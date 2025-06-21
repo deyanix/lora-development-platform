@@ -67,7 +67,7 @@ public class LoRaConfiguration {
 		return this;
 	}
 
-	public Optional<Boolean> isBackOffIncreased() {
+	public Optional<Boolean> isBackOffIncrease() {
 		return Optional.ofNullable(backOffIncrease);
 	}
 
