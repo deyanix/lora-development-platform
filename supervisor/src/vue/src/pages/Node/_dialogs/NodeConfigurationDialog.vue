@@ -43,26 +43,17 @@
           </div>
           <div class="row items-center">
             <div class="col-auto q-pr-sm">
-              <q-checkbox v-model="changed.minDelta" dense />
+              <q-checkbox v-model="changed.delta" dense />
             </div>
             <div class="col">
               <div class="row q-col-gutter-sm">
                 <q-input
-                  v-model.number="configuration.minDelta"
-                  label="Min. Delta"
+                  v-model.number="configuration.delta"
+                  label="Max. delta backoff"
                   type="number"
                   dense
                   outlined
-                  :disable="!changed.minDelta"
-                  class="col"
-                />
-                <q-input
-                  v-model.number="configuration.maxDelta"
-                  label="Max. Delta"
-                  type="number"
-                  dense
-                  outlined
-                  :disable="!changed.maxDelta"
+                  :disable="!changed.delta"
                   class="col"
                 />
               </div>
@@ -134,8 +125,7 @@ const configuration = ref<Partial<NodeConfiguration>>({ ...props.node?.configura
 const changed = ref<Record<keyof NodeConfiguration, boolean>>({
   mode: false,
   auto: false,
-  minDelta: false,
-  maxDelta: false,
+  delta: false,
   interval: false,
   ackRequired: false,
   ackLifetime: false,
@@ -166,8 +156,6 @@ async function onSubmit() {
 watch(
   changed,
   () => {
-    changed.value.maxDelta = changed.value.minDelta;
-
     Object.entries(changed.value).forEach(([key, value]) => {
       if (!value) {
         // @ts-ignore

@@ -12,8 +12,7 @@ export interface NodeModel {
 export interface NodeConfiguration {
   mode: string;
   auto: string;
-  minDelta: number;
-  maxDelta: number;
+  delta: number;
   interval: number;
   ackRequired: boolean;
   ackLifetime: number;
