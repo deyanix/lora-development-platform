@@ -260,6 +260,16 @@ public class LoRaCommander {
 				new ArgumentData().setInteger(value));
 	}
 
+	public boolean isBackOffIncreased() {
+		return sendDataGetter("BIN")
+				.getBoolean()
+				.orElseThrow();
+	}
+
+	public void setBackOffIncreased(boolean value) {
+		sendDataSetter("BIN",
+				new ArgumentData().setBoolean(value));
+	}
 
 	public LoRaRadioConfiguration getRadioConfiguration() {
 		return new LoRaRadioConfiguration()
@@ -298,7 +308,8 @@ public class LoRaCommander {
 				.setAckRequired(getAckRequired())
 				.setAckLifetime(getAckLifetime())
 				.setInterval(getInterval())
-				.setAuto(getAuto());
+				.setAuto(getAuto())
+				.setBackOffIncrease(isBackOffIncreased());
 	}
 
 	public void setConfiguration(LoRaConfiguration configuration) {
@@ -308,6 +319,7 @@ public class LoRaCommander {
 		configuration.isAckRequired().ifPresent(this::setAckRequired);
 		configuration.getAckLifetime().ifPresent(this::setAckLifetime);
 		configuration.getInterval().ifPresent(this::setInterval);
+		configuration.isBackOffIncreased().ifPresent(this::setBackOffIncreased);
 	}
 
 	public void setLed(boolean value) {

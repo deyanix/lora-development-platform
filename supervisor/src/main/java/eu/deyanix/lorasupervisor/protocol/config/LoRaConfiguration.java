@@ -11,6 +11,7 @@ public class LoRaConfiguration {
 	private Long interval;
 	private Boolean ackRequired;
 	private Integer ackLifetime;
+	private Boolean backOffIncrease;
 
 	public Optional<LoRaMode> getMode() {
 		return Optional.ofNullable(mode);
@@ -63,6 +64,15 @@ public class LoRaConfiguration {
 
 	public LoRaConfiguration setAckLifetime(Integer ackLifetime) {
 		this.ackLifetime = ackLifetime;
+		return this;
+	}
+
+	public Optional<Boolean> isBackOffIncreased() {
+		return Optional.ofNullable(backOffIncrease);
+	}
+
+	public LoRaConfiguration setBackOffIncrease(Boolean backOffIncrease) {
+		this.backOffIncrease = backOffIncrease;
 		return this;
 	}
 }

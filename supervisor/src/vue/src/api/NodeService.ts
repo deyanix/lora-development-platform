@@ -16,6 +16,7 @@ export interface NodeConfiguration {
   interval: number;
   ackRequired: boolean;
   ackLifetime: number;
+  backOffIncrease: boolean;
 }
 
 export interface NodeRadioConfiguration {

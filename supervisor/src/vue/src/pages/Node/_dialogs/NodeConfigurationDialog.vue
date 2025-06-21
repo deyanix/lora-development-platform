@@ -102,6 +102,19 @@
               />
             </div>
           </div>
+          <div class="row items-center">
+            <div class="col-auto q-pr-sm">
+              <q-checkbox v-model="changed.backOffIncrease" dense />
+            </div>
+            <div class="col">
+              <q-toggle
+                v-model="configuration.backOffIncrease"
+                label="Powiększanie backoff"
+                dense
+                :disable="!changed.backOffIncrease"
+              />
+            </div>
+          </div>
         </q-card-section>
         <q-card-actions align="right">
           <q-btn type="submit" label="Zapisz" color="primary" rounded unelevated />
@@ -129,6 +142,7 @@ const changed = ref<Record<keyof NodeConfiguration, boolean>>({
   interval: false,
   ackRequired: false,
   ackLifetime: false,
+  backOffIncrease: false
 });
 
 async function onSubmit() {
