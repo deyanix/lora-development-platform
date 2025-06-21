@@ -321,12 +321,13 @@ void processTerminal() {
         } else if (reader.with("RTO"))
         {
             if (reader.with('=')) {
-                long maxDelta = reader.untilEnd().toInt();
-                if (maxDelta >= 0 && maxDelta <= UINT32_MAX) {
-                    LoRaNode.maxDelta = (uint32_t)maxDelta;
+                long delta = reader.untilEnd().toInt();
+                if (delta >= 0 && delta <= UINT32_MAX) {
+                    LoRaNode.maxBackOffInit = (uint32_t)delta;
+                    LoRaNode.maxBackOff = (uint32_t)delta;
 
                     RandomGenerator random_generator = RandomGenerator();
-                    LoRaNode.firstMsgDelay = random_generator.generateUniform(0, LoRaNode.maxDelta);
+                    LoRaNode.firstMsgDelay = random_generator.generateUniform(0, LoRaNode.maxBackOff);
                     Serial.println("RTO=OK");
                 } else {
                     Serial.println("RTO=ERR");
@@ -334,7 +335,7 @@ void processTerminal() {
             } else if (reader.with('?'))
             {
                 Serial.print("RTO=");
-                Serial.println(LoRaNode.maxDelta);
+                Serial.println(LoRaNode.maxBackOff);
             }
         } else if (reader.with("ACKLT")) {
             if (reader.with('=')) {
@@ -361,6 +362,19 @@ void processTerminal() {
             } else if (reader.with('?')) {
                 Serial.print("ACKRQ=");
                 Serial.println(LoRaNode.ackReq ? 1 : 0);
+            }
+        } else if (reader.with("BIN")) {
+            if (reader.with('=')) {
+                long value = reader.untilEnd().toInt();
+                if (value >= 0 && value <= 1) {
+                    LoRaNode.backOffIncrease = (bool)value;
+                    Serial.println("BIN=OK");
+                } else {
+                    Serial.println("BIN=ERR");
+                }
+            } else if (reader.with('?')) {
+                Serial.print("BIN=");
+                Serial.println(LoRaNode.backOffIncrease ? 1 : 0);
             }
         } else if (reader.with("LED")) {
             if (reader.with('=')) {

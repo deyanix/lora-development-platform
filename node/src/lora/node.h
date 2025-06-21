@@ -64,13 +64,15 @@ public:
     unsigned long msgDelay;     // Amount of time to wait before sending next msg
 
     bool permanentDelta;
-    unsigned long maxDelta;
+    unsigned long maxBackOffInit;
+    unsigned long maxBackOff;
     unsigned long firstMsgDelay;
     int msgCounter;
 
     unsigned long ackLifetimeInit;
     long ackLifetime;
     bool ackReq;
+    bool backOffIncrease;
 
     bool ledState = false;
     bool isSendingAck = false;
