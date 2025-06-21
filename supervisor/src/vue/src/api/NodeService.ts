@@ -12,11 +12,11 @@ export interface NodeModel {
 export interface NodeConfiguration {
   mode: string;
   auto: string;
-  delta: number;
+  initialBackoffMax: number;
   interval: number;
   ackRequired: boolean;
   ackLifetime: number;
-  backOffIncrease: boolean;
+  backoffIncrease: boolean;
 }
 
 export interface NodeRadioConfiguration {

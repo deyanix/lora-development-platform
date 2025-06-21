@@ -64,9 +64,9 @@ public:
     unsigned long msgDelay;     // Amount of time to wait before sending next msg
 
     bool permanentDelta;
-    unsigned long maxBackOffInit;
-    unsigned long maxBackOff;
-    unsigned long firstMsgDelay;
+    unsigned long backoffMaxInit;
+    unsigned long backoffMax;
+    unsigned long randomMsgDelay;
     int msgCounter;
 
     unsigned long ackLifetimeInit;

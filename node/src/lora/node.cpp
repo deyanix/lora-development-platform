@@ -12,8 +12,8 @@ void LoRaNodeClass::Init()
     this->lastSendTime = millis();
     this->msgDelay = 10000;
 
-    this->maxBackOffInit = 10000;
-    this->maxBackOff = 10000;
+    this->backoffMaxInit = 10000;
+    this->backoffMax = 10000;
     this->msgCounter = 0;
 
     this->ackLifetime = 0;
@@ -77,7 +77,7 @@ void LoRaNodeClass::Loop()
 
     if (this->Mode == SRC && this->Auto == RANDOM)
     {
-        unsigned long interval = this->permanentDelta ? this->msgDelay : (this->firstMsgDelay + this->msgDelay);
+        unsigned long interval = this->permanentDelta ? this->msgDelay : (this->randomMsgDelay + this->msgDelay);
         if (millis() - this->lastSendTime >= interval)
         {
             char message[128];
@@ -89,9 +89,9 @@ void LoRaNodeClass::Loop()
                     RandomGenerator randomGenerator;
                     if (this->backOffIncrease)
                     {
-                        this->maxBackOff = this->maxBackOff * 2;
+                        this->backoffMax = this->backoffMax * 2;
                     }
-                    this->firstMsgDelay = randomGenerator.generateUniform(0, this->maxBackOff);
+                    this->randomMsgDelay = randomGenerator.generateUniform(0, this->backoffMax);
                     this->permanentDelta = false;
                 }
             }
@@ -186,7 +186,7 @@ void LoRaNodeClass::OnRxDone(uint8_t* payload, uint16_t size, int16_t rssi, int8
             {
                 if (this->backOffIncrease)
                 {
-                    this->maxBackOff = this->maxBackOffInit;
+                    this->backoffMax = this->backoffMaxInit;
                 }
                 this->permanentDelta = true;
                 this->ackLifetime = this->ackLifetimeInit;

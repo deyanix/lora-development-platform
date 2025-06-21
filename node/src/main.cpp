@@ -275,6 +275,8 @@ void processTerminal() {
                     LoRaNode.Auto = OFF;
                     Serial.println("AUTO=OK");
                 } else if (reader.with("RANDOM")) {
+                    RandomGenerator random_generator = RandomGenerator();
+                    LoRaNode.randomMsgDelay = random_generator.generateUniform(0, LoRaNode.backoffMax);
                     LoRaNode.Auto = RANDOM;
                     Serial.println("AUTO=OK");
                 } else if (reader.with("TURNBASED")) {
@@ -318,24 +320,21 @@ void processTerminal() {
                 Serial.print("INV=");
                 Serial.println(LoRaNode.msgDelay);
             }
-        } else if (reader.with("RTO"))
+        } else if (reader.with("IBM"))
         {
             if (reader.with('=')) {
                 long delta = reader.untilEnd().toInt();
                 if (delta >= 0 && delta <= UINT32_MAX) {
-                    LoRaNode.maxBackOffInit = (uint32_t)delta;
-                    LoRaNode.maxBackOff = (uint32_t)delta;
-
-                    RandomGenerator random_generator = RandomGenerator();
-                    LoRaNode.firstMsgDelay = random_generator.generateUniform(0, LoRaNode.maxBackOff);
-                    Serial.println("RTO=OK");
+                    LoRaNode.backoffMaxInit = (uint32_t)delta;
+                    LoRaNode.backoffMax = (uint32_t)delta;
+                    Serial.println("IBM=OK");
                 } else {
-                    Serial.println("RTO=ERR");
+                    Serial.println("IBM=ERR");
                 }
             } else if (reader.with('?'))
             {
-                Serial.print("RTO=");
-                Serial.println(LoRaNode.maxBackOff);
+                Serial.print("IBM=");
+                Serial.println(LoRaNode.backoffMaxInit);
             }
         } else if (reader.with("ACKLT")) {
             if (reader.with('=')) {

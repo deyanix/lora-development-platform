@@ -43,17 +43,17 @@
           </div>
           <div class="row items-center">
             <div class="col-auto q-pr-sm">
-              <q-checkbox v-model="changed.delta" dense />
+              <q-checkbox v-model="changed.initialBackoffMax" dense />
             </div>
             <div class="col">
               <div class="row q-col-gutter-sm">
                 <q-input
-                  v-model.number="configuration.delta"
-                  label="Max. delta backoff"
+                  v-model.number="configuration.initialBackoffMax"
+                  label="Maksymalne początkowe opóźnienie ponowienia"
                   type="number"
                   dense
                   outlined
-                  :disable="!changed.delta"
+                  :disable="!changed.initialBackoffMax"
                   class="col"
                 />
               </div>
@@ -104,14 +104,14 @@
           </div>
           <div class="row items-center">
             <div class="col-auto q-pr-sm">
-              <q-checkbox v-model="changed.backOffIncrease" dense />
+              <q-checkbox v-model="changed.backoffIncrease" dense />
             </div>
             <div class="col">
               <q-toggle
-                v-model="configuration.backOffIncrease"
-                label="Wydłużanie backoff"
+                v-model="configuration.backoffIncrease"
+                label="Wydłużanie opóźnienia ponowienia"
                 dense
-                :disable="!changed.backOffIncrease"
+                :disable="!changed.backoffIncrease"
               />
             </div>
           </div>
@@ -138,11 +138,11 @@ const configuration = ref<Partial<NodeConfiguration>>({ ...props.node?.configura
 const changed = ref<Record<keyof NodeConfiguration, boolean>>({
   mode: false,
   auto: false,
-  delta: false,
+  initialBackoffMax: false,
   interval: false,
   ackRequired: false,
   ackLifetime: false,
-  backOffIncrease: false
+  backoffIncrease: false
 });
 
 async function onSubmit() {

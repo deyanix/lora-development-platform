@@ -1,17 +1,15 @@
 package eu.deyanix.lorasupervisor.protocol.config;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
-
 import java.util.Optional;
 
 public class LoRaConfiguration {
 	private LoRaMode mode;
 	private LoRaAuto auto;
-	private Integer delta;
+	private Integer initialBackoffMax;
 	private Long interval;
 	private Boolean ackRequired;
 	private Integer ackLifetime;
-	private Boolean backOffIncrease;
+	private Boolean backoffIncrease;
 
 	public Optional<LoRaMode> getMode() {
 		return Optional.ofNullable(mode);
@@ -31,12 +29,12 @@ public class LoRaConfiguration {
 		return this;
 	}
 
-	public Optional<Integer> getDelta() {
-		return Optional.ofNullable(delta);
+	public Optional<Integer> getInitialBackoffMax() {
+		return Optional.ofNullable(initialBackoffMax);
 	}
 
-	public LoRaConfiguration setDelta(int delta) {
-		this.delta = delta;
+	public LoRaConfiguration setInitialBackoffMax(int initialBackoffMax) {
+		this.initialBackoffMax = initialBackoffMax;
 		return this;
 	}
 
@@ -67,12 +65,12 @@ public class LoRaConfiguration {
 		return this;
 	}
 
-	public Optional<Boolean> isBackOffIncrease() {
-		return Optional.ofNullable(backOffIncrease);
+	public Optional<Boolean> isBackoffIncrease() {
+		return Optional.ofNullable(backoffIncrease);
 	}
 
-	public LoRaConfiguration setBackOffIncrease(Boolean backOffIncrease) {
-		this.backOffIncrease = backOffIncrease;
+	public LoRaConfiguration setBackoffIncrease(Boolean backoffIncrease) {
+		this.backoffIncrease = backoffIncrease;
 		return this;
 	}
 }

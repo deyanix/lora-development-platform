@@ -107,17 +107,17 @@
       </q-item>
       <q-item>
         <q-item-section>
-          <q-item-label caption> Wydłużanie backoff </q-item-label>
+          <q-item-label caption> Maksymalne początkowe opóźnienie ponowienia </q-item-label>
           <q-item-label>
-            {{ node.configuration.backOffIncrease ? 'Włączone' : 'Wyłączone' }}
+            {{ node.configuration.initialBackoffMax }} ms
           </q-item-label>
         </q-item-section>
       </q-item>
       <q-item>
         <q-item-section>
-          <q-item-label caption> Przesunięcie podstawy czasowej </q-item-label>
+          <q-item-label caption> Wydłużanie opóźnienia ponowienia </q-item-label>
           <q-item-label>
-            {{ node.configuration.delta }} ms
+            {{ node.configuration.backoffIncrease ? 'Włączone' : 'Wyłączone' }}
           </q-item-label>
         </q-item-section>
       </q-item>

@@ -249,24 +249,24 @@ public class LoRaCommander {
 				new ArgumentData("RST"));
 	}
 
-	public int getDelta() {
-		return sendDataGetter("RTO")
+	public int getInitialBackoffMax() {
+		return sendDataGetter("IBM")
 				.getInteger()
 				.orElseThrow();
 	}
 
-	public void setDelta(int value) {
-		sendDataSetter("RTO",
+	public void setInitialBackoffMax(int value) {
+		sendDataSetter("IBM",
 				new ArgumentData().setInteger(value));
 	}
 
-	public boolean isBackOffIncrease() {
+	public boolean isBackoffIncrease() {
 		return sendDataGetter("BIN")
 				.getBoolean()
 				.orElseThrow();
 	}
 
-	public void setBackOffIncrease(boolean value) {
+	public void setBackoffIncrease(boolean value) {
 		sendDataSetter("BIN",
 				new ArgumentData().setBoolean(value));
 	}
@@ -304,22 +304,22 @@ public class LoRaCommander {
 	public LoRaConfiguration getConfiguration() {
 		return new LoRaConfiguration()
 				.setMode(getMode())
-				.setDelta(getDelta())
+				.setInitialBackoffMax(getInitialBackoffMax())
 				.setAckRequired(getAckRequired())
 				.setAckLifetime(getAckLifetime())
 				.setInterval(getInterval())
 				.setAuto(getAuto())
-				.setBackOffIncrease(isBackOffIncrease());
+				.setBackoffIncrease(isBackoffIncrease());
 	}
 
 	public void setConfiguration(LoRaConfiguration configuration) {
 		configuration.getMode().ifPresent(this::setMode);
-		configuration.getDelta().ifPresent(this::setDelta);
+		configuration.getInitialBackoffMax().ifPresent(this::setInitialBackoffMax);
 		configuration.getAuto().ifPresent(this::setAuto);
 		configuration.isAckRequired().ifPresent(this::setAckRequired);
 		configuration.getAckLifetime().ifPresent(this::setAckLifetime);
 		configuration.getInterval().ifPresent(this::setInterval);
-		configuration.isBackOffIncrease().ifPresent(this::setBackOffIncrease);
+		configuration.isBackoffIncrease().ifPresent(this::setBackoffIncrease);
 	}
 
 	public void setLed(boolean value) {
