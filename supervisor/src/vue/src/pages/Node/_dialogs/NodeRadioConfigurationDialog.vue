@@ -120,7 +120,7 @@
                 dense
                 outlined
                 :disable="!changed.preambleLength"
-                suffix="bit"
+                suffix="symb."
               />
             </div>
           </div>

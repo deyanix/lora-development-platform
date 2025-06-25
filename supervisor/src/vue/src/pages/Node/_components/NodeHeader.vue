@@ -26,6 +26,9 @@
           :disable="!node"
           @click="toggleFlashing"
         />
+        <q-btn icon="mdi-refresh" flat dense round :disable="!node" @click="resetAuto">
+          <q-tooltip>Reset algorytmu</q-tooltip>
+        </q-btn>
         <q-btn icon="mdi-antenna" flat dense round :disable="!node" @click="openRadioConfiguration">
           <q-tooltip>Konfiguracje radiowe</q-tooltip>
         </q-btn>
@@ -38,7 +41,7 @@
 </template>
 <script setup lang="ts">
 import { NodeModel, NodeService } from 'src/api/NodeService';
-import { Dialog } from 'quasar';
+import { Dialog, Loading } from 'quasar';
 import NodeRadioConfigurationDialog from 'pages/Node/_dialogs/NodeRadioConfigurationDialog.vue';
 import { usePlatformStore } from 'stores/platform';
 import NodeConfigurationDialog from 'pages/Node/_dialogs/NodeConfigurationDialog.vue';
@@ -59,6 +62,20 @@ async function send() {
   if (!props.node) return;
 
   await NodeService.transmit(props.node.id, 'abc\ndef');
+}
+
+async function resetAuto() {
+  if (!props.node) {
+    return;
+  }
+
+  Loading.show({ group: 'node-reset-auto' });
+  try {
+    await NodeService.resetAuto(props.node?.id);
+  } finally {
+    await platform.fetch();
+    Loading.hide('node-reset-auto');
+  }
 }
 
 function openRadioConfiguration() {

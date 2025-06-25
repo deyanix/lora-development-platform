@@ -56,7 +56,7 @@
       <q-item>
         <q-item-section>
           <q-item-label caption> Rozmiar preambuły </q-item-label>
-          <q-item-label> {{ node.radioConfiguration.preambleLength }} bit </q-item-label>
+          <q-item-label> {{ node.radioConfiguration.preambleLength }} symb. </q-item-label>
         </q-item-section>
       </q-item>
       <q-item>
@@ -108,9 +108,7 @@
       <q-item>
         <q-item-section>
           <q-item-label caption> Maksymalne początkowe opóźnienie ponowienia </q-item-label>
-          <q-item-label>
-            {{ node.configuration.initialBackoffMax }} ms
-          </q-item-label>
+          <q-item-label> {{ node.configuration.initialBackoffMax }} ms </q-item-label>
         </q-item-section>
       </q-item>
       <q-item>

@@ -4,7 +4,6 @@ import eu.deyanix.lorasupervisor.protocol.command.Argument;
 import eu.deyanix.lorasupervisor.protocol.command.ArgumentData;
 import eu.deyanix.lorasupervisor.protocol.command.Command;
 import eu.deyanix.lorasupervisor.protocol.command.CommandFactory;
-import eu.deyanix.lorasupervisor.protocol.command.CommandResult;
 import eu.deyanix.lorasupervisor.protocol.command.ExtensibleArgument;
 import eu.deyanix.lorasupervisor.protocol.config.LoRaBandwidth;
 import eu.deyanix.lorasupervisor.protocol.config.LoRaCodingRate;
@@ -13,9 +12,6 @@ import eu.deyanix.lorasupervisor.protocol.config.LoRaRadioConfiguration;
 import eu.deyanix.lorasupervisor.protocol.config.LoRaMode;
 import eu.deyanix.lorasupervisor.protocol.config.LoRaAuto;
 
-import java.util.List;
-import java.util.stream.IntStream;
-
 public class LoRaCommander {
 	private final LoRaPort port;
 
@@ -23,14 +19,12 @@ public class LoRaCommander {
 		this.port = port;
 	}
 
-	public List<ArgumentData> sendDataGetter(String name, int args) {
-		Command tx = CommandFactory.createGetter(name);
-		Command rx = CommandFactory.createSetterArgs(name, IntStream.range(0, args)
-				.mapToObj(i -> new Argument())
-				.toArray(Argument[]::new));
+	public ArgumentData sendDataGetter(String name, ArgumentData... args) {
+		Command tx = CommandFactory.createGetter(name, args);
+		Command rx = CommandFactory.createSetterArgs(name, new Argument());
 
 		return port.send(tx, rx, 3)
-				.map(CommandResult::getArguments)
+				.flatMap(cmd -> cmd.getArgument(0))
 				.orElseThrow(); // TODO: Internal exception
 	}
 
@@ -330,6 +324,12 @@ public class LoRaCommander {
 	public boolean isLed() {
 		return sendDataGetter("LED")
 				.getBoolean()
+				.orElseThrow();
+	}
+
+	public long getTimeOnAir(int length) {
+		return sendDataGetter("TOA", new ArgumentData().setInteger(length))
+				.getLong()
 				.orElseThrow();
 	}
 

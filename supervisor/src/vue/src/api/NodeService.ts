@@ -71,4 +71,7 @@ export const NodeService = {
   async updateRadioConfiguration(id: string, configuration: Partial<NodeRadioConfiguration>) {
     await api.patch(`/nodes/${id}/radio`, configuration);
   },
+  async resetAuto(id: string) {
+    await api.post(`/nodes/${id}/reset-auto`);
+  },
 };
