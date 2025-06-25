@@ -2,8 +2,7 @@ import { defineStore } from 'pinia';
 import { onBeforeUnmount, onMounted, ref } from 'vue';
 import { Client } from '@stomp/stompjs';
 import SockJS from 'sockjs-client';
-
-const websocketUrl = 'http://localhost:8080/ws';
+import { api } from 'boot/axios';
 
 export interface LoRaPortEvent {
   portName: string;
@@ -38,6 +37,7 @@ export const useWebsocketStore = defineStore('websocket', () => {
   const isConnected = ref<boolean>(false);
   const stompClient = ref<Client | null>(null);
   const listeners = ref<LoRaPortListener[]>([]);
+  const websocketUrl = api.getUri({ url: '/ws' });
 
   function addListener(listener: LoRaPortListener): void {
     listeners.value.push(listener);
