@@ -54,9 +54,17 @@ public class LoRaNode {
 		return radioConfiguration;
 	}
 
-	public LoRaNode setRadioConfiguration(LoRaRadioConfiguration radioConfiguration) {
-		getCommander().ifPresent(cmd -> cmd.setRadioConfiguration(radioConfiguration));
-		this.radioConfiguration = commander.getRadioConfiguration();
+	public LoRaNode setRadioConfiguration(LoRaRadioConfiguration conf) {
+		if (commander != null) {
+			commander.setRadioConfiguration(conf, radioConfiguration);
+			radioConfiguration = commander.getRadioConfiguration();
+		} else {
+			if (radioConfiguration == null) {
+				radioConfiguration = new LoRaRadioConfiguration();
+			}
+
+			radioConfiguration.merge(conf);
+		}
 		return this;
 	}
 
@@ -64,9 +72,17 @@ public class LoRaNode {
 		return configuration;
 	}
 
-	public LoRaNode setConfiguration(LoRaConfiguration configuration) {
-		getCommander().ifPresent(cmd -> cmd.setConfiguration(configuration));
-		this.configuration = commander.getConfiguration();
+	public LoRaNode setConfiguration(LoRaConfiguration conf) {
+		if (commander != null) {
+			commander.setConfiguration(conf, configuration);
+			configuration = commander.getConfiguration();
+		} else {
+			if (configuration == null) {
+				configuration = new LoRaConfiguration();
+			}
+
+			configuration.merge(conf);
+		}
 		return this;
 	}
 

@@ -73,4 +73,15 @@ public class LoRaConfiguration {
 		this.backoffIncrease = backoffIncrease;
 		return this;
 	}
+
+	public LoRaConfiguration merge(LoRaConfiguration other) {
+		other.getMode().ifPresent(this::setMode);
+		other.getInitialBackoffMax().ifPresent(this::setInitialBackoffMax);
+		other.getAuto().ifPresent(this::setAuto);
+		other.isAckRequired().ifPresent(this::setAckRequired);
+		other.getAckLifetime().ifPresent(this::setAckLifetime);
+		other.getInterval().ifPresent(this::setInterval);
+		other.isBackoffIncrease().ifPresent(this::setBackoffIncrease);
+		return this;
+	}
 }

@@ -12,6 +12,10 @@ import eu.deyanix.lorasupervisor.protocol.config.LoRaRadioConfiguration;
 import eu.deyanix.lorasupervisor.protocol.config.LoRaMode;
 import eu.deyanix.lorasupervisor.protocol.config.LoRaAuto;
 
+import java.util.Optional;
+import java.util.function.Consumer;
+import java.util.function.Function;
+
 public class LoRaCommander {
 	private final LoRaPort port;
 
@@ -280,19 +284,23 @@ public class LoRaCommander {
 				.setRxSymbolTimeout(getRxSymbolTimeout());
 	}
 
-	public void setRadioConfiguration(LoRaRadioConfiguration configuration) {
-		configuration.getFrequency().ifPresent(this::setFrequency);
-		configuration.getBandwidth().ifPresent(this::setBandwidth);
-		configuration.getPower().ifPresent(this::setPower);
-		configuration.getSpreadingFactor().ifPresent(this::setSpreadingFactor);
-		configuration.getCodingRate().ifPresent(this::setCodingRate);
-		configuration.isEnableCrc().ifPresent(this::setEnabledCrc);
-		configuration.isIqInverted().ifPresent(this::setIqInverted);
-		configuration.getPreambleLength().ifPresent(this::setPreambleLength);
-		configuration.getPayloadLength().ifPresent(this::setPayloadLength);
-		configuration.getTxTimeout().ifPresent(this::setTxTimeout);
-		configuration.getRxSymbolTimeout().ifPresent(this::setRxSymbolTimeout);
+	public void setRadioConfiguration(LoRaRadioConfiguration configuration, LoRaRadioConfiguration previousConfiguration) {
+		setIfDifferent(configuration, previousConfiguration, LoRaRadioConfiguration::getFrequency, this::setFrequency);
+		setIfDifferent(configuration, previousConfiguration, LoRaRadioConfiguration::getBandwidth, this::setBandwidth);
+		setIfDifferent(configuration, previousConfiguration, LoRaRadioConfiguration::getPower, this::setPower);
+		setIfDifferent(configuration, previousConfiguration, LoRaRadioConfiguration::getSpreadingFactor, this::setSpreadingFactor);
+		setIfDifferent(configuration, previousConfiguration, LoRaRadioConfiguration::getCodingRate, this::setCodingRate);
+		setIfDifferent(configuration, previousConfiguration, LoRaRadioConfiguration::isEnableCrc, this::setEnabledCrc);
+		setIfDifferent(configuration, previousConfiguration, LoRaRadioConfiguration::isIqInverted, this::setIqInverted);
+		setIfDifferent(configuration, previousConfiguration, LoRaRadioConfiguration::getPreambleLength, this::setPreambleLength);
+		setIfDifferent(configuration, previousConfiguration, LoRaRadioConfiguration::getPayloadLength, this::setPayloadLength);
+		setIfDifferent(configuration, previousConfiguration, LoRaRadioConfiguration::getTxTimeout, this::setTxTimeout);
+		setIfDifferent(configuration, previousConfiguration, LoRaRadioConfiguration::getRxSymbolTimeout, this::setRxSymbolTimeout);
 		push();
+	}
+
+	public void setRadioConfiguration(LoRaRadioConfiguration configuration) {
+		setRadioConfiguration(configuration, null);
 	}
 
 	public LoRaConfiguration getConfiguration() {
@@ -306,14 +314,18 @@ public class LoRaCommander {
 				.setBackoffIncrease(isBackoffIncrease());
 	}
 
+	public void setConfiguration(LoRaConfiguration configuration, LoRaConfiguration previousConfiguration) {
+		setIfDifferent(configuration, previousConfiguration, LoRaConfiguration::getMode, this::setMode);
+		setIfDifferent(configuration, previousConfiguration, LoRaConfiguration::getInitialBackoffMax, this::setInitialBackoffMax);
+		setIfDifferent(configuration, previousConfiguration, LoRaConfiguration::getAuto, this::setAuto);
+		setIfDifferent(configuration, previousConfiguration, LoRaConfiguration::isAckRequired, this::setAckRequired);
+		setIfDifferent(configuration, previousConfiguration, LoRaConfiguration::getAckLifetime, this::setAckLifetime);
+		setIfDifferent(configuration, previousConfiguration, LoRaConfiguration::getInterval, this::setInterval);
+		setIfDifferent(configuration, previousConfiguration, LoRaConfiguration::isBackoffIncrease, this::setBackoffIncrease);
+	}
+
 	public void setConfiguration(LoRaConfiguration configuration) {
-		configuration.getMode().ifPresent(this::setMode);
-		configuration.getInitialBackoffMax().ifPresent(this::setInitialBackoffMax);
-		configuration.getAuto().ifPresent(this::setAuto);
-		configuration.isAckRequired().ifPresent(this::setAckRequired);
-		configuration.getAckLifetime().ifPresent(this::setAckLifetime);
-		configuration.getInterval().ifPresent(this::setInterval);
-		configuration.isBackoffIncrease().ifPresent(this::setBackoffIncrease);
+		setConfiguration(configuration, null);
 	}
 
 	public void setLed(boolean value) {
@@ -346,5 +358,20 @@ public class LoRaCommander {
 
 	public LoRaPort getPort() {
 		return port;
+	}
+
+	private <T, C> void setIfDifferent(C currentConfig, C previousConfigOptional, Function<C, Optional<T>> getter, Consumer<T> setter) {
+		Optional.ofNullable(currentConfig)
+				.flatMap(getter)
+				.ifPresent(newValue -> {
+					boolean shouldSet = Optional.ofNullable(previousConfigOptional)
+						.flatMap(getter)
+						.map(oldValue -> !newValue.equals(oldValue))
+						.orElse(true);
+
+					if (shouldSet) {
+						setter.accept(newValue);
+					}
+				});
 	}
 }
