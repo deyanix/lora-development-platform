@@ -20,9 +20,9 @@ public class LoRaNodeOptions {
 	public LoRaNodeOptionRange<Integer> payloadLength =
 			new LoRaNodeOptionRange<>(LoRaRadioConfiguration.PAYLOAD_LENGTH_MIN, LoRaRadioConfiguration.PAYLOAD_LENGTH_MAX);
 	public LoRaNodeOptionRange<Integer> txTimeout =
-			new LoRaNodeOptionRange<>(LoRaRadioConfiguration.TX_TIMEOUT_MIN, LoRaRadioConfiguration.TX_TIMEOUT_MIN);
+			new LoRaNodeOptionRange<>(LoRaRadioConfiguration.TX_TIMEOUT_MIN, LoRaRadioConfiguration.TX_TIMEOUT_MAX);
 	public LoRaNodeOptionRange<Integer> rxSymbolTimeout =
-			new LoRaNodeOptionRange<>(LoRaRadioConfiguration.RX_TIMEOUT_MIN, LoRaRadioConfiguration.RX_TIMEOUT_MIN);
+			new LoRaNodeOptionRange<>(LoRaRadioConfiguration.RX_TIMEOUT_MIN, LoRaRadioConfiguration.RX_TIMEOUT_MAX);
 
 	public List<LoRaNodeOption<Integer>> spreadingFactor = IntStream
 			.rangeClosed(LoRaRadioConfiguration.SPREADING_FACTOR_MIN, LoRaRadioConfiguration.SPREADING_FACTOR_MAX)

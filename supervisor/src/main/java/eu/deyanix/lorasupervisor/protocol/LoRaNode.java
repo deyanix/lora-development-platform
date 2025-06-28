@@ -63,7 +63,7 @@ public class LoRaNode {
 				radioConfiguration = new LoRaRadioConfiguration();
 			}
 
-			radioConfiguration.merge(conf);
+			LoRaCommander.mergeRadioConfiguration(radioConfiguration, conf);
 		}
 		return this;
 	}
@@ -81,7 +81,7 @@ public class LoRaNode {
 				configuration = new LoRaConfiguration();
 			}
 
-			configuration.merge(conf);
+			LoRaCommander.mergeConfiguration(configuration, conf);
 		}
 		return this;
 	}

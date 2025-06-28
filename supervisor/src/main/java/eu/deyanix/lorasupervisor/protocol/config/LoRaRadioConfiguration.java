@@ -128,19 +128,4 @@ public class LoRaRadioConfiguration {
 		this.rxSymbolTimeout = rxSymbolTimeout;
 		return this;
 	}
-
-	public LoRaRadioConfiguration merge(LoRaRadioConfiguration other) {
-		other.getFrequency().ifPresent(this::setFrequency);
-		other.getBandwidth().ifPresent(this::setBandwidth);
-		other.getPower().ifPresent(this::setPower);
-		other.getSpreadingFactor().ifPresent(this::setSpreadingFactor);
-		other.getCodingRate().ifPresent(this::setCodingRate);
-		other.isEnableCrc().ifPresent(this::setEnableCrc);
-		other.isIqInverted().ifPresent(this::setIqInverted);
-		other.getPreambleLength().ifPresent(this::setPreambleLength);
-		other.getPayloadLength().ifPresent(this::setPayloadLength);
-		other.getTxTimeout().ifPresent(this::setTxTimeout);
-		other.getRxSymbolTimeout().ifPresent(this::setRxSymbolTimeout);
-		return this;
-	}
 }
