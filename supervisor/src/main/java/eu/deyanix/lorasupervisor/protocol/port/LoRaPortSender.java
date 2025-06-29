@@ -1,5 +1,7 @@
 package eu.deyanix.lorasupervisor.protocol.port;
 
+import eu.deyanix.lorasupervisor.protocol.event.serial.LoRaSerialTxEvent;
+
 import java.io.PrintStream;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
@@ -19,9 +21,7 @@ public class LoRaPortSender {
 		try {
 			out.print(data);
 
-			for (LoRaPortListener listener : port.getListeners()) {
-				listener.onSend(port, data);
-			}
+			port.invokeEvent(new LoRaSerialTxEvent(port, data));
 		} finally {
 			writeLock.unlock();
 		}

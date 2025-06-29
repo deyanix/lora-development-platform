@@ -10,6 +10,11 @@ import eu.deyanix.lorasupervisor.protocol.command.Command;
 import eu.deyanix.lorasupervisor.protocol.connection.LoRaCommandConnection;
 import eu.deyanix.lorasupervisor.protocol.connection.LoRaEventConnection;
 import eu.deyanix.lorasupervisor.protocol.connection.LoRaSenderConnection;
+import eu.deyanix.lorasupervisor.protocol.event.LoRaEvent;
+import eu.deyanix.lorasupervisor.protocol.event.LoRaNodeEvent;
+import eu.deyanix.lorasupervisor.protocol.event.port.LoRaPortConnectEvent;
+import eu.deyanix.lorasupervisor.protocol.event.port.LoRaPortDisconnectEvent;
+import eu.deyanix.lorasupervisor.protocol.event.port.LoRaPortRecognizedEvent;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -21,13 +26,6 @@ import java.util.concurrent.locks.ReentrantLock;
 import java.util.function.Consumer;
 
 public class LoRaPort {
-	public static LoRaPort openNode(SerialPort port) {
-		if (!port.isOpen() && !port.openPort()) {
-			return null;
-		}
-		return new LoRaPort(port);
-	}
-
 	private final SerialPort serialPort;
 	private final LoRaPortSender sender;
 	private final LoRaPortReceiver receiver;
@@ -47,6 +45,28 @@ public class LoRaPort {
 		this.serialPort.addDataListener(new LoRaSerialPortListener());
 
 		attachConnection(new LoRaEventConnection());
+	}
+
+	public boolean open() {
+		if (serialPort.isOpen()) {
+			return true;
+		}
+
+		if (!serialPort.openPort()) {
+			return false;
+		}
+
+		invokeEvent(new LoRaPortConnectEvent(this));
+		return true;
+	}
+
+	public void close() {
+		serialPort.closePort();
+		if (node != null) {
+			node.setCommander(null);
+		}
+
+		invokeEvent(new LoRaPortDisconnectEvent(this));
 	}
 
 	public Optional<CommandResult> send(Command tx, Command rx, int retries) {
@@ -89,9 +109,16 @@ public class LoRaPort {
 		return Collections.unmodifiableList(listeners);
 	}
 
-	public void invokeListener(Consumer<LoRaPortListener> action) {
+	public void invokeEvent(LoRaEvent event) {
 		for (LoRaPortListener listener : getListeners()) {
-			action.accept(listener);
+			listener.onEvent(event);
+		}
+
+		if (event instanceof LoRaNodeEvent nodeEvent) {
+			LoRaNode node = nodeEvent.getNode();
+			if (node != null) {
+				node.getEvents().add(nodeEvent);
+			}
 		}
 	}
 
@@ -154,6 +181,8 @@ public class LoRaPort {
 
 	public LoRaPort setNode(LoRaNode node) {
 		this.node = node;
+		invokeEvent(new LoRaPortRecognizedEvent(this));
+
 		return this;
 	}
 
@@ -166,7 +195,7 @@ public class LoRaPort {
 		@Override
 		public void serialEvent(SerialPortEvent event) {
 			if (event.getEventType() == SerialPort.LISTENING_EVENT_PORT_DISCONNECTED) {
-				invokeListener(listener -> listener.onDisconnect(LoRaPort.this));
+				invokeEvent(new LoRaPortDisconnectEvent(LoRaPort.this));
 			}
 
 			if (event.getEventType() == SerialPort.LISTENING_EVENT_DATA_AVAILABLE) {

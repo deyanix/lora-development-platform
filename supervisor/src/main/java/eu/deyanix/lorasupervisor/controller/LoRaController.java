@@ -6,6 +6,7 @@ import eu.deyanix.lorasupervisor.model.LoRaNodeState;
 import eu.deyanix.lorasupervisor.protocol.LoRaNode;
 import eu.deyanix.lorasupervisor.protocol.config.LoRaConfiguration;
 import eu.deyanix.lorasupervisor.protocol.config.LoRaRadioConfiguration;
+import eu.deyanix.lorasupervisor.protocol.event.LoRaNodeEvent;
 import eu.deyanix.lorasupervisor.service.LoRaService;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -17,6 +18,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
+import java.util.Set;
 
 @Tag(name = "LoRa")
 @RestController
@@ -90,5 +92,12 @@ public class LoRaController {
 				.flatMap(LoRaNode::getCommander)
 				.orElseThrow()
 				.resetAuto();
+	}
+
+	@GetMapping("/nodes/{id}/events")
+	public Set<LoRaNodeEvent> getEvents(@PathVariable String id) {
+		return loRaService.getNodeById(id)
+				.map(LoRaNode::getEvents)
+				.orElseThrow();
 	}
 }

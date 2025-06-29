@@ -135,14 +135,16 @@ const frequency = computed(
 );
 
 const spreadingFactor = computed(() =>
-  platform.options.spreadingFactor.find(
+  platform.options?.spreadingFactor.find(
     (opt) => opt.value === props.node.radioConfiguration.spreadingFactor,
   ),
 );
 const bandwidth = computed(() =>
-  platform.options.bandwidth.find((opt) => opt.value === props.node.radioConfiguration.bandwidth),
+  platform.options?.bandwidth.find((opt) => opt.value === props.node.radioConfiguration.bandwidth),
 );
 const codingRate = computed(() =>
-  platform.options.codingRate.find((opt) => opt.value === props.node.radioConfiguration.codingRate),
+  platform.options?.codingRate.find(
+    (opt) => opt.value === props.node.radioConfiguration.codingRate,
+  ),
 );
 </script>

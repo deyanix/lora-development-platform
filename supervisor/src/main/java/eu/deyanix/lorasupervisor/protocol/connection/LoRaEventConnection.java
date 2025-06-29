@@ -1,15 +1,19 @@
 package eu.deyanix.lorasupervisor.protocol.connection;
 
-import eu.deyanix.lorasupervisor.protocol.buffer.BufferReader;
 import eu.deyanix.lorasupervisor.protocol.command.Argument;
 import eu.deyanix.lorasupervisor.protocol.command.ArgumentData;
 import eu.deyanix.lorasupervisor.protocol.command.Command;
 import eu.deyanix.lorasupervisor.protocol.command.CommandFactory;
 import eu.deyanix.lorasupervisor.protocol.command.CommandResult;
-import eu.deyanix.lorasupervisor.protocol.command.CommandTokenizer;
 import eu.deyanix.lorasupervisor.protocol.command.ExtensibleArgument;
+import eu.deyanix.lorasupervisor.protocol.event.rx.LoRaRxDoneEvent;
+import eu.deyanix.lorasupervisor.protocol.event.rx.LoRaRxErrorEvent;
+import eu.deyanix.lorasupervisor.protocol.event.rx.LoRaRxStartEvent;
+import eu.deyanix.lorasupervisor.protocol.event.rx.LoRaRxTimeoutEvent;
+import eu.deyanix.lorasupervisor.protocol.event.tx.LoRaTxDoneEvent;
+import eu.deyanix.lorasupervisor.protocol.event.tx.LoRaTxStartEvent;
+import eu.deyanix.lorasupervisor.protocol.event.tx.LoRaTxTimeoutEvent;
 import eu.deyanix.lorasupervisor.protocol.port.LoRaPort;
-import eu.deyanix.lorasupervisor.protocol.port.LoRaPortListener;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -49,23 +53,23 @@ public class LoRaEventConnection extends LoRaConnection {
 					.flatMap(ArgumentData::getString)
 					.orElse(null);
 
-			port.invokeListener(listener -> listener.onRxDone(port, rssi, snr, eventData));
+			port.invokeEvent(new LoRaRxDoneEvent(port, rssi, snr, eventData));
 		});
 
 		commandHandlers.put(RX_ERROR, (port, result) -> {
-			port.invokeListener(listener -> listener.onRxError(port));
+			port.invokeEvent(new LoRaRxErrorEvent(port));
 		});
 
 		commandHandlers.put(RX_TIMEOUT, (port, result) -> {
-			port.invokeListener(listener -> listener.onRxTimeout(port));
+			port.invokeEvent(new LoRaRxTimeoutEvent(port));
 		});
 
 		commandHandlers.put(TX_DONE, (port, result) -> {
-			port.invokeListener(listener -> listener.onTxDone(port));
+			port.invokeEvent(new LoRaTxDoneEvent(port));
 		});
 
 		commandHandlers.put(TX_TIMEOUT, (port, result) -> {
-			port.invokeListener(listener -> listener.onTxTimeout(port));
+			port.invokeEvent(new LoRaTxTimeoutEvent(port));
 		});
 
 		commandHandlers.put(TX_START, (port, result) -> {
@@ -73,11 +77,11 @@ public class LoRaEventConnection extends LoRaConnection {
 					.flatMap(ArgumentData::getString)
 					.orElse(null);
 
-			port.invokeListener(listener -> listener.onTxStart(port, eventData));
+			port.invokeEvent(new LoRaTxStartEvent(port, eventData));
 		});
 
 		commandHandlers.put(RX_START, (port, result) -> {
-			port.invokeListener(listener -> listener.onRxStart(port));
+			port.invokeEvent(new LoRaRxStartEvent(port));
 		});
 	}
 

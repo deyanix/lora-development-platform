@@ -15,7 +15,7 @@
   </div>
 </template>
 <script setup lang="ts">
-import { Ref, ref } from 'vue';
+import { ref } from 'vue';
 import { onLoRaEvent } from 'src/composables/onLoRaEvent';
 import { PortModel } from 'src/api/PortService';
 
@@ -34,7 +34,6 @@ const rxBuffer = ref<string>('');
 
 function processSerialBuffer(type: 'tx' | 'rx') {
   const bufferRef = type === 'tx' ? txBuffer : rxBuffer;
-  const altBufferRef = type === 'tx' ? rxBuffer : txBuffer;
 
   let currentBuffer = bufferRef.value;
   let terminatorIndex;
@@ -61,13 +60,13 @@ function processSerialBuffer(type: 'tx' | 'rx') {
 onLoRaEvent({
   onSerialTx(evt) {
     if (evt.portName === props.port.portName) {
-      txBuffer.value += evt.message;
+      txBuffer.value += evt.data;
       processSerialBuffer('tx');
     }
   },
   onSerialRx(evt) {
     if (evt.portName === props.port.portName) {
-      rxBuffer.value += evt.message;
+      rxBuffer.value += evt.data;
       processSerialBuffer('rx');
     }
   },

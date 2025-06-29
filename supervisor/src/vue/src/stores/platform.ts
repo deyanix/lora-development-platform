@@ -3,18 +3,26 @@ import { onBeforeMount, ref } from 'vue';
 import { onLoRaEvent } from 'src/composables/onLoRaEvent';
 import { PortModel, PortService } from 'src/api/PortService';
 import { NodeModel, NodeOptions, NodeService } from 'src/api/NodeService';
+import { LoRaEvent } from 'stores/websocket';
 
 export const usePlatformStore = defineStore('platform', () => {
   const ports = ref<PortModel[]>([]);
   const nodes = ref<NodeModel[]>([]);
-  const options = ref<NodeOptions>({} as NodeOptions);
+  const events = ref<Record<string, LoRaEvent[]>>({});
+  const options = ref<NodeOptions>();
   const autoFetch = ref<boolean>(true);
 
   async function fetch() {
+    if (options.value === undefined) await fetchOptions();
+
     [ports.value, nodes.value] = await Promise.all([
       PortService.getPorts(),
       NodeService.getNodes(),
     ]);
+
+    await Promise.all(
+      nodes.value.map(async (n) => (events.value[n.id] = await NodeService.getEvents(n.id))),
+    );
   }
 
   async function fetchOptions() {
@@ -27,29 +35,18 @@ export const usePlatformStore = defineStore('platform', () => {
   });
 
   onLoRaEvent({
-    async onConnect() {
+    async onWebsocketConnect() {
       if (autoFetch.value) {
+        await fetchOptions();
         await fetch();
       }
     },
-    async onDisconnect() {
-      if (autoFetch.value) {
+    async onEvent(evt) {
+      if (!evt.name.startsWith('SERIAL') && autoFetch.value) {
         await fetch();
       }
-    },
-    onTxDone(evt) {
-      console.log('TX DONE', evt.portName);
-    },
-    onTxStart(evt) {
-      console.log('TX START', evt.portName, evt.message);
-    },
-    onRxDone(evt) {
-      console.log('RX DONE', evt.portName, evt.message);
-    },
-    onRxStart(evt) {
-      console.log('RX START', evt.portName);
     },
   });
 
-  return { options, ports, nodes, autoFetch, fetch };
+  return { options, ports, nodes, events, autoFetch, fetch };
 });

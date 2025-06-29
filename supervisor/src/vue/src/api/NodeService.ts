@@ -1,4 +1,5 @@
 import { api } from 'boot/axios';
+import { LoRaEvent } from 'stores/websocket';
 
 export interface NodeModel {
   id: string;
@@ -57,6 +58,10 @@ export const NodeService = {
   },
   async getNodes(): Promise<NodeModel[]> {
     const response = await api.get('/nodes');
+    return response.data;
+  },
+  async getEvents(id: string): Promise<LoRaEvent[]> {
+    const response = await api.get(`/nodes/${id}/events`);
     return response.data;
   },
   async transmit(id: string, text: string): Promise<void> {
