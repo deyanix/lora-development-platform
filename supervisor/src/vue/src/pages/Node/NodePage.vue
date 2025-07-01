@@ -1,35 +1,15 @@
 <template>
   <q-page class="column">
-    <NodeHeader :node="node" />
-    <q-separator />
-    <div v-if="node" class="row col-md">
-      <div class="col-12 col-md-9 relative-position">
-        <div class="column absolute full-height full-width">
-          <q-virtual-scroll
-            virtual-scroll-item-size="21"
-            :items="events"
-            v-slot="{ item }"
-            class="col-auto"
-            style="flex-grow: 0; flex-shrink: 1"
-          >
-            <q-item :key="item.id">
-              <q-item-section class="col-auto">
-                <q-item-label caption>
-                  {{ item.date }}
-                </q-item-label>
-                <q-item-label>
-                  {{ item.name }}
-                  {{ item.rssi }}
-                  {{ item.snr }}
-                  {{ item.data }}
-                </q-item-label>
-              </q-item-section>
-            </q-item>
-          </q-virtual-scroll>
-        </div>
-      </div>
-      <div class="node-panel col-12 col-md-3 bg-white">
+    <div class="col-auto">
+      <NodeHeader :node="node" />
+      <q-separator />
+    </div>
+    <div v-if="node" class="node-page__main">
+      <div class="node-page__panel scroll">
         <NodePanel :node="node" />
+      </div>
+      <div class="node-page__content">
+        <NodeContent :node="node" class="full-height" />
       </div>
     </div>
   </q-page>
@@ -41,15 +21,12 @@ import { useRoute } from 'vue-router';
 import NodeHeader from 'pages/Node/_components/NodeHeader.vue';
 import NodePanel from 'pages/Node/_components/NodePanel.vue';
 import { NodeModel } from 'src/api/NodeService';
-import { LoRaEvent } from 'stores/websocket';
+import NodeContent from 'pages/Node/_components/NodeContent.vue';
 
 const $route = useRoute();
 const platform = usePlatformStore();
 const node = computed<NodeModel | undefined>(() =>
   platform.nodes.find((n) => n.id === $route.params.id),
-);
-const events = computed<LoRaEvent[]>(
-  () => (node.value ? platform.events[node.value?.id] : undefined) ?? [],
 );
 
 onBeforeMount(async () => {
@@ -57,7 +34,41 @@ onBeforeMount(async () => {
 });
 </script>
 <style lang="scss">
-.node-panel {
-  border-left: 1px solid $separator-color;
+.node-page {
+  &__main {
+    display: flex;
+    flex-direction: column;
+    justify-content: start;
+    flex: 1 1 0;
+    overflow: hidden;
+
+    @media screen and (min-width: $breakpoint-md-min) {
+      flex-direction: row-reverse;
+    }
+  }
+
+  &__content {
+    flex: 1 1 auto;
+    overflow: hidden;
+
+    @media screen and (min-width: $breakpoint-md-min) {
+      width: 75%;
+      height: 100% !important;
+    }
+  }
+
+  &__panel {
+    flex: 0 0 auto;
+
+    @media screen and (max-width: $breakpoint-sm-max) {
+      border-bottom: 1px solid $separator-color;
+    }
+
+    @media screen and (min-width: $breakpoint-md-min) {
+      border-left: 1px solid $separator-color;
+      width: 25%;
+      height: 100% !important;
+    }
+  }
 }
 </style>

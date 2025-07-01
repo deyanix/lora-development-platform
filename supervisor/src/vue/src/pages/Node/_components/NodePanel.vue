@@ -1,6 +1,10 @@
 <template>
-  <q-list separator class="full-height">
-    <q-expansion-item group="node-panel" label="Konfiguracje radiowe" default-opened>
+  <q-list separator>
+    <q-expansion-item
+      group="node-panel"
+      label="Konfiguracje radiowe"
+      :default-opened="$q.screen.gt.md"
+    >
       <q-item>
         <q-item-section>
           <q-item-label caption> Częstotliwość </q-item-label>
@@ -136,7 +140,7 @@ const frequency = computed(
 
 const spreadingFactor = computed(() =>
   platform.options?.spreadingFactor.find(
-    (opt) => opt.value === props.node.radioConfiguration.spreadingFactor,
+    (opt) => opt.value === props.node?.radioConfiguration.spreadingFactor,
   ),
 );
 const bandwidth = computed(() =>
