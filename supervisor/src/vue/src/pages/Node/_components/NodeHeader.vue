@@ -19,7 +19,19 @@
     <q-space />
     <q-item-section class="col-auto">
       <div class="row q-gutter-xs">
-        <q-btn icon="mdi-send" flat round dense :disable="!node" @click="send" />
+        <q-btn
+          icon="mdi-signal-distance-variant"
+          flat
+          round
+          dense
+          :disable="!node"
+          @click="openTimeOnAirCalculator"
+        >
+          <q-tooltip>Time on Air</q-tooltip>
+        </q-btn>
+        <q-btn icon="mdi-send" flat round dense :disable="!node" @click="send">
+          <q-tooltip>Wysyłanie wiadomości</q-tooltip>
+        </q-btn>
         <q-btn
           :icon="!node?.flashing ? 'mdi-led-off' : 'mdi-led-on'"
           flat
@@ -27,7 +39,9 @@
           dense
           :disable="!node"
           @click="toggleFlashing"
-        />
+        >
+          <q-tooltip>Wskaźnik LED</q-tooltip>
+        </q-btn>
         <q-btn icon="mdi-refresh" flat dense round :disable="!node" @click="resetAuto">
           <q-tooltip>Reset algorytmu</q-tooltip>
         </q-btn>
@@ -48,6 +62,7 @@ import NodeRadioConfigurationDialog from 'pages/Node/_dialogs/NodeRadioConfigura
 import { usePlatformStore } from 'stores/platform';
 import NodeConfigurationDialog from 'pages/Node/_dialogs/NodeConfigurationDialog.vue';
 import { NodeUtilities } from 'src/utilities/NodeUtilities';
+import NodeTimeOnAirDialog from 'pages/Node/_dialogs/NodeTimeOnAirDialog.vue';
 
 const platform = usePlatformStore();
 const props = defineProps<{ node?: NodeModel }>();
@@ -93,6 +108,15 @@ function openRadioConfiguration() {
 function openNodeConfiguration() {
   Dialog.create({
     component: NodeConfigurationDialog,
+    componentProps: {
+      node: props.node,
+    },
+  });
+}
+
+function openTimeOnAirCalculator() {
+  Dialog.create({
+    component: NodeTimeOnAirDialog,
     componentProps: {
       node: props.node,
     },

@@ -79,4 +79,8 @@ export const NodeService = {
   async resetAuto(id: string) {
     await api.post(`/nodes/${id}/reset-auto`);
   },
+  async getTimeOnAir(id: string, length: number): Promise<number> {
+    const response = await api.get(`/nodes/${id}/time-on-air`, { params: { length } });
+    return response.data;
+  },
 };
