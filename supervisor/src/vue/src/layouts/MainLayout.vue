@@ -36,7 +36,9 @@
             </q-avatar>
           </q-item-section>
           <q-item-section>
-            <q-item-label> {{ node.id }} </q-item-label>
+            <q-item-label>
+              {{ NodeUtilities.formatId(node.id) }}
+            </q-item-label>
           </q-item-section>
           <q-space />
           <q-item-section class="col-auto q-px-md">
@@ -58,6 +60,7 @@ import SerialConnectorDialog from 'layouts/_components/SerialConnectorDialog.vue
 import { usePlatformStore } from 'stores/platform';
 import { computed, ref } from 'vue';
 import StatusIndicator from 'components/StatusIndicator.vue';
+import { NodeUtilities } from 'src/utilities/NodeUtilities';
 
 const platform = usePlatformStore();
 

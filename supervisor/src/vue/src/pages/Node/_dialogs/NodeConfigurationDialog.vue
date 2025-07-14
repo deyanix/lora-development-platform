@@ -31,7 +31,7 @@
             type="number"
             dense
             outlined
-            class="col"
+            suffix="ms"
           />
           <q-input
             v-model.number="configuration.interval"
@@ -39,6 +39,7 @@
             type="number"
             dense
             outlined
+            suffix="ms"
           />
           <q-input
             v-model.number="configuration.ackLifetime"
@@ -63,9 +64,9 @@
 </template>
 
 <script setup lang="ts">
-import { ref, watch } from 'vue';
-import { NodeModel, NodeConfiguration, NodeService } from 'src/api/NodeService'; // Upewnij się, że ścieżka do NodeService jest poprawna
-import { usePlatformStore } from 'stores/platform'; // Upewnij się, że ścieżka do platformy jest poprawna
+import { ref } from 'vue';
+import { NodeModel, NodeConfiguration, NodeService } from 'src/api/NodeService';
+import { usePlatformStore } from 'stores/platform';
 import { Loading, useDialogPluginComponent } from 'quasar';
 
 const { dialogRef, onDialogOK } = useDialogPluginComponent();

@@ -1,5 +1,6 @@
 package eu.deyanix.lorasupervisor.controller;
 
+import eu.deyanix.lorasupervisor.model.LoRaEventSearchCriteria;
 import eu.deyanix.lorasupervisor.model.LoRaFlashing;
 import eu.deyanix.lorasupervisor.model.LoRaNodeOptions;
 import eu.deyanix.lorasupervisor.model.LoRaNodeState;
@@ -18,7 +19,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
-import java.util.Set;
+import java.util.stream.Stream;
 
 @Tag(name = "LoRa")
 @RestController
@@ -95,9 +96,7 @@ public class LoRaController {
 	}
 
 	@GetMapping("/nodes/{id}/events")
-	public Set<LoRaNodeEvent> getEvents(@PathVariable String id) {
-		return loRaService.getNodeById(id)
-				.map(LoRaNode::getEvents)
-				.orElseThrow();
+	public Stream<LoRaNodeEvent> getEvents(@PathVariable String id, LoRaEventSearchCriteria criteria) {
+		return loRaService.getEvents(id, criteria);
 	}
 }

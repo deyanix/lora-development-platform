@@ -15,7 +15,7 @@
               {{ port.portName }}
             </q-item-label>
             <q-item-label caption>
-              {{ port.nodeId ?? '(niepodłączony)' }}
+              {{ NodeUtilities.formatId(port.nodeId) ?? '(niepodłączony)' }}
             </q-item-label>
           </q-item-section>
           <q-space />
@@ -67,6 +67,7 @@ import { computed, onBeforeMount, ref } from 'vue';
 import { usePlatformStore } from 'stores/platform';
 import { PortService } from 'src/api/PortService';
 import StatusIndicator from 'components/StatusIndicator.vue';
+import { NodeUtilities } from 'src/utilities/NodeUtilities';
 
 const { dialogRef } = useDialogPluginComponent();
 const platformStore = usePlatformStore();

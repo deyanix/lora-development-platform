@@ -1,10 +1,11 @@
 package eu.deyanix.lorasupervisor.service;
 
 import com.fazecast.jSerialComm.SerialPort;
-import eu.deyanix.lorasupervisor.model.LoRaPortEvent;
+import eu.deyanix.lorasupervisor.model.LoRaEventSearchCriteria;
 import eu.deyanix.lorasupervisor.model.LoRaSerialPort;
 import eu.deyanix.lorasupervisor.protocol.LoRaNode;
 import eu.deyanix.lorasupervisor.protocol.event.LoRaEvent;
+import eu.deyanix.lorasupervisor.protocol.event.LoRaNodeEvent;
 import eu.deyanix.lorasupervisor.protocol.port.LoRaCommander;
 import eu.deyanix.lorasupervisor.protocol.port.LoRaPort;
 import eu.deyanix.lorasupervisor.protocol.port.LoRaPortListener;
@@ -12,8 +13,10 @@ import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Stream;
 
 @Service
 public class LoRaService {
@@ -104,6 +107,15 @@ public class LoRaService {
 						.map(p -> p.getSerialPort().getSystemPortName().equals(port))
 						.orElse(false))
 				.findFirst();
+	}
+
+	public Stream<LoRaNodeEvent> getEvents(String id, LoRaEventSearchCriteria criteria) {
+		return getNodeById(id)
+				.stream()
+				.map(LoRaNode::getEvents)
+				.flatMap(Collection::stream)
+				.skip(criteria.getOffset())
+				.limit(criteria.getLength());
 	}
 
 	protected class LoRaListener implements LoRaPortListener {

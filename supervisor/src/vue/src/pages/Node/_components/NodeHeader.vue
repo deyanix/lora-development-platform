@@ -6,7 +6,9 @@
       </q-avatar>
     </q-item-section>
     <q-item-section v-if="node">
-      <q-item-label class="text-bold"> {{ node?.id }} </q-item-label>
+      <q-item-label class="text-bold">
+        {{ NodeUtilities.formatId(node?.id) }}
+      </q-item-label>
       <q-item-label caption>
         {{ node?.portName }}
       </q-item-label>
@@ -45,6 +47,7 @@ import { Dialog, Loading } from 'quasar';
 import NodeRadioConfigurationDialog from 'pages/Node/_dialogs/NodeRadioConfigurationDialog.vue';
 import { usePlatformStore } from 'stores/platform';
 import NodeConfigurationDialog from 'pages/Node/_dialogs/NodeConfigurationDialog.vue';
+import { NodeUtilities } from 'src/utilities/NodeUtilities';
 
 const platform = usePlatformStore();
 const props = defineProps<{ node?: NodeModel }>();

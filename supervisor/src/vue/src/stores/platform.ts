@@ -3,7 +3,13 @@ import { onBeforeMount, ref } from 'vue';
 import { onLoRaEvent } from 'src/composables/onLoRaEvent';
 import { PortModel, PortService } from 'src/api/PortService';
 import { NodeModel, NodeOptions, NodeService } from 'src/api/NodeService';
-import { LoRaEvent } from 'stores/websocket';
+import { LoRaEvent, LoRaEventType } from 'stores/websocket';
+
+const PlatformFetchEvents: string[] = [
+  LoRaEventType.PORT_RECOGNIZED,
+  LoRaEventType.PORT_CONNECT,
+  LoRaEventType.PORT_DISCONNECT,
+];
 
 export const usePlatformStore = defineStore('platform', () => {
   const ports = ref<PortModel[]>([]);
@@ -42,8 +48,26 @@ export const usePlatformStore = defineStore('platform', () => {
       }
     },
     async onEvent(evt) {
-      if (!evt.name.startsWith('SERIAL') && autoFetch.value) {
-        await fetch();
+      const nodeId = Object.entries(evt)
+        .find(([k]) => k === 'nodeId')
+        ?.at(1);
+
+      if (nodeId) {
+        const arr = events.value[nodeId];
+
+        if (!arr) {
+          events.value[nodeId] = [evt];
+        } else {
+          arr.unshift(evt);
+
+          if (arr.length > 100) {
+            arr.splice(100, arr.length - 100);
+          }
+        }
+
+        if (autoFetch.value && PlatformFetchEvents.includes(evt.name)) {
+          await fetch();
+        }
       }
     },
   });

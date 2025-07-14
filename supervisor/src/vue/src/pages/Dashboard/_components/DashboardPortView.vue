@@ -7,7 +7,7 @@
         </q-item-label>
         <q-item-label caption>
           <template v-if="port.nodeId">
-            {{ port.nodeId }}
+            {{ NodeUtilities.formatId(port.nodeId) }}
           </template>
           <template v-else> (niepodłączone) </template>
         </q-item-label>
@@ -19,6 +19,7 @@
 <script setup lang="ts">
 import { PortModel } from 'src/api/PortService';
 import SerialMonitor from 'pages/Dashboard/_components/SerialMonitor.vue';
+import { NodeUtilities } from 'src/utilities/NodeUtilities';
 
 defineProps<{ port: PortModel }>();
 </script>

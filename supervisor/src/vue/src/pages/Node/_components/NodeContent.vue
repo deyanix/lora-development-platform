@@ -1,18 +1,6 @@
 <template>
-  <q-virtual-scroll virtual-scroll-item-size="21" :items="events" v-slot="{ item }">
-    <q-item :key="item.id">
-      <q-item-section class="col-auto">
-        <q-item-label caption>
-          {{ item.date }}
-        </q-item-label>
-        <q-item-label>
-          {{ item.name }}
-          {{ item.rssi }}
-          {{ item.snr }}
-          {{ item.data }}
-        </q-item-label>
-      </q-item-section>
-    </q-item>
+  <q-virtual-scroll virtual-scroll-item-size="51" :items="events" v-slot="{ item }" class="bg-dark">
+    <NodeContentItem :item="item" :key="item.id" />
   </q-virtual-scroll>
 </template>
 <script setup lang="ts">
@@ -20,6 +8,7 @@ import { computed } from 'vue';
 import { LoRaEvent } from 'stores/websocket';
 import { NodeModel } from 'src/api/NodeService';
 import { usePlatformStore } from 'stores/platform';
+import NodeContentItem from 'pages/Node/_components/NodeContentItem.vue';
 
 const platform = usePlatformStore();
 
