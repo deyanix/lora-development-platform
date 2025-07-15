@@ -1,16 +1,21 @@
 <template>
   <div class="serial-monitor">
-    <q-scroll-area style="height: 200px; max-width: 100%">
-      <div v-for="(msg, index) in messages" :key="index">
-        {{ msg.date.toISOString() }}
-        {{ msg.type === 'rx' ? '<' : '>' }}
-        {{ msg.message }}
+    <q-virtual-scroll
+      virtual-scroll-item-size="21"
+      :items="messages"
+      v-slot="{ item, index }"
+      style="height: 200px; max-width: 100%"
+    >
+      <div :key="index">
+        {{ item.date.toISOString() }}
+        {{ item.type === 'rx' ? '<' : '>' }}
+        {{ item.message }}
       </div>
-    </q-scroll-area>
+    </q-virtual-scroll>
   </div>
 </template>
 <script setup lang="ts">
-import { Ref, ref } from 'vue';
+import { ref } from 'vue';
 import { onLoRaEvent } from 'src/composables/onLoRaEvent';
 import { PortModel } from 'src/api/PortService';
 
@@ -27,14 +32,11 @@ const messages = ref<SerialMonitorMessage[]>([]);
 const txBuffer = ref<string>('');
 const rxBuffer = ref<string>('');
 
-function processSerialBuffer(
-  bufferRef: Ref<string>,
-  type: 'tx' | 'rx',
-  allMessages: typeof messages,
-) {
+function processSerialBuffer(type: 'tx' | 'rx') {
+  const bufferRef = type === 'tx' ? txBuffer : rxBuffer;
+
   let currentBuffer = bufferRef.value;
   let terminatorIndex;
-
   while (currentBuffer.includes('\n') || currentBuffer.includes('\r')) {
     terminatorIndex = currentBuffer.search(/[\r\n]/);
     if (terminatorIndex === -1) {
@@ -45,7 +47,7 @@ function processSerialBuffer(
     currentBuffer = currentBuffer.substring(terminatorIndex + 1).replace(/^[\r\n]+/, '');
     if (line.length === 0) continue;
 
-    allMessages.value.unshift({
+    messages.value.unshift({
       type: type,
       date: new Date(),
       message: line,
@@ -58,14 +60,14 @@ function processSerialBuffer(
 onLoRaEvent({
   onSerialTx(evt) {
     if (evt.portName === props.port.portName) {
-      txBuffer.value += evt.message;
-      processSerialBuffer(txBuffer, 'tx', messages);
+      txBuffer.value += evt.data;
+      processSerialBuffer('tx');
     }
   },
   onSerialRx(evt) {
     if (evt.portName === props.port.portName) {
-      rxBuffer.value += evt.message;
-      processSerialBuffer(rxBuffer, 'rx', messages);
+      rxBuffer.value += evt.data;
+      processSerialBuffer('rx');
     }
   },
 });

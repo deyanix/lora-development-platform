@@ -1,4 +1,5 @@
 import { api } from 'boot/axios';
+import { LoRaEvent } from 'stores/websocket';
 
 export interface NodeModel {
   id: string;
@@ -59,6 +60,10 @@ export const NodeService = {
     const response = await api.get('/nodes');
     return response.data;
   },
+  async getEvents(id: string): Promise<LoRaEvent[]> {
+    const response = await api.get(`/nodes/${id}/events`);
+    return response.data;
+  },
   async transmit(id: string, text: string): Promise<void> {
     await api.post(`/nodes/${id}/transmit`, text, { headers: { 'Content-Type': 'text/plain' } });
   },
@@ -70,5 +75,12 @@ export const NodeService = {
   },
   async updateRadioConfiguration(id: string, configuration: Partial<NodeRadioConfiguration>) {
     await api.patch(`/nodes/${id}/radio`, configuration);
+  },
+  async resetAuto(id: string) {
+    await api.post(`/nodes/${id}/reset-auto`);
+  },
+  async getTimeOnAir(id: string, length: number): Promise<number> {
+    const response = await api.get(`/nodes/${id}/time-on-air`, { params: { length } });
+    return response.data;
   },
 };

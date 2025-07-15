@@ -1,11 +1,13 @@
 package eu.deyanix.lorasupervisor.controller;
 
+import eu.deyanix.lorasupervisor.model.LoRaEventSearchCriteria;
 import eu.deyanix.lorasupervisor.model.LoRaFlashing;
 import eu.deyanix.lorasupervisor.model.LoRaNodeOptions;
 import eu.deyanix.lorasupervisor.model.LoRaNodeState;
 import eu.deyanix.lorasupervisor.protocol.LoRaNode;
 import eu.deyanix.lorasupervisor.protocol.config.LoRaConfiguration;
 import eu.deyanix.lorasupervisor.protocol.config.LoRaRadioConfiguration;
+import eu.deyanix.lorasupervisor.protocol.event.LoRaNodeEvent;
 import eu.deyanix.lorasupervisor.service.LoRaService;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -13,9 +15,11 @@ import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
+import java.util.stream.Stream;
 
 @Tag(name = "LoRa")
 @RestController
@@ -73,5 +77,26 @@ public class LoRaController {
 				.flatMap(LoRaNode::getCommander)
 				.orElseThrow()
 				.transmit(data);
+	}
+
+	@GetMapping("/nodes/{id}/time-on-air")
+	public long getTimeOnAir(@PathVariable String id, @RequestParam int length) {
+		return loRaService.getNodeById(id)
+				.flatMap(LoRaNode::getCommander)
+				.orElseThrow()
+				.getTimeOnAir(length);
+	}
+
+	@PostMapping("/nodes/{id}/reset-auto")
+	public void resetAuto(@PathVariable String id) {
+		loRaService.getNodeById(id)
+				.flatMap(LoRaNode::getCommander)
+				.orElseThrow()
+				.resetAuto();
+	}
+
+	@GetMapping("/nodes/{id}/events")
+	public Stream<LoRaNodeEvent> getEvents(@PathVariable String id, LoRaEventSearchCriteria criteria) {
+		return loRaService.getEvents(id, criteria);
 	}
 }

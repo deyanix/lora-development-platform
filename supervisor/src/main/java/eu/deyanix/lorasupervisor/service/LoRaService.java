@@ -1,20 +1,22 @@
 package eu.deyanix.lorasupervisor.service;
 
 import com.fazecast.jSerialComm.SerialPort;
-import eu.deyanix.lorasupervisor.model.LoRaPortEvent;
-import eu.deyanix.lorasupervisor.model.LoRaPortMessage;
-import eu.deyanix.lorasupervisor.model.LoRaPortReceivedMessage;
+import eu.deyanix.lorasupervisor.model.LoRaEventSearchCriteria;
 import eu.deyanix.lorasupervisor.model.LoRaSerialPort;
 import eu.deyanix.lorasupervisor.protocol.LoRaNode;
+import eu.deyanix.lorasupervisor.protocol.event.LoRaEvent;
+import eu.deyanix.lorasupervisor.protocol.event.LoRaNodeEvent;
 import eu.deyanix.lorasupervisor.protocol.port.LoRaCommander;
 import eu.deyanix.lorasupervisor.protocol.port.LoRaPort;
-import eu.deyanix.lorasupervisor.protocol.port.LoRaPortBasicListener;
+import eu.deyanix.lorasupervisor.protocol.port.LoRaPortListener;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Stream;
 
 @Service
 public class LoRaService {
@@ -49,12 +51,12 @@ public class LoRaService {
 
 	public LoRaSerialPort connect(String portName) {
 		SerialPort serialPort = SerialPort.getCommPort(portName);
-		LoRaPort port = LoRaPort.openNode(serialPort);
-		if (port != null) {
-			try {
-				port.addListener(new LoRaListener());
-				port.addListener(loraStatisticService.getPortListener());
+		LoRaPort port = new LoRaPort(serialPort);
+		port.addListener(new LoRaListener());
+		port.addListener(loraStatisticService.getPortListener());
 
+		if (port.open()) {
+			try {
 				LoRaCommander commander = port.createCommander();
 				String nodeId = commander.getId();
 
@@ -68,9 +70,6 @@ public class LoRaService {
 					nodes.add(node);
 				}
 				port.setNode(node);
-
-				webSocketService.sendMessage("/topic/port/connect",
-						new LoRaPortEvent(serialPort.getSystemPortName()));
 
 				return new LoRaSerialPort()
 						.setPortName(serialPort.getSystemPortName())
@@ -87,17 +86,9 @@ public class LoRaService {
 	}
 
 	public void disconnect(String port) {
-		LoRaNode node = getNodeByPort(port).orElse(null);
-		if (node != null) {
-			node.getPort()
-					.map(LoRaPort::getSerialPort)
-					.ifPresent(SerialPort::closePort);
-
-			node.setCommander(null);
-
-			webSocketService.sendMessage("/topic/port/disconnect",
-					new LoRaPortEvent(port));
-		}
+		getNodeByPort(port)
+				.flatMap(LoRaNode::getPort)
+				.ifPresent(LoRaPort::close);
 	}
 
 	public List<LoRaNode> getNodes() {
@@ -118,64 +109,19 @@ public class LoRaService {
 				.findFirst();
 	}
 
-	protected class LoRaListener extends LoRaPortBasicListener {
-		@Override
-		public void onDisconnect(LoRaPort port) {
-			disconnect(port.getSerialPort().getSystemPortName());
-		}
+	public Stream<LoRaNodeEvent> getEvents(String id, LoRaEventSearchCriteria criteria) {
+		return getNodeById(id)
+				.stream()
+				.map(LoRaNode::getEvents)
+				.flatMap(Collection::stream)
+				.skip(criteria.getOffset())
+				.limit(criteria.getLength());
+	}
 
+	protected class LoRaListener implements LoRaPortListener {
 		@Override
-		public void onSend(LoRaPort port, String data) {
-			webSocketService.sendMessage("/topic/serial/tx",
-					new LoRaPortMessage(port.getSerialPort().getSystemPortName(), data));
-		}
-
-		@Override
-		public void onReceive(LoRaPort port, String data) {
-			webSocketService.sendMessage("/topic/serial/rx",
-					new LoRaPortMessage(port.getSerialPort().getSystemPortName(), data));
-		}
-
-		@Override
-		public void onRxDone(LoRaPort port, int rssi, int snr, String data) {
-			webSocketService.sendMessage("/topic/port/rx/done",
-					new LoRaPortReceivedMessage(port.getSerialPort().getSystemPortName(), rssi, snr, data));
-		}
-
-		@Override
-		public void onRxTimeout(LoRaPort port) {
-			webSocketService.sendMessage("/topic/port/rx/timeout",
-					new LoRaPortEvent(port.getSerialPort().getSystemPortName()));
-		}
-
-		@Override
-		public void onRxError(LoRaPort port) {
-			webSocketService.sendMessage("/topic/port/rx/error",
-					new LoRaPortEvent(port.getSerialPort().getSystemPortName()));
-		}
-
-		@Override
-		public void onTxDone(LoRaPort port) {
-			webSocketService.sendMessage("/topic/port/tx/done",
-					new LoRaPortEvent(port.getSerialPort().getSystemPortName()));
-		}
-
-		@Override
-		public void onTxTimeout(LoRaPort port) {
-			webSocketService.sendMessage("/topic/port/tx/timeout",
-					new LoRaPortEvent(port.getSerialPort().getSystemPortName()));
-		}
-
-		@Override
-		public void onTxStart(LoRaPort port, String data) {
-			webSocketService.sendMessage("/topic/port/tx/start",
-					new LoRaPortMessage(port.getSerialPort().getSystemPortName(), data));
-		}
-
-		@Override
-		public void onRxStart(LoRaPort port) {
-			webSocketService.sendMessage("/topic/port/rx/start",
-					new LoRaPortEvent(port.getSerialPort().getSystemPortName()));
+		public void onEvent(LoRaEvent event) {
+			webSocketService.sendMessage("/topic/event", event);
 		}
 	}
 }

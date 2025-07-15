@@ -1,43 +1,69 @@
 import { defineStore } from 'pinia';
-import { onBeforeUnmount, onMounted, ref } from 'vue';
+import { onBeforeUnmount, onMounted, ref, watch } from 'vue';
 import { Client } from '@stomp/stompjs';
 import SockJS from 'sockjs-client';
+import { api } from 'boot/axios';
 
-const websocketUrl = 'http://localhost:8080/ws';
+export enum LoRaEventType {
+  PORT_CONNECT = 'PORT_CONNECT',
+  PORT_DISCONNECT = 'PORT_DISCONNECT',
+  PORT_RECOGNIZED = 'PORT_RECOGNIZED',
+  SERIAL_TX = 'SERIAL_TX',
+  SERIAL_RX = 'SERIAL_RX',
+  RX_START = 'RX_START',
+  RX_DONE = 'RX_DONE',
+  RX_TIMEOUT = 'RX_TIMEOUT',
+  RX_ERROR = 'RX_ERROR',
+  TX_START = 'TX_START',
+  TX_DONE = 'TX_DONE',
+  TX_TIMEOUT = 'TX_TIMEOUT',
+}
 
-export interface LoRaPortEvent {
+export interface LoRaEvent {
+  id: number;
+  date: Date;
   portName: string;
+  name: string;
 }
 
-export interface LoRaPortMessage extends LoRaPortEvent {
-  message: string;
+export interface LoRaNodeEvent extends LoRaEvent {
+  nodeId: string;
 }
 
-export interface LoRaPortReceivedMessage extends LoRaPortMessage {
+export interface LoRaDataEvent extends LoRaNodeEvent {
+  data: string;
+}
+
+export interface LoRaPortReceivedMessage extends LoRaDataEvent {
   rssi: number;
   snr: number;
 }
 
+export type LoRaPortListenerCallbackContextless = () => void;
 export type LoRaPortListenerCallback<Event> = (evt: Event) => void;
 
 export interface LoRaPortListener {
-  onConnect?: LoRaPortListenerCallback<LoRaPortEvent>;
-  onDisconnect?: LoRaPortListenerCallback<LoRaPortEvent>;
-  onSerialTx?: LoRaPortListenerCallback<LoRaPortMessage>;
-  onSerialRx?: LoRaPortListenerCallback<LoRaPortMessage>;
-  onTxDone?: LoRaPortListenerCallback<LoRaPortEvent>;
-  onTxTimeout?: LoRaPortListenerCallback<LoRaPortEvent>;
+  onWebsocketConnect?: LoRaPortListenerCallbackContextless;
+  onWebsocketDisconnect?: LoRaPortListenerCallbackContextless;
+  onEvent?: LoRaPortListenerCallback<LoRaEvent>;
+  onConnect?: LoRaPortListenerCallback<LoRaEvent>;
+  onDisconnect?: LoRaPortListenerCallback<LoRaEvent>;
+  onSerialTx?: LoRaPortListenerCallback<LoRaDataEvent>;
+  onSerialRx?: LoRaPortListenerCallback<LoRaDataEvent>;
+  onTxDone?: LoRaPortListenerCallback<LoRaEvent>;
+  onTxTimeout?: LoRaPortListenerCallback<LoRaEvent>;
   onRxDone?: LoRaPortListenerCallback<LoRaPortReceivedMessage>;
-  onRxTimeout?: LoRaPortListenerCallback<LoRaPortEvent>;
-  onRxError?: LoRaPortListenerCallback<LoRaPortEvent>;
-  onRxStart?: LoRaPortListenerCallback<LoRaPortEvent>;
-  onTxStart?: LoRaPortListenerCallback<LoRaPortMessage>;
+  onRxTimeout?: LoRaPortListenerCallback<LoRaEvent>;
+  onRxError?: LoRaPortListenerCallback<LoRaEvent>;
+  onRxStart?: LoRaPortListenerCallback<LoRaEvent>;
+  onTxStart?: LoRaPortListenerCallback<LoRaDataEvent>;
 }
 
 export const useWebsocketStore = defineStore('websocket', () => {
   const isConnected = ref<boolean>(false);
   const stompClient = ref<Client | null>(null);
   const listeners = ref<LoRaPortListener[]>([]);
+  const websocketUrl = api.getUri({ url: '/ws' });
 
   function addListener(listener: LoRaPortListener): void {
     listeners.value.push(listener);
@@ -66,59 +92,47 @@ export const useWebsocketStore = defineStore('websocket', () => {
     client.onConnect = () => {
       isConnected.value = true;
 
-      client.subscribe('/topic/serial/tx', (message) => {
+      client.subscribe('/topic/event', (message) => {
         const evt = JSON.parse(message.body);
-        listeners.value.map((l) => l.onSerialTx?.(evt));
-      });
+        evt.date = new Date(evt.date);
+        listeners.value.map((l) => l.onEvent?.(evt));
 
-      client.subscribe('/topic/serial/rx', (message) => {
-        const evt = JSON.parse(message.body);
-        listeners.value.map((l) => l.onSerialRx?.(evt));
-      });
-
-      client.subscribe('/topic/port/connect', (message) => {
-        const evt = JSON.parse(message.body);
-        listeners.value.map((l) => l.onConnect?.(evt));
-      });
-
-      client.subscribe('/topic/port/disconnect', (message) => {
-        const evt = JSON.parse(message.body);
-        listeners.value.map((l) => l.onDisconnect?.(evt));
-      });
-
-      client.subscribe('/topic/port/tx/done', (message) => {
-        const evt = JSON.parse(message.body);
-        listeners.value.map((l) => l.onTxDone?.(evt));
-      });
-
-      client.subscribe('/topic/port/tx/timeout', (message) => {
-        const evt = JSON.parse(message.body);
-        listeners.value.map((l) => l.onTxTimeout?.(evt));
-      });
-
-      client.subscribe('/topic/port/rx/done', (message) => {
-        const evt = JSON.parse(message.body);
-        listeners.value.map((l) => l.onRxDone?.(evt));
-      });
-
-      client.subscribe('/topic/port/rx/timeout', (message) => {
-        const evt = JSON.parse(message.body);
-        listeners.value.map((l) => l.onRxTimeout?.(evt));
-      });
-
-      client.subscribe('/topic/port/rx/error', (message) => {
-        const evt = JSON.parse(message.body);
-        listeners.value.map((l) => l.onRxError?.(evt));
-      });
-
-      client.subscribe('/topic/port/tx/start', (message) => {
-        const evt = JSON.parse(message.body);
-        listeners.value.map((l) => l.onTxStart?.(evt));
-      });
-
-      client.subscribe('/topic/port/rx/start', (message) => {
-        const evt = JSON.parse(message.body);
-        listeners.value.map((l) => l.onRxStart?.(evt));
+        switch (evt.name) {
+          case LoRaEventType.PORT_CONNECT:
+          case LoRaEventType.PORT_RECOGNIZED:
+            listeners.value.map((l) => l.onConnect?.(evt));
+            break;
+          case LoRaEventType.PORT_DISCONNECT:
+            listeners.value.map((l) => l.onDisconnect?.(evt));
+            break;
+          case LoRaEventType.SERIAL_TX:
+            listeners.value.map((l) => l.onSerialTx?.(evt));
+            break;
+          case LoRaEventType.SERIAL_RX:
+            listeners.value.map((l) => l.onSerialRx?.(evt));
+            break;
+          case LoRaEventType.RX_START:
+            listeners.value.map((l) => l.onRxStart?.(evt));
+            break;
+          case LoRaEventType.RX_DONE:
+            listeners.value.map((l) => l.onRxDone?.(evt));
+            break;
+          case LoRaEventType.RX_TIMEOUT:
+            listeners.value.map((l) => l.onRxTimeout?.(evt));
+            break;
+          case LoRaEventType.RX_ERROR:
+            listeners.value.map((l) => l.onRxError?.(evt));
+            break;
+          case LoRaEventType.TX_START:
+            listeners.value.map((l) => l.onTxStart?.(evt));
+            break;
+          case LoRaEventType.TX_DONE:
+            listeners.value.map((l) => l.onTxDone?.(evt));
+            break;
+          case LoRaEventType.TX_TIMEOUT:
+            listeners.value.map((l) => l.onTxTimeout?.(evt));
+            break;
+        }
       });
     };
 
@@ -135,13 +149,24 @@ export const useWebsocketStore = defineStore('websocket', () => {
     stompClient.value = client;
   }
 
+  console.log('reload');
   onMounted(() => {
+    console.log('mount');
     initWebSocket();
   });
 
   onBeforeUnmount(async () => {
+    console.log('unmount');
     if (stompClient.value) {
       await stompClient.value.deactivate();
+    }
+  });
+
+  watch(isConnected, (val) => {
+    if (val) {
+      listeners.value.map((l) => l.onWebsocketConnect?.());
+    } else {
+      listeners.value.map((l) => l.onWebsocketDisconnect?.());
     }
   });
 

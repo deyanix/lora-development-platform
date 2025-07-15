@@ -1,24 +1,28 @@
 package eu.deyanix.lorasupervisor.protocol;
 
 import eu.deyanix.lorasupervisor.model.LoRaNodeState;
+import eu.deyanix.lorasupervisor.protocol.event.LoRaNodeEvent;
 import eu.deyanix.lorasupervisor.protocol.config.LoRaConfiguration;
 import eu.deyanix.lorasupervisor.protocol.config.LoRaRadioConfiguration;
 import eu.deyanix.lorasupervisor.protocol.port.LoRaCommander;
 import eu.deyanix.lorasupervisor.protocol.port.LoRaPort;
 
 import java.util.Optional;
+import java.util.Set;
+import java.util.concurrent.ConcurrentSkipListSet;
 
 public class LoRaNode {
 	private final String id;
+	private final Set<LoRaNodeEvent> events;
 	private LoRaCommander commander;
 	private LoRaRadioConfiguration radioConfiguration;
 	private LoRaConfiguration configuration;
-
 	private boolean flashing;
 
 	public LoRaNode(String id, LoRaCommander commander) {
 		this.id = id;
 		this.commander = commander;
+		this.events = new ConcurrentSkipListSet<>();
 	}
 
 	public String getId() {
@@ -54,9 +58,17 @@ public class LoRaNode {
 		return radioConfiguration;
 	}
 
-	public LoRaNode setRadioConfiguration(LoRaRadioConfiguration radioConfiguration) {
-		getCommander().ifPresent(cmd -> cmd.setRadioConfiguration(radioConfiguration));
-		this.radioConfiguration = commander.getRadioConfiguration();
+	public LoRaNode setRadioConfiguration(LoRaRadioConfiguration conf) {
+		if (commander != null) {
+			commander.setRadioConfiguration(conf, radioConfiguration);
+			radioConfiguration = commander.getRadioConfiguration();
+		} else {
+			if (radioConfiguration == null) {
+				radioConfiguration = new LoRaRadioConfiguration();
+			}
+
+			LoRaCommander.mergeRadioConfiguration(radioConfiguration, conf);
+		}
 		return this;
 	}
 
@@ -64,9 +76,17 @@ public class LoRaNode {
 		return configuration;
 	}
 
-	public LoRaNode setConfiguration(LoRaConfiguration configuration) {
-		getCommander().ifPresent(cmd -> cmd.setConfiguration(configuration));
-		this.configuration = commander.getConfiguration();
+	public LoRaNode setConfiguration(LoRaConfiguration conf) {
+		if (commander != null) {
+			commander.setConfiguration(conf, configuration);
+			configuration = commander.getConfiguration();
+		} else {
+			if (configuration == null) {
+				configuration = new LoRaConfiguration();
+			}
+
+			LoRaCommander.mergeConfiguration(configuration, conf);
+		}
 		return this;
 	}
 
@@ -77,6 +97,10 @@ public class LoRaNode {
 	public void setFlashing(boolean flashing) {
 		getCommander().ifPresent(cmd -> cmd.setLed(flashing));
 		this.flashing = flashing;
+	}
+
+	public Set<LoRaNodeEvent> getEvents() {
+		return events;
 	}
 
 	public boolean isConnected() {

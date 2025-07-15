@@ -1,6 +1,10 @@
 <template>
-  <q-list separator class="full-height">
-    <q-expansion-item group="node-panel" label="Konfiguracje radiowe" default-opened>
+  <q-list separator>
+    <q-expansion-item
+      group="node-panel"
+      label="Konfiguracje radiowe"
+      :default-opened="$q.screen.gt.md"
+    >
       <q-item>
         <q-item-section>
           <q-item-label caption> Częstotliwość </q-item-label>
@@ -56,7 +60,7 @@
       <q-item>
         <q-item-section>
           <q-item-label caption> Rozmiar preambuły </q-item-label>
-          <q-item-label> {{ node.radioConfiguration.preambleLength }} bit </q-item-label>
+          <q-item-label> {{ node.radioConfiguration.preambleLength }} symb. </q-item-label>
         </q-item-section>
       </q-item>
       <q-item>
@@ -108,9 +112,7 @@
       <q-item>
         <q-item-section>
           <q-item-label caption> Maksymalne początkowe opóźnienie ponowienia </q-item-label>
-          <q-item-label>
-            {{ node.configuration.initialBackoffMax }} ms
-          </q-item-label>
+          <q-item-label> {{ node.configuration.initialBackoffMax }} ms </q-item-label>
         </q-item-section>
       </q-item>
       <q-item>
@@ -137,14 +139,16 @@ const frequency = computed(
 );
 
 const spreadingFactor = computed(() =>
-  platform.options.spreadingFactor.find(
-    (opt) => opt.value === props.node.radioConfiguration.spreadingFactor,
+  platform.options?.spreadingFactor.find(
+    (opt) => opt.value === props.node?.radioConfiguration.spreadingFactor,
   ),
 );
 const bandwidth = computed(() =>
-  platform.options.bandwidth.find((opt) => opt.value === props.node.radioConfiguration.bandwidth),
+  platform.options?.bandwidth.find((opt) => opt.value === props.node.radioConfiguration.bandwidth),
 );
 const codingRate = computed(() =>
-  platform.options.codingRate.find((opt) => opt.value === props.node.radioConfiguration.codingRate),
+  platform.options?.codingRate.find(
+    (opt) => opt.value === props.node.radioConfiguration.codingRate,
+  ),
 );
 </script>

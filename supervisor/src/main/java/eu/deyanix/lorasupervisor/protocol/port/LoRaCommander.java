@@ -4,7 +4,6 @@ import eu.deyanix.lorasupervisor.protocol.command.Argument;
 import eu.deyanix.lorasupervisor.protocol.command.ArgumentData;
 import eu.deyanix.lorasupervisor.protocol.command.Command;
 import eu.deyanix.lorasupervisor.protocol.command.CommandFactory;
-import eu.deyanix.lorasupervisor.protocol.command.CommandResult;
 import eu.deyanix.lorasupervisor.protocol.command.ExtensibleArgument;
 import eu.deyanix.lorasupervisor.protocol.config.LoRaBandwidth;
 import eu.deyanix.lorasupervisor.protocol.config.LoRaCodingRate;
@@ -14,23 +13,57 @@ import eu.deyanix.lorasupervisor.protocol.config.LoRaMode;
 import eu.deyanix.lorasupervisor.protocol.config.LoRaAuto;
 
 import java.util.List;
-import java.util.stream.IntStream;
+import java.util.Optional;
+import java.util.function.BiConsumer;
+import java.util.function.Function;
 
 public class LoRaCommander {
+	public static final List<LoRaCommanderPropertyFactor<LoRaConfiguration, ?>> CONFIGURATION_PROPERTY_FACTORS = List.of(
+			LoRaCommanderPropertyFactor.of(LoRaConfiguration::getMode, LoRaConfiguration::setMode, LoRaCommander::getMode, LoRaCommander::setMode),
+			LoRaCommanderPropertyFactor.of(LoRaConfiguration::getInitialBackoffMax, LoRaConfiguration::setInitialBackoffMax, LoRaCommander::getInitialBackoffMax, LoRaCommander::setInitialBackoffMax),
+			LoRaCommanderPropertyFactor.of(LoRaConfiguration::getAuto, LoRaConfiguration::setAuto, LoRaCommander::getAuto, LoRaCommander::setAuto),
+			LoRaCommanderPropertyFactor.of(LoRaConfiguration::isAckRequired, LoRaConfiguration::setAckRequired, LoRaCommander::getAckRequired, LoRaCommander::setAckRequired),
+			LoRaCommanderPropertyFactor.of(LoRaConfiguration::getAckLifetime, LoRaConfiguration::setAckLifetime, LoRaCommander::getAckLifetime, LoRaCommander::setAckLifetime),
+			LoRaCommanderPropertyFactor.of(LoRaConfiguration::getInterval, LoRaConfiguration::setInterval, LoRaCommander::getInterval, LoRaCommander::setInterval),
+			LoRaCommanderPropertyFactor.of(LoRaConfiguration::isBackoffIncrease, LoRaConfiguration::setBackoffIncrease, LoRaCommander::isBackoffIncrease, LoRaCommander::setBackoffIncrease)
+	);
+
+	public static final List<LoRaCommanderPropertyFactor<LoRaRadioConfiguration, ?>> RADIO_CONFIGURATION_PROPERTY_FACTORS = List.of(
+			LoRaCommanderPropertyFactor.of(LoRaRadioConfiguration::getFrequency, LoRaRadioConfiguration::setFrequency, LoRaCommander::getFrequency, LoRaCommander::setFrequency),
+			LoRaCommanderPropertyFactor.of(LoRaRadioConfiguration::getBandwidth, LoRaRadioConfiguration::setBandwidth, LoRaCommander::getBandwidth, LoRaCommander::setBandwidth),
+			LoRaCommanderPropertyFactor.of(LoRaRadioConfiguration::getPower, LoRaRadioConfiguration::setPower, LoRaCommander::getPower, LoRaCommander::setPower),
+			LoRaCommanderPropertyFactor.of(LoRaRadioConfiguration::getSpreadingFactor, LoRaRadioConfiguration::setSpreadingFactor, LoRaCommander::getSpreadingFactor, LoRaCommander::setSpreadingFactor),
+			LoRaCommanderPropertyFactor.of(LoRaRadioConfiguration::getCodingRate, LoRaRadioConfiguration::setCodingRate, LoRaCommander::getCodingRate, LoRaCommander::setCodingRate),
+			LoRaCommanderPropertyFactor.of(LoRaRadioConfiguration::isEnableCrc, LoRaRadioConfiguration::setEnableCrc, LoRaCommander::isEnabledCrc, LoRaCommander::setEnabledCrc),
+			LoRaCommanderPropertyFactor.of(LoRaRadioConfiguration::isIqInverted, LoRaRadioConfiguration::setIqInverted, LoRaCommander::isIqInverted, LoRaCommander::setIqInverted),
+			LoRaCommanderPropertyFactor.of(LoRaRadioConfiguration::getPreambleLength, LoRaRadioConfiguration::setPreambleLength, LoRaCommander::getPreambleLength, LoRaCommander::setPreambleLength),
+			LoRaCommanderPropertyFactor.of(LoRaRadioConfiguration::getPayloadLength, LoRaRadioConfiguration::setPayloadLength, LoRaCommander::getPayloadLength, LoRaCommander::setPayloadLength),
+			LoRaCommanderPropertyFactor.of(LoRaRadioConfiguration::getTxTimeout, LoRaRadioConfiguration::setTxTimeout, LoRaCommander::getTxTimeout, LoRaCommander::setTxTimeout),
+			LoRaCommanderPropertyFactor.of(LoRaRadioConfiguration::getRxSymbolTimeout, LoRaRadioConfiguration::setRxSymbolTimeout, LoRaCommander::getRxSymbolTimeout, LoRaCommander::setRxSymbolTimeout)
+	);
+
+	public static void mergeRadioConfiguration(LoRaRadioConfiguration target, LoRaRadioConfiguration source) {
+		RADIO_CONFIGURATION_PROPERTY_FACTORS.forEach(
+				property -> property.merge(target, source));
+	}
+
+	public static void mergeConfiguration(LoRaConfiguration target, LoRaConfiguration source) {
+		CONFIGURATION_PROPERTY_FACTORS.forEach(
+				property -> property.merge(target, source));
+	}
+
 	private final LoRaPort port;
 
 	public LoRaCommander(LoRaPort port) {
 		this.port = port;
 	}
 
-	public List<ArgumentData> sendDataGetter(String name, int args) {
-		Command tx = CommandFactory.createGetter(name);
-		Command rx = CommandFactory.createSetterArgs(name, IntStream.range(0, args)
-				.mapToObj(i -> new Argument())
-				.toArray(Argument[]::new));
+	public ArgumentData sendDataGetter(String name, ArgumentData... args) {
+		Command tx = CommandFactory.createGetter(name, args);
+		Command rx = CommandFactory.createSetterArgs(name, new Argument());
 
 		return port.send(tx, rx, 3)
-				.map(CommandResult::getArguments)
+				.flatMap(cmd -> cmd.getArgument(0))
 				.orElseThrow(); // TODO: Internal exception
 	}
 
@@ -272,54 +305,39 @@ public class LoRaCommander {
 	}
 
 	public LoRaRadioConfiguration getRadioConfiguration() {
-		return new LoRaRadioConfiguration()
-				.setFrequency(getFrequency())
-				.setBandwidth(getBandwidth())
-				.setPower(getPower())
-				.setSpreadingFactor(getSpreadingFactor())
-				.setCodingRate(getCodingRate())
-				.setEnableCrc(isEnabledCrc())
-				.setIqInverted(isIqInverted())
-				.setPreambleLength(getPreambleLength())
-				.setPayloadLength(getPayloadLength())
-				.setTxTimeout(getTxTimeout())
-				.setRxSymbolTimeout(getRxSymbolTimeout());
+		LoRaRadioConfiguration configuration = new LoRaRadioConfiguration();
+		RADIO_CONFIGURATION_PROPERTY_FACTORS.forEach(
+				property -> property.syncDown(this, configuration));
+
+		return configuration;
 	}
 
-	public void setRadioConfiguration(LoRaRadioConfiguration configuration) {
-		configuration.getFrequency().ifPresent(this::setFrequency);
-		configuration.getBandwidth().ifPresent(this::setBandwidth);
-		configuration.getPower().ifPresent(this::setPower);
-		configuration.getSpreadingFactor().ifPresent(this::setSpreadingFactor);
-		configuration.getCodingRate().ifPresent(this::setCodingRate);
-		configuration.isEnableCrc().ifPresent(this::setEnabledCrc);
-		configuration.isIqInverted().ifPresent(this::setIqInverted);
-		configuration.getPreambleLength().ifPresent(this::setPreambleLength);
-		configuration.getPayloadLength().ifPresent(this::setPayloadLength);
-		configuration.getTxTimeout().ifPresent(this::setTxTimeout);
-		configuration.getRxSymbolTimeout().ifPresent(this::setRxSymbolTimeout);
+	public void setRadioConfiguration(LoRaRadioConfiguration configuration, LoRaRadioConfiguration previousConfiguration) {
+		RADIO_CONFIGURATION_PROPERTY_FACTORS.forEach(
+				property -> property.syncUp(this, configuration, previousConfiguration));
+
 		push();
 	}
 
+	public void setRadioConfiguration(LoRaRadioConfiguration configuration) {
+		setRadioConfiguration(configuration, null);
+	}
+
 	public LoRaConfiguration getConfiguration() {
-		return new LoRaConfiguration()
-				.setMode(getMode())
-				.setInitialBackoffMax(getInitialBackoffMax())
-				.setAckRequired(getAckRequired())
-				.setAckLifetime(getAckLifetime())
-				.setInterval(getInterval())
-				.setAuto(getAuto())
-				.setBackoffIncrease(isBackoffIncrease());
+		LoRaConfiguration configuration = new LoRaConfiguration();
+		CONFIGURATION_PROPERTY_FACTORS.forEach(
+				property -> property.syncDown(this, configuration));
+
+		return configuration;
+	}
+
+	public void setConfiguration(LoRaConfiguration configuration, LoRaConfiguration previousConfiguration) {
+		CONFIGURATION_PROPERTY_FACTORS.forEach(
+				property -> property.syncUp(this, configuration, previousConfiguration));
 	}
 
 	public void setConfiguration(LoRaConfiguration configuration) {
-		configuration.getMode().ifPresent(this::setMode);
-		configuration.getInitialBackoffMax().ifPresent(this::setInitialBackoffMax);
-		configuration.getAuto().ifPresent(this::setAuto);
-		configuration.isAckRequired().ifPresent(this::setAckRequired);
-		configuration.getAckLifetime().ifPresent(this::setAckLifetime);
-		configuration.getInterval().ifPresent(this::setInterval);
-		configuration.isBackoffIncrease().ifPresent(this::setBackoffIncrease);
+		setConfiguration(configuration, null);
 	}
 
 	public void setLed(boolean value) {
@@ -330,6 +348,12 @@ public class LoRaCommander {
 	public boolean isLed() {
 		return sendDataGetter("LED")
 				.getBoolean()
+				.orElseThrow();
+	}
+
+	public long getTimeOnAir(int length) {
+		return sendDataGetter("TOA", new ArgumentData().setInteger(length))
+				.getLong()
 				.orElseThrow();
 	}
 
@@ -346,5 +370,53 @@ public class LoRaCommander {
 
 	public LoRaPort getPort() {
 		return port;
+	}
+
+	public static class LoRaCommanderPropertyFactor<C, T> {
+		public static <C, T> LoRaCommanderPropertyFactor<C, T> of(Function<C, Optional<T>> getter, BiConsumer<C, T> setter, Function<LoRaCommander, T> commanderGetter, BiConsumer<LoRaCommander, T> commanderSetter) {
+			return new LoRaCommanderPropertyFactor<>(getter, setter, commanderGetter, commanderSetter);
+		}
+
+		private final Function<C, Optional<T>> configGetter;
+		private final BiConsumer<C, T> configSetter;
+		private final Function<LoRaCommander, T> commanderGetter;
+		private final BiConsumer<LoRaCommander, T> commanderSetter;
+
+		public LoRaCommanderPropertyFactor(Function<C, Optional<T>> configGetter, BiConsumer<C, T> configSetter, Function<LoRaCommander, T> commanderGetter, BiConsumer<LoRaCommander, T> commanderSetter) {
+			this.configGetter = configGetter;
+			this.configSetter = configSetter;
+			this.commanderGetter = commanderGetter;
+			this.commanderSetter = commanderSetter;
+		}
+
+		public void syncUp(LoRaCommander commander, C config, C previousConfig) {
+			Optional.ofNullable(config)
+					.flatMap(configGetter)
+					.ifPresent(newValue -> {
+						boolean shouldSet = Optional.ofNullable(previousConfig)
+								.flatMap(configGetter)
+								.map(oldValue -> !newValue.equals(oldValue))
+								.orElse(true);
+
+						if (shouldSet) {
+							commanderSetter.accept(commander, newValue);
+						}
+					});
+		}
+
+		public void syncUp(LoRaCommander commander, C config) {
+			syncUp(commander, config, null);
+		}
+
+		public void syncDown(LoRaCommander commander, C config) {
+			T nodeValue = commanderGetter.apply(commander);
+			configSetter.accept(config, nodeValue);
+		}
+
+		public void merge(C targetConfig, C sourceConfig) {
+			Optional.ofNullable(sourceConfig)
+					.flatMap(configGetter)
+					.ifPresent(value -> configSetter.accept(targetConfig, value));
+		}
 	}
 }

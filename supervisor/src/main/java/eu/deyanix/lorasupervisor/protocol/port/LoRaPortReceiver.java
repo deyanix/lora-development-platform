@@ -2,6 +2,7 @@ package eu.deyanix.lorasupervisor.protocol.port;
 
 import eu.deyanix.lorasupervisor.protocol.connection.LoRaConnection;
 import eu.deyanix.lorasupervisor.protocol.buffer.BufferWriter;
+import eu.deyanix.lorasupervisor.protocol.event.serial.LoRaSerialRxEvent;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -53,9 +54,7 @@ public class LoRaPortReceiver {
 				}
 			}
 
-			for (LoRaPortListener listener : port.getListeners()) {
-				listener.onReceive(port, localBuffer.getData());
-			}
+			port.invokeEvent(new LoRaSerialRxEvent(port, localBuffer.getData()));
 		} finally {
 			setTimeout(Duration.ofMillis(50));
 			lock.unlock();
