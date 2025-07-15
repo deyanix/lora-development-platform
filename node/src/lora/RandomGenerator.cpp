@@ -4,46 +4,61 @@
 
 #include "RandomGenerator.h"
 
-#include "RandomGenerator.h"
-
-RandomGenerator::RandomGenerator() : _hasSpare(false), _spare(0.0f) {
-    // Note: The global randomSeed(analogRead(0)) in lora_controller.ino's setup()
-    // seeds the underlying Arduino random number generator used by random().
-    // We don't need to re-seed here.
+RandomGenerator::RandomGenerator()
+{
+    srand(time(NULL));
 }
 
-long RandomGenerator::generateUniform(long minVal, long maxVal) {
-    if (minVal >= maxVal) {
-        // Handle invalid range, e.g., return minVal or an error indicator
-        return minVal;
+long RandomGenerator::uniformRand(long min, long max)
+{
+    if (min >= max)
+    {
+        return min;
     }
-    // random(min, max) generates a number from min (inclusive) up to max (exclusive)
-    return random(minVal, maxVal);
+    return min + (long)((double)rand() / (RAND_MAX + 1.0) * (max - min + 1));
 }
 
-// Implements the Box-Muller transform to generate normally distributed random numbers.
-// This function generates two standard normal variates (mean=0, stdDev=1) from two
-// uniform variates. It stores one ("spare") for the next call if only one is needed.
-float RandomGenerator::generateNormal(float mean, float stdDev) {
-    if (_hasSpare) {
-        _hasSpare = false;
-        return _spare * stdDev + mean;
-    } else {
-        float u1, u2;
-        // Generate two uniform random numbers between 0 and 1 (exclusive)
-        // Ensure they are not zero to avoid log(0)
+long RandomGenerator::exponentialRandInt(double lambda, int min, int max)
+{
+    if (min >= max)
+    {
+        return min;
+    }
+    double range_size = max - min;
+    double u;
+    double x;
+
+    do {
         do {
-            u1 = (float)random(1, 1000000) / 1000000.0f; // 0.000001 to 0.999999
-            u2 = (float)random(1, 1000000) / 1000000.0f;
-        } while (u1 == 0.0f || u2 == 0.0f); // Make sure they are not zero
+            u = static_cast<double>(rand()) / RAND_MAX;
+        } while (u == 0.0);
 
-        float mag = std::sqrt(-2.0f * std::log(u1));
-        float z1 = mag * std::cos(2.0f * PI * u2);
-        float z2 = mag * std::sin(2.0f * PI * u2);
+        x = -log(1.0 - u) / lambda;
+    } while (x > range_size);
 
-        _spare = z2;
-        _hasSpare = true;
+    return min + static_cast<long>(x + 0.5);
+}
 
-        return z1 * stdDev + mean;
+double RandomGenerator::normalRand()
+{
+    double u1, u2;
+    do {
+        u1 = (double)rand() / RAND_MAX;
+        u2 = (double)rand() / RAND_MAX;
+    } while (u1 <= 1e-10);
+
+    return sqrt(-2.0 * log(u1)) * cos(2 * M_PI * u2);
+}
+
+long RandomGenerator::normalRandInt(double mean, double stddev, long min, long max){
+    if (min >= max)
+    {
+        return min;
     }
+    double val = mean + stddev * RandomGenerator::normalRand();
+
+    if (val < min) val = min;
+    if (val > max) val = max;
+
+    return (long)(val + 0.5);
 }

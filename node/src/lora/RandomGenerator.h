@@ -5,24 +5,61 @@
 #ifndef RANDOMGENERATOR_H
 #define RANDOMGENERATOR_H
 
-#include <Arduino.h> // For random(), millis(), etc.
-#include <math.h>    // For log(), sqrt(), cos(), PI
+#include <cstdlib> // For rand(), srand(), RAND_MAX
+#include <cmath>   // For log(), sqrt(), cos(), M_PI
+#include <ctime>   // For time()
+#include "terminal.h"
 
+// Define M_PI if it's not already defined (e.g., on some compilers or platforms)
+#ifndef M_PI
+#define M_PI 3.14159265358979323846
+#endif
+
+/**
+ * @brief A class for generating various types of random numbers.
+ * Uses standard C library random functions.
+ */
 class RandomGenerator {
 public:
+    /**
+     * @brief Constructor for RandomGenerator.
+     * Seeds the random number generator using the current time.
+     * Note: For Arduino, you might want to use analogRead(0) for better seeding.
+     */
     RandomGenerator();
 
-    // Generates a uniform random integer between min (inclusive) and max (exclusive)
-    long generateUniform(long minVal, long maxVal);
+    /**
+     * @brief Generates a uniformly distributed random long integer within a specified range.
+     * @param min The minimum value (inclusive).
+     * @param max The maximum value (inclusive).
+     * @return A random long integer between min and max (inclusive).
+     */
+    static long uniformRand(long min, long max);
 
-    // Generates a random float following a normal (Gaussian) distribution
-    float generateNormal(float mean, float stdDev);
+    /**
+     * @brief Generates an exponentially distributed random long integer.
+     * @param lambda The rate parameter of the exponential distribution.
+     * @param min The minimum value (inclusive).
+     * @param max The maximum value (inclusive).
+     * @return An exponentially distributed random long integer, clamped within [min, max].
+     */
+    static long exponentialRandInt(double lambda, int min, int max);
 
-private:
-    // Variables for Box-Muller transform to avoid re-calculating two random numbers
-    // if only one is needed per call.
-    bool _hasSpare;
-    float _spare;
+    /**
+     * @brief Generates a normally (Gaussian) distributed random double using the Box-Muller transform.
+     * @return A random double from a standard normal distribution (mean=0, stddev=1).
+     */
+    static double normalRand();
+
+    /**
+     * @brief Generates a normally (Gaussian) distributed random long integer within a specified range.
+     * @param mean The mean of the normal distribution.
+     * @param stddev The standard deviation of the normal distribution.
+     * @param min The minimum value (inclusive).
+     * @param max The maximum value (inclusive).
+     * @return A normally distributed random long integer, clamped within [min, max].
+     */
+    static long normalRandInt(double mean, double stddev, long min, long max);
 };
 
 #endif //RANDOMGENERATOR_H

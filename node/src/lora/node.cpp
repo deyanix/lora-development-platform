@@ -10,6 +10,7 @@ void LoRaNodeClass::Init()
     this->rxLedOnDur = 500;
 
     this->lastSendTime = millis();
+    this->startSendTime = millis();
     this->msgDelay = 10000;
 
     this->backoffMaxInit = 10000;
@@ -86,12 +87,11 @@ void LoRaNodeClass::Loop()
                 snprintf(message, sizeof(message), "%012llx-%d-?", getID(), msgCounter);
                 if (ackLifetime < 0)
                 {
-                    RandomGenerator randomGenerator;
                     if (this->backOffIncrease)
                     {
                         this->backoffMax = this->backoffMax * 2;
                     }
-                    this->randomMsgDelay = randomGenerator.generateUniform(0, this->backoffMax);
+                    this->randomMsgDelay = RandomGenerator::uniformRand(0, this->backoffMax);
                     this->permanentDelta = false;
                 }
             }
@@ -138,6 +138,7 @@ void LoRaNodeClass::Send(uint8_t* data, size_t length)
     memcpy(this->lastSentData, data, length);
     this->lastSentData[length] = '\0';
     this->OnTxStart();
+    this->startSendTime = millis();
     Radio.Send(data, length);
     this->Idle = false;
 }
@@ -207,7 +208,9 @@ void LoRaNodeClass::OnRxError()
 
 void LoRaNodeClass::OnTxDone()
 {
-    Serial.println("TX=DONE");
+    //Serial.print("TX=DONE");
+    Serial.print(",");
+    Serial.println(millis() - this->lastSendTime);
     this->Stop();
 }
 

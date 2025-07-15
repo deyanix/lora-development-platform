@@ -80,6 +80,7 @@ public:
     uint64_t chipID;
 
     char lastSentData[MAX_MSG_BUFFER_LENGTH];
+    uint32_t startSendTime;
 
     void Init();
     void Configure();

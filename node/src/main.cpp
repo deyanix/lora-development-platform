@@ -1,6 +1,8 @@
 #include <Arduino.h>
+
 #include "lora/terminal.h"
 #include "lora/reader.h"
+#include "lora/RandomGenerator.h"
 
 #ifndef LoraWan_RGB
 #define LoraWan_RGB 0
@@ -32,7 +34,7 @@ void OnRxError() {
 }
 
 void OnTxDone() {
-    //Serial.print("TX=DONE");
+    Serial.print("TX=DONE");
     LoRaNode.OnTxDone();
 }
 
@@ -275,8 +277,7 @@ void processTerminal() {
                     LoRaNode.Auto = OFF;
                     Serial.println("AUTO=OK");
                 } else if (reader.with("RANDOM")) {
-                    RandomGenerator random_generator = RandomGenerator();
-                    LoRaNode.randomMsgDelay = random_generator.generateUniform(0, LoRaNode.backoffMax);
+                    LoRaNode.randomMsgDelay = RandomGenerator::uniformRand(0, LoRaNode.backoffMax);
                     LoRaNode.Auto = RANDOM;
                     Serial.println("AUTO=OK");
                 } else if (reader.with("TURNBASED")) {
@@ -286,6 +287,7 @@ void processTerminal() {
                     LoRaNode.msgCounter = 0;
                     LoRaNode.ackLifetime = 0;
                     LoRaNode.permanentDelta = false;
+                    LoRaNode.backoffMax = LoRaNode.backoffMaxInit;
                     Serial.println("AUTO=OK");
                 } else {
                     Serial.println("AUTO=ERR");
@@ -407,6 +409,38 @@ void setup() {
     LoRaNode.Events.RxTimeout = OnRxTimeout;
     LoRaNode.Events.RxError = OnRxError;
     LoRaNode.Init();
+
+    if (false)
+    {
+        int max = 10000;
+
+        Serial.print("max: ");
+        Serial.println(max);
+
+        Serial.print("\n\n Normal: ");
+        for (int i = 0; i < 5000; ++i)
+        {
+            Serial.print(RandomGenerator::normalRandInt(max/2, max/2/3, 0, max));
+            Serial.print(' ');
+        }
+        Serial.println();
+
+        Serial.print("\n\n Uniform: ");
+        for (int i = 0; i < 5000; ++i)
+        {
+            Serial.print(RandomGenerator::uniformRand(0, max));
+            Serial.print(' ');
+        }
+        Serial.println();
+
+        Serial.print("\n\n Exponential: ");
+        for (int i = 0; i < 5000; ++i)
+        {
+            Serial.print(RandomGenerator::exponentialRandInt(5.0 / max, 0, max));
+            Serial.print(' ');
+        }
+        Serial.println();
+    }
 }
 
 
