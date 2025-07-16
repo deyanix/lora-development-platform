@@ -30,7 +30,8 @@ public class LoRaEventConnection extends LoRaConnection {
 	private static final Command RX_ERROR = CommandFactory.createSetterArgs("RX",
 			new Argument("ERROR"));
 	private static final Command TX_DONE = CommandFactory.createSetterArgs("TX",
-			new Argument("DONE"));
+			new Argument("DONE"),
+			new Argument());
 	private static final Command TX_TIMEOUT = CommandFactory.createSetterArgs("TX",
 			new Argument("TIMEOUT"));
 	private static final Command TX_START= CommandFactory.createSetterArgs("TX",
@@ -65,7 +66,11 @@ public class LoRaEventConnection extends LoRaConnection {
 		});
 
 		commandHandlers.put(TX_DONE, (port, result) -> {
-			port.invokeEvent(new LoRaTxDoneEvent(port));
+			long duration = result.getArgument(1)
+					.flatMap(ArgumentData::getInteger)
+					.orElse(0);
+
+			port.invokeEvent(new LoRaTxDoneEvent(port, duration));
 		});
 
 		commandHandlers.put(TX_TIMEOUT, (port, result) -> {

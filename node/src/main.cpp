@@ -34,7 +34,10 @@ void OnRxError() {
 }
 
 void OnTxDone() {
-    Serial.print("TX=DONE");
+    uint32_t duration = LoRaNode.SendStopwatch.getElapsed();
+
+    Serial.print("TX=DONE,");
+    Serial.println(duration);
     LoRaNode.OnTxDone();
 }
 

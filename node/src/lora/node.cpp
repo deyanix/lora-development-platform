@@ -10,7 +10,6 @@ void LoRaNodeClass::Init()
     this->rxLedOnDur = 500;
 
     this->lastSendTime = millis();
-    this->startSendTime = millis();
     this->msgDelay = 10000;
 
     this->backoffMaxInit = 10000;
@@ -135,10 +134,8 @@ void LoRaNodeClass::Receive()
 
 void LoRaNodeClass::Send(uint8_t* data, size_t length)
 {
-    memcpy(this->lastSentData, data, length);
-    this->lastSentData[length] = '\0';
-    this->OnTxStart();
-    this->startSendTime = millis();
+    this->OnTxStart(data, length);
+    this->SendStopwatch.reset();
     Radio.Send(data, length);
     this->Idle = false;
 }
@@ -170,7 +167,6 @@ void LoRaNodeClass::OnRxDone(uint8_t* payload, uint16_t size, int16_t rssi, int8
         {
             if (validateStandardMessage(payload))
             {
-                turnOnRGB(COLOR_RACK, 0);
                 char message[128];
                 snprintf(message, sizeof(message), "%s-%s", "ACK", (char*)payload);
                 unsigned int msgLen = strlen(message);
@@ -209,9 +205,6 @@ void LoRaNodeClass::OnRxError()
 
 void LoRaNodeClass::OnTxDone()
 {
-    //Serial.print("TX=DONE");
-    Serial.print(",");
-    Serial.println(millis() - this->startSendTime);
     this->Stop();
 }
 
@@ -239,7 +232,7 @@ void LoRaNodeClass::OnRxStart()
     Serial.println("RX=START");
 }
 
-void LoRaNodeClass::OnTxStart()
+void LoRaNodeClass::OnTxStart(uint8_t* data, size_t length)
 {
     if (this->ackReq && (this->ackLifetime + 1) <= 0)
     {
@@ -249,9 +242,10 @@ void LoRaNodeClass::OnTxStart()
     {
         turnOnRGB(COLOR_SEND, 0);
     }
+
     Serial.print("TX=START,");
-    Serial.print(strlen(this->lastSentData));
+    Serial.print(length);
     Serial.print(",");
-    Serial.println(this->lastSentData);
-    memset(this->lastSentData, 0, MAX_MSG_BUFFER_LENGTH);
+    Serial.write(data, length);
+    Serial.println();
 }

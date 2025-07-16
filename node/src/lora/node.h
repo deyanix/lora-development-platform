@@ -5,6 +5,7 @@
 #include <sx126x.h>
 #include "RandomGenerator.h"
 #include "validation.h"
+#include "stopwatch.h"
 
 #define MAX_MSG_BUFFER_LENGTH 128
 #define COLOR_FIND 0xff00ff
@@ -81,7 +82,7 @@ public:
     uint64_t chipID;
 
     char lastSentData[MAX_MSG_BUFFER_LENGTH];
-    uint32_t startSendTime;
+    Stopwatch SendStopwatch;
 
     void Init();
     void Configure();
@@ -96,7 +97,7 @@ public:
     void OnTxDone();
     void OnTxTimeout();
     void OnRxStart();
-    void OnTxStart();
+    void OnTxStart(uint8_t* data, size_t length);
 
     void SwitchLed(bool state, uint32_t color);
 };
