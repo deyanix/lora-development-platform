@@ -170,6 +170,7 @@ void LoRaNodeClass::OnRxDone(uint8_t* payload, uint16_t size, int16_t rssi, int8
         {
             if (validateStandardMessage(payload))
             {
+                turnOnRGB(COLOR_RACK, 0);
                 char message[128];
                 snprintf(message, sizeof(message), "%s-%s", "ACK", (char*)payload);
                 unsigned int msgLen = strlen(message);
@@ -210,7 +211,7 @@ void LoRaNodeClass::OnTxDone()
 {
     //Serial.print("TX=DONE");
     Serial.print(",");
-    Serial.println(millis() - this->lastSendTime);
+    Serial.println(millis() - this->startSendTime);
     this->Stop();
 }
 

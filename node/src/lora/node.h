@@ -9,6 +9,7 @@
 #define MAX_MSG_BUFFER_LENGTH 128
 #define COLOR_FIND 0xff00ff
 #define COLOR_SACK 0x000050
+#define COLOR_RACK 0x005050
 #define COLOR_BOOT 0x505000
 
 typedef struct {
