@@ -54,7 +54,7 @@
       <q-item>
         <q-item-section>
           <q-item-label caption> Rozmiar ładunku </q-item-label>
-          <q-item-label> {{ node.radioConfiguration.payloadLength }} bit </q-item-label>
+          <q-item-label> {{ node.radioConfiguration.payloadLength }} B </q-item-label>
         </q-item-section>
       </q-item>
       <q-item>

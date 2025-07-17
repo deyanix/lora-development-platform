@@ -1,6 +1,5 @@
 package eu.deyanix.lorasupervisor.model;
 
-import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -10,6 +9,8 @@ public class LoRaMessageDto {
 	private LocalDateTime startDate;
 	private LocalDateTime endDate;
 	private String data;
+	private boolean successful;
+	private long duration;
 	private List<LoRaMessageReceptionDto> receptions = new ArrayList<>();
 
 	public String getSenderId() {
@@ -39,11 +40,8 @@ public class LoRaMessageDto {
 		return this;
 	}
 
-	public long getDurationMs() {
-		if (startDate == null || endDate == null) {
-			return -1;
-		}
-		return Duration.between(startDate, endDate).toMillis();
+	public boolean isFinished() {
+		return endDate != null;
 	}
 
 	public String getData() {
@@ -61,6 +59,24 @@ public class LoRaMessageDto {
 
 	public LoRaMessageDto setReceptions(List<LoRaMessageReceptionDto> receptions) {
 		this.receptions = receptions;
+		return this;
+	}
+
+	public boolean isSuccessful() {
+		return successful;
+	}
+
+	public LoRaMessageDto setSuccessful(boolean successful) {
+		this.successful = successful;
+		return this;
+	}
+
+	public long getDuration() {
+		return duration;
+	}
+
+	public LoRaMessageDto setDuration(long duration) {
+		this.duration = duration;
 		return this;
 	}
 }
