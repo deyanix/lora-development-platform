@@ -134,7 +134,7 @@ void LoRaNodeClass::Receive()
 
 void LoRaNodeClass::Send(uint8_t* data, size_t length)
 {
-    if (!this->Idle){
+    if (!this->Idle && this->Mode == SRC){
         this->OnTxBusy();
         return;
     }
