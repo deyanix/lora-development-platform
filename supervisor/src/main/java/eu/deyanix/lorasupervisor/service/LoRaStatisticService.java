@@ -4,6 +4,9 @@ import eu.deyanix.lorasupervisor.model.LoRaMessage;
 import eu.deyanix.lorasupervisor.model.LoRaMessageDto;
 import eu.deyanix.lorasupervisor.model.LoRaMessageReception;
 import eu.deyanix.lorasupervisor.protocol.event.LoRaEvent;
+import eu.deyanix.lorasupervisor.protocol.event.rx.LoRaRxDoneEvent;
+import eu.deyanix.lorasupervisor.protocol.event.tx.LoRaTxFinishEvent;
+import eu.deyanix.lorasupervisor.protocol.event.tx.LoRaTxStartEvent;
 import eu.deyanix.lorasupervisor.protocol.port.LoRaPort;
 import eu.deyanix.lorasupervisor.protocol.port.LoRaPortListener;
 import org.springframework.stereotype.Service;
@@ -34,35 +37,30 @@ public class LoRaStatisticService {
 		return listener;
 	}
 
-	public static class LoRaPortStatisticListener implements LoRaPortListener {
-//		@Override
-//		public void onTxStart(LoRaPort port, String data) {
-//			messages.add(new LoRaMessage(port.getNode(), LocalDateTime.now(), data));
-//		}
-//
-//		@Override
-//		public void onTxDone(LoRaPort port) {
-//			messages.stream()
-//					.filter(msg -> msg.getEndDate() == null)
-//					.filter(msg -> msg.getSender()
-//							.filter(node -> node == port.getNode())
-//							.isPresent())
-//					.findFirst()
-//					.ifPresent(msg -> msg.setEndDate(LocalDateTime.now()));
-//		}
-//
-//		@Override
-//		public void onRxDone(LoRaPort port, int rssi, int snr, String data) {
-//			messages.stream()
-//					.filter(msg -> msg.getData().equals(data))
-//					.findFirst()
-//					.ifPresent(msg -> msg.getReceptions()
-//							.add(new LoRaMessageReception(port.getNode(), LocalDateTime.now())));
-//		}
-
+	public class LoRaPortStatisticListener implements LoRaPortListener {
 		@Override
 		public void onEvent(LoRaEvent event) {
+			if (event instanceof LoRaTxStartEvent txStartEvent) {
+				messages.add(new LoRaMessage(txStartEvent));
+			}
 
+			if (event instanceof LoRaTxFinishEvent txFinishEvent) {
+				messages.stream()
+					.filter(msg -> msg.getEndDate() == null)
+					.filter(msg -> msg.getSender()
+							.filter(node -> node == txFinishEvent.getNode())
+							.isPresent())
+					.findFirst()
+					.ifPresent(msg -> msg.finish(txFinishEvent));
+			}
+
+			if (event instanceof LoRaRxDoneEvent rxDoneEvent) {
+				messages.stream()
+					.filter(msg -> msg.getData().equals(rxDoneEvent.getData()))
+					.findFirst()
+					.ifPresent(msg -> msg.getReceptions()
+							.add(new LoRaMessageReception(rxDoneEvent)));
+			}
 		}
 	}
 }

@@ -1,12 +1,14 @@
 package eu.deyanix.lorasupervisor.model;
 
 import eu.deyanix.lorasupervisor.protocol.LoRaNode;
+import eu.deyanix.lorasupervisor.protocol.event.tx.LoRaTxDoneEvent;
+import eu.deyanix.lorasupervisor.protocol.event.tx.LoRaTxFinishEvent;
+import eu.deyanix.lorasupervisor.protocol.event.tx.LoRaTxStartEvent;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
 public class LoRaMessage {
 	private final LoRaNode sender;
@@ -14,11 +16,13 @@ public class LoRaMessage {
 	private final String data;
 	private final List<LoRaMessageReception> receptions = new ArrayList<>();
 	private LocalDateTime endDate;
+	private boolean successful = false;
+	private long duration = 0;
 
-	public LoRaMessage(LoRaNode sender, LocalDateTime startDate, String data) {
-		this.sender = sender;
-		this.startDate = startDate;
-		this.data = data;
+	public LoRaMessage(LoRaTxStartEvent event) {
+		this.sender = event.getNode();
+		this.startDate = event.getDate();
+		this.data = event.getData();
 	}
 
 	public Optional<LoRaNode> getSender() {
@@ -37,9 +41,20 @@ public class LoRaMessage {
 		return endDate;
 	}
 
-	public LoRaMessage setEndDate(LocalDateTime endDate) {
-		this.endDate = endDate;
-		return this;
+	public boolean isSuccessful() {
+		return successful;
+	}
+
+	public long getDuration() {
+		return duration;
+	}
+
+	public void finish(LoRaTxFinishEvent event) {
+		this.endDate = event.getDate();
+		this.successful = true;
+		if (event instanceof LoRaTxDoneEvent doneEvent) {
+			this.duration = doneEvent.getDuration();
+		}
 	}
 
 	public String getData() {
@@ -53,6 +68,8 @@ public class LoRaMessage {
 						.orElse(null))
 				.setStartDate(startDate)
 				.setEndDate(endDate)
+				.setSuccessful(successful)
+				.setDuration(duration)
 				.setData(data)
 				.setReceptions(receptions.stream()
 						.map(LoRaMessageReception::toDto)

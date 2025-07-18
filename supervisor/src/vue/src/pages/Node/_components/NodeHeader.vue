@@ -58,9 +58,9 @@
 <script setup lang="ts">
 import { NodeModel, NodeService } from 'src/api/NodeService';
 import { Dialog, Loading } from 'quasar';
-import NodeRadioConfigurationDialog from 'pages/Node/_dialogs/NodeRadioConfigurationDialog.vue';
+import NodeRadioConfigurationDialog from 'components/Node/NodeRadioConfigurationDialog.vue';
 import { usePlatformStore } from 'stores/platform';
-import NodeConfigurationDialog from 'pages/Node/_dialogs/NodeConfigurationDialog.vue';
+import NodeConfigurationDialog from 'components/Node/NodeConfigurationDialog.vue';
 import { NodeUtilities } from 'src/utilities/NodeUtilities';
 import NodeTimeOnAirDialog from 'pages/Node/_dialogs/NodeTimeOnAirDialog.vue';
 
@@ -100,7 +100,7 @@ function openRadioConfiguration() {
   Dialog.create({
     component: NodeRadioConfigurationDialog,
     componentProps: {
-      node: props.node,
+      nodes: [props.node],
     },
   });
 }
@@ -109,7 +109,7 @@ function openNodeConfiguration() {
   Dialog.create({
     component: NodeConfigurationDialog,
     componentProps: {
-      node: props.node,
+      nodes: [props.node],
     },
   });
 }
