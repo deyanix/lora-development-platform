@@ -134,6 +134,10 @@ void LoRaNodeClass::Receive()
 
 void LoRaNodeClass::Send(uint8_t* data, size_t length)
 {
+    if (!this->Idle){
+        this->OnTxBusy();
+        return;
+    }
     this->OnTxStart(data, length);
     this->SendStopwatch.reset();
     Radio.Send(data, length);
@@ -248,4 +252,9 @@ void LoRaNodeClass::OnTxStart(uint8_t* data, size_t length)
     Serial.print(",");
     Serial.write(data, length);
     Serial.println();
+}
+
+void LoRaNodeClass::OnTxBusy()
+{
+    Serial.println("TX=BUSY");
 }

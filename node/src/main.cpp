@@ -61,10 +61,10 @@ void processTerminal() {
         if (len > 0) {
             LoRaTerminal.request(len);
         } else {
-            LoRaNode.Send((uint8_t*) payload.c_str(), payload.length());
-            LoRaTerminal.clear();
             Serial.print("TX=OK,");
             Serial.println(payload.length());
+            LoRaNode.Send((uint8_t*) payload.c_str(), payload.length());
+            LoRaTerminal.clear();
         }
     } else if (LoRaTerminal.isFinished()) {
         if (reader.with("ID")) {
