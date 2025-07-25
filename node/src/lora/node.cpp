@@ -242,6 +242,10 @@ void LoRaNodeClass::OnTxStart(uint8_t* data, size_t length)
     {
         turnOnRGB(COLOR_SACK, 0);
     }
+    else if (this->Mode == SNK && this->)
+    {
+
+    }
     else
     {
         turnOnRGB(COLOR_SEND, 0);

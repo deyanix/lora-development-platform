@@ -3,6 +3,7 @@
 #include "lora/terminal.h"
 #include "lora/reader.h"
 #include "lora/RandomGenerator.h"
+#include "lora/CharPointerQueue.h"
 
 #ifndef LoraWan_RGB
 #define LoraWan_RGB 0
@@ -11,6 +12,8 @@
 #define LoraWan_RGB 1
 
 uint64_t chipID = getID();
+
+CharPointerQueue serialPrintQueue;
 
 void OnRxDone(uint8_t *payload, uint16_t size, int16_t rssi, int8_t snr) {
     Serial.print("RX=DONE,");
@@ -24,12 +27,12 @@ void OnRxDone(uint8_t *payload, uint16_t size, int16_t rssi, int8_t snr) {
 }
 
 void OnRxTimeout() {
-    Serial.println("RX=TIMEOUT");
+    serialPrintQueue.enqueue("RX=TIMEOUT");
     LoRaNode.OnRxTimeout();
 }
 
 void OnRxError() {
-    Serial.println("RX=ERROR");
+    serialPrintQueue.enqueue("RX=ERROR");
     LoRaNode.OnRxError();
 }
 
@@ -42,7 +45,7 @@ void OnTxDone() {
 }
 
 void OnTxTimeout() {
-    Serial.println("TX=TIMEOUT");
+    serialPrintQueue.enqueue("TX=TIMEOUT");
     LoRaNode.OnTxTimeout();
 }
 
@@ -78,9 +81,9 @@ void processTerminal() {
                 long value = reader.untilEnd().toInt();
                 if (value >= 864000000 && value <= 870000000) {
                     LoRaNode.Params.Frequency = (uint32_t)value;
-                    Serial.println("FRQ=OK");
+                    serialPrintQueue.enqueue("FRQ=OK");
                 } else {
-                    Serial.println("FRQ=ERR");
+                    serialPrintQueue.enqueue("FRQ=ERR");
                 }
             } else if (reader.with('?')) {
                 Serial.print("FRQ=");
@@ -91,9 +94,9 @@ void processTerminal() {
                 long value = reader.untilEnd().toInt();
                 if (value >= 0 && value <= 3) {
                     LoRaNode.Params.Bandwidth = (uint32_t)value;
-                    Serial.println("BW=OK");
+                    serialPrintQueue.enqueue("BW=OK");
                 } else {
-                    Serial.println("BW=ERR");
+                    serialPrintQueue.enqueue("BW=ERR");
                 }
             } else if (reader.with('?')) {
                 Serial.print("BW=");
@@ -104,9 +107,9 @@ void processTerminal() {
                 long value = reader.untilEnd().toInt();
                 if (value >= 6 && value <= 12) {
                     LoRaNode.Params.SpreadingFactor = (uint32_t)value;
-                    Serial.println("SF=OK");
+                    serialPrintQueue.enqueue("SF=OK");
                 } else {
-                    Serial.println("SF=ERR");
+                    serialPrintQueue.enqueue("SF=ERR");
                 }
             } else if (reader.with('?')) {
                 Serial.print("SF=");
@@ -117,9 +120,9 @@ void processTerminal() {
                 long value = reader.untilEnd().toInt();
                 if (value >= -3 && value <= 22) {
                     LoRaNode.Params.Power = (int8_t)value;
-                    Serial.println("PWR=OK");
+                    serialPrintQueue.enqueue("PWR=OK");
                 } else {
-                    Serial.println("PWR=ERR");
+                    serialPrintQueue.enqueue("PWR=ERR");
                 }
             } else if (reader.with('?')) {
                 Serial.print("PWR=");
@@ -130,9 +133,9 @@ void processTerminal() {
                 long value = reader.untilEnd().toInt();
                 if (value >= 1 && value <= 4) {
                     LoRaNode.Params.CodeRate = (uint8_t)value;
-                    Serial.println("CRT=OK");
+                    serialPrintQueue.enqueue("CRT=OK");
                 } else {
-                    Serial.println("CRT=ERR");
+                    serialPrintQueue.enqueue("CRT=ERR");
                 }
             } else if (reader.with('?')) {
                 Serial.print("CRT=");
@@ -143,9 +146,9 @@ void processTerminal() {
                 long value = reader.untilEnd().toInt();
                 if (value >= 1 && value <= 8) {
                     LoRaNode.Params.PreambleLength = (uint16_t)value;
-                    Serial.println("PRLEN=OK");
+                    serialPrintQueue.enqueue("PRLEN=OK");
                 } else {
-                    Serial.println("PRLEN=ERR");
+                    serialPrintQueue.enqueue("PRLEN=ERR");
                 }
             } else if (reader.with('?')) {
                 Serial.print("PRLEN=");
@@ -156,9 +159,9 @@ void processTerminal() {
                 long value = reader.untilEnd().toInt();
                 if (value >= 0 && value <= 255) {
                     LoRaNode.Params.PayloadLength = (uint8_t)value;
-                    Serial.println("PYLEN=OK");
+                    serialPrintQueue.enqueue("PYLEN=OK");
                 } else {
-                    Serial.println("PYLEN=ERR");
+                    serialPrintQueue.enqueue("PYLEN=ERR");
                 }
             } else if (reader.with('?')) {
                 Serial.print("PYLEN=");
@@ -169,9 +172,9 @@ void processTerminal() {
                 long value = reader.untilEnd().toInt();
                 if (value >= 0 && value <= 1) {
                     LoRaNode.Params.EnableCrc = (bool)value;
-                    Serial.println("CRC=OK");
+                    serialPrintQueue.enqueue("CRC=OK");
                 } else {
-                    Serial.println("CRC=ERR");
+                    serialPrintQueue.enqueue("CRC=ERR");
                 }
             } else if (reader.with('?')) {
                 Serial.print("CRC=");
@@ -182,9 +185,9 @@ void processTerminal() {
                 long value = reader.untilEnd().toInt();
                 if (value >= 0 && value <= 1) {
                     LoRaNode.Params.EnableIqInverted = (bool)value;
-                    Serial.println("IIQ=OK");
+                    serialPrintQueue.enqueue("IIQ=OK");
                 } else {
-                    Serial.println("IIQ=ERR");
+                    serialPrintQueue.enqueue("IIQ=ERR");
                 }
             } else if (reader.with('?')) {
                 Serial.print("IIQ=");
@@ -195,9 +198,9 @@ void processTerminal() {
                 long value = reader.untilEnd().toInt();
                 if (value >= 0 && value <= UINT32_MAX) {
                     LoRaNode.Params.TxTimeout = (uint32_t)value;
-                    Serial.println("TXTO=OK");
+                    serialPrintQueue.enqueue("TXTO=OK");
                 } else {
-                    Serial.println("TXTO=ERR");
+                    serialPrintQueue.enqueue("TXTO=ERR");
                 }
             } else if (reader.with('?')) {
                 Serial.print("TXTO=");
@@ -208,9 +211,9 @@ void processTerminal() {
                 long value = reader.untilEnd().toInt();
                 if (value >= 0 && value <= UINT16_MAX) {
                     LoRaNode.Params.RxSymbolTimeout = (uint16_t)value;
-                    Serial.println("STO=OK");
+                    serialPrintQueue.enqueue("STO=OK");
                 } else {
-                    Serial.println("STO=ERR");
+                    serialPrintQueue.enqueue("STO=ERR");
                 }
             } else if (reader.with('?')) {
                 Serial.print("STO=");
@@ -220,50 +223,50 @@ void processTerminal() {
             if (reader.with('=')) {
                 if (reader.with("SNK")) {
                     LoRaNode.Mode = SNK;
-                    Serial.println("MODE=OK");
+                    serialPrintQueue.enqueue("MODE=OK");
                 } else if (reader.with("SRC")) {
                     LoRaNode.Mode = SRC;
-                    Serial.println("MODE=OK");
+                    serialPrintQueue.enqueue("MODE=OK");
                 } else {
-                    Serial.println("MODE=ERR");
+                    serialPrintQueue.enqueue("MODE=ERR");
                 }
             } else if (reader.with('?')) {
                 Serial.print("MODE=");
                 switch (LoRaNode.Mode) {
                     case SNK:
-                        Serial.println("SNK");
+                        serialPrintQueue.enqueue("SNK");
                         break;
 
                     case SRC:
-                        Serial.println("SRC");
+                        serialPrintQueue.enqueue("SRC");
                         break;
 
                     default:
-                        Serial.println("UNKNOWN");
+                        serialPrintQueue.enqueue("UNKNOWN");
                         break;
                 }
             }
         } else if (reader.with("PUSH")) {
             LoRaNode.Configure();
-            Serial.println("PUSH=OK");
+            serialPrintQueue.enqueue("PUSH=OK");
         } else if (reader.with("STA")) {
             if (reader.with('?')) {
                 Serial.print("STA=");
                 switch (Radio.GetStatus()) {
                     case RF_IDLE:
-                        Serial.println("IDLE");
+                        serialPrintQueue.enqueue("IDLE");
                         break;
                     case RF_RX_RUNNING:
-                        Serial.println("RX");
+                        serialPrintQueue.enqueue("RX");
                         break;
                     case RF_TX_RUNNING:
-                        Serial.println("TX");
+                        serialPrintQueue.enqueue("TX");
                         break;
                     case RF_CAD:
-                        Serial.println("CAD");
+                        serialPrintQueue.enqueue("CAD");
                         break;
                     default:
-                        Serial.println("UNKNOWN");
+                        serialPrintQueue.enqueue("UNKNOWN");
                         break;
                 }
             }
@@ -278,37 +281,37 @@ void processTerminal() {
             if (reader.with('=')) {
                 if (reader.with("OFF")) {
                     LoRaNode.Auto = OFF;
-                    Serial.println("AUTO=OK");
+                    serialPrintQueue.enqueue("AUTO=OK");
                 } else if (reader.with("RANDOM")) {
                     LoRaNode.randomMsgDelay = RandomGenerator::uniformRand(0, LoRaNode.backoffMax);
                     LoRaNode.Auto = RANDOM;
-                    Serial.println("AUTO=OK");
+                    serialPrintQueue.enqueue("AUTO=OK");
                 } else if (reader.with("TURNBASED")) {
                     LoRaNode.Auto = TURNBASED;
-                    Serial.println("AUTO=OK");
+                    serialPrintQueue.enqueue("AUTO=OK");
                 } else if (reader.with("RST")) {
                     LoRaNode.msgCounter = 0;
                     LoRaNode.ackLifetime = 0;
                     LoRaNode.permanentDelta = false;
                     LoRaNode.backoffMax = LoRaNode.backoffMaxInit;
-                    Serial.println("AUTO=OK");
+                    serialPrintQueue.enqueue("AUTO=OK");
                 } else {
-                    Serial.println("AUTO=ERR");
+                    serialPrintQueue.enqueue("AUTO=ERR");
                 }
             } else if (reader.with('?')) {
                 Serial.print("AUTO=");
                 switch (LoRaNode.Auto) {
                 case OFF:
-                    Serial.println("OFF");
+                    serialPrintQueue.enqueue("OFF");
                     break;
                 case RANDOM:
-                    Serial.println("RANDOM");
+                    serialPrintQueue.enqueue("RANDOM");
                     break;
                 case TURNBASED:
-                    Serial.println("TURNBASED");
+                    serialPrintQueue.enqueue("TURNBASED");
                     break;
                 default:
-                    Serial.println("UNKNOWN");
+                    serialPrintQueue.enqueue("UNKNOWN");
                     break;
                 }
             }
@@ -317,13 +320,14 @@ void processTerminal() {
                 long value = reader.untilEnd().toInt();
                 if (value >= 0 && value <= UINT32_MAX) {
                     LoRaNode.msgDelay = (uint32_t)value;
-                    Serial.println("INV=OK");
+                    serialPrintQueue.enqueue("INV=OK");
                 } else {
-                    Serial.println("INV=ERR");
+                    serialPrintQueue.enqueue("INV=ERR");
                 }
             } else if (reader.with('?')) {
-                Serial.print("INV=");
-                Serial.println(LoRaNode.msgDelay);
+                char buffer[10];
+                snprintf(buffer, sizeof(buffer), "INV=%d", LoRaNode.msgDelay);
+                serialPrintQueue.enqueue(buffer);
             }
         } else if (reader.with("IBM"))
         {
@@ -332,70 +336,75 @@ void processTerminal() {
                 if (delta >= 0 && delta <= UINT32_MAX) {
                     LoRaNode.backoffMaxInit = (uint32_t)delta;
                     LoRaNode.backoffMax = (uint32_t)delta;
-                    Serial.println("IBM=OK");
+                    serialPrintQueue.enqueue("IBM=OK");
                 } else {
-                    Serial.println("IBM=ERR");
+                    serialPrintQueue.enqueue("IBM=ERR");
                 }
             } else if (reader.with('?'))
             {
-                Serial.print("IBM=");
-                Serial.println(LoRaNode.backoffMaxInit);
+                char buffer[10];
+                snprintf(buffer, sizeof(buffer), "IBM=%d", LoRaNode.backoffMaxInit);
+                serialPrintQueue.enqueue(buffer);
             }
         } else if (reader.with("ACKLT")) {
             if (reader.with('=')) {
                 long value = reader.untilEnd().toInt();
                 if (value >= 0 && value <= UINT32_MAX) {
                     LoRaNode.ackLifetimeInit = (uint32_t)value;
-                    Serial.println("ACKLT=OK");
+                    serialPrintQueue.enqueue("ACKLT=OK");
                 } else {
-                    Serial.println("ACKLT=ERR");
+                    serialPrintQueue.enqueue("ACKLT=ERR");
                 }
             } else if (reader.with('?')) {
-                Serial.print("ACKLT=");
-                Serial.println(LoRaNode.ackLifetimeInit);
+                char buffer[10];
+                snprintf(buffer, sizeof(buffer), "ACKLT=%d", LoRaNode.ackLifetimeInit);
+                serialPrintQueue.enqueue(buffer);
             }
         } else if (reader.with("ACKRQ")) {
             if (reader.with('=')) {
                 long value = reader.untilEnd().toInt();
                 if (value >= 0 && value <= 1) {
                     LoRaNode.ackReq = (bool)value;
-                    Serial.println("ACKRQ=OK");
+                    serialPrintQueue.enqueue("ACKRQ=OK");
                 } else {
-                    Serial.println("ACKRQ=ERR");
+                    serialPrintQueue.enqueue("ACKRQ=ERR");
                 }
             } else if (reader.with('?')) {
-                Serial.print("ACKRQ=");
-                Serial.println(LoRaNode.ackReq ? 1 : 0);
+                char buffer[10];
+                snprintf(buffer, sizeof(buffer), "ACKRQ=%d", LoRaNode.ackReq ? 1 : 0);
+                serialPrintQueue.enqueue(buffer);
             }
         } else if (reader.with("BIN")) {
             if (reader.with('=')) {
                 long value = reader.untilEnd().toInt();
                 if (value >= 0 && value <= 1) {
                     LoRaNode.backOffIncrease = (bool)value;
-                    Serial.println("BIN=OK");
+                    serialPrintQueue.enqueue("BIN=OK");
                 } else {
-                    Serial.println("BIN=ERR");
+                    serialPrintQueue.enqueue("BIN=ERR");
                 }
             } else if (reader.with('?')) {
-                Serial.print("BIN=");
-                Serial.println(LoRaNode.backOffIncrease ? 1 : 0);
+                char buffer[10];
+                snprintf(buffer, sizeof(buffer), "BIN=%d", LoRaNode.backOffIncrease ? 1 : 0);
+                serialPrintQueue.enqueue(buffer);
             }
         } else if (reader.with("LED")) {
             if (reader.with('=')) {
                 long value = reader.untilEnd().toInt();
                 if (value >= 0 && value <= 1) {
                     LoRaNode.SwitchLed(value, COLOR_FIND);
-                    Serial.println("LED=OK");
+                    serialPrintQueue.enqueue("LED=OK");
                 } else {
-                    Serial.println("LED=ERR");
+                    serialPrintQueue.enqueue("LED=ERR");
                 }
             } else if (reader.with('?')) {
-                Serial.print("LED=");
-                Serial.println(LoRaNode.ledState ? 1 : 0);
+                char buffer[10];
+                snprintf(buffer, sizeof(buffer), "LED=%d", LoRaNode.ledState ? 1 : 0);
+                serialPrintQueue.enqueue(buffer);
             }
         } else
         {
-            Serial.println("ERR");
+            serialPrintQueue.enqueue("ERR");
         }
         LoRaTerminal.clear();
     }
@@ -452,6 +461,10 @@ void loop() {
     processTerminal();
 
     LoRaNode.Loop();
+
+    if (!serialPrintQueue.isEmpty()) {
+        serialPrintQueue.dequeue();
+    }
 
     delay(5);
 }

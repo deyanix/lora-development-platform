@@ -139,6 +139,7 @@ def initialize_port(port, idx, args, freq_map):
         '+RTO?\n',
         '+ACKRQ?\n',
         '+ACKLT?\n',
+        '+LED=0\n'
         '+AUTO?\n'
     ]
     for cmd in commands:
