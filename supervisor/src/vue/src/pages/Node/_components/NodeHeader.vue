@@ -63,6 +63,7 @@ import { usePlatformStore } from 'stores/platform';
 import NodeConfigurationDialog from 'components/Node/NodeConfigurationDialog.vue';
 import { NodeUtilities } from 'src/utilities/NodeUtilities';
 import NodeTimeOnAirDialog from 'pages/Node/_dialogs/NodeTimeOnAirDialog.vue';
+import NodeSendDialog from 'pages/Node/_dialogs/NodeSendDialog.vue';
 
 const platform = usePlatformStore();
 const props = defineProps<{ node?: NodeModel }>();
@@ -76,10 +77,13 @@ async function toggleFlashing() {
   await platform.fetch();
 }
 
-async function send() {
-  if (!props.node) return;
-
-  await NodeService.transmit(props.node.id, 'abc\ndef');
+function send() {
+  Dialog.create({
+    component: NodeSendDialog,
+    componentProps: {
+      node: props.node,
+    },
+  });
 }
 
 async function resetAuto() {

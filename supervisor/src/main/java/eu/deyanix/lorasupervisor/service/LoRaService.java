@@ -23,13 +23,17 @@ public class LoRaService {
 	private static final int NODE_VENDOR_ID = 0x10C4;
 	private static final int NODE_PRODUCT_ID = 0xEA60;
 
-	private final ArrayList<LoRaNode> nodes = new ArrayList<>();
+	private final List<LoRaNode> nodes = new ArrayList<>();
+	private final List<LoRaPortListener> listeners = new ArrayList<>();
 	private final WebSocketService webSocketService;
-	private final LoRaStatisticService loraStatisticService;
 
-	public LoRaService(WebSocketService webSocketService, LoRaStatisticService loraStatisticService) {
+	public LoRaService(WebSocketService webSocketService) {
 		this.webSocketService = webSocketService;
-		this.loraStatisticService = loraStatisticService;
+		addListener(new LoRaListener());
+	}
+
+	public void addListener(LoRaPortListener listener) {
+		listeners.add(listener);
 	}
 
 	public List<SerialPort> getSerialPorts() {
@@ -52,8 +56,7 @@ public class LoRaService {
 	public LoRaSerialPort connect(String portName) {
 		SerialPort serialPort = SerialPort.getCommPort(portName);
 		LoRaPort port = new LoRaPort(serialPort);
-		port.addListener(new LoRaListener());
-		port.addListener(loraStatisticService.getPortListener());
+		port.addListeners(listeners);
 
 		if (port.open()) {
 			try {

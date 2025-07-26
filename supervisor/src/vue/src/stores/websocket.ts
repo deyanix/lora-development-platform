@@ -59,6 +59,7 @@ export interface LoRaPortListener {
   onRxError?: LoRaPortListenerCallback<LoRaEvent>;
   onRxStart?: LoRaPortListenerCallback<LoRaEvent>;
   onTxStart?: LoRaPortListenerCallback<LoRaDataEvent>;
+  onClear?: LoRaPortListenerCallbackContextless;
 }
 
 export const useWebsocketStore = defineStore('websocket', () => {
@@ -140,6 +141,10 @@ export const useWebsocketStore = defineStore('websocket', () => {
       client.subscribe('/topic/message', (message) => {
         const evt = NodeStatisticService.deserializeMessage(JSON.parse(message.body));
         listeners.value.map((l) => l.onMessage?.(evt));
+      });
+
+      client.subscribe('/topic/clear', () => {
+        listeners.value.map((l) => l.onClear?.());
       });
     };
 

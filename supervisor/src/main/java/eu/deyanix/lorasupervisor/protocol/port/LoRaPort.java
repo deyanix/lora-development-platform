@@ -19,6 +19,7 @@ import eu.deyanix.lorasupervisor.protocol.event.port.LoRaPortRecognizedEvent;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
@@ -102,6 +103,10 @@ public class LoRaPort {
 
 	public void addListener(LoRaPortListener listener) {
 		listeners.add(listener);
+	}
+
+	public void addListeners(Collection<LoRaPortListener> newListeners) {
+		listeners.addAll(newListeners);
 	}
 
 	public void removeListener(LoRaPortListener listener) {

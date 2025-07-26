@@ -1,11 +1,12 @@
 package eu.deyanix.lorasupervisor.controller;
 
+import eu.deyanix.lorasupervisor.model.LoRaEventStatistic;
 import eu.deyanix.lorasupervisor.model.LoRaMessageDto;
 import eu.deyanix.lorasupervisor.service.LoRaStatisticService;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
@@ -29,7 +30,12 @@ public class LoRaStatisticController {
 		return loRaStatisticService.getMessagesBySenderId(id);
 	}
 
-	@DeleteMapping("/nodes/any/messages")
+	@GetMapping("/nodes/any/events/statistics")
+	public List<LoRaEventStatistic> getEventStatistics() {
+		return loRaStatisticService.getEventStatistics();
+	}
+
+	@PostMapping("/nodes/any/reset")
 	public void reset() {
 		loRaStatisticService.reset();
 	}

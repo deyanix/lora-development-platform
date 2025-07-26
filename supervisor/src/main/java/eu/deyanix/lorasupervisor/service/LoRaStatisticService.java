@@ -1,5 +1,7 @@
 package eu.deyanix.lorasupervisor.service;
 
+import eu.deyanix.lorasupervisor.model.LoRaEventStatistic;
+import eu.deyanix.lorasupervisor.model.LoRaEventStatisticItem;
 import eu.deyanix.lorasupervisor.model.LoRaMessage;
 import eu.deyanix.lorasupervisor.model.LoRaMessageDto;
 import eu.deyanix.lorasupervisor.model.LoRaMessageReception;
@@ -16,15 +18,19 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.ConcurrentSkipListSet;
+import java.util.stream.Collectors;
 
 @Service
 public class LoRaStatisticService {
+	private final LoRaService loraService;
 	private final WebSocketService webSocketService;
-	private final LoRaPortStatisticListener listener = new LoRaPortStatisticListener();
 	private final Set<LoRaMessage> messages = new ConcurrentSkipListSet<>();
 
-	public LoRaStatisticService(WebSocketService webSocketService) {
+	public LoRaStatisticService(LoRaService loraService, WebSocketService webSocketService) {
+		this.loraService = loraService;
 		this.webSocketService = webSocketService;
+
+		loraService.addListener(new LoRaPortStatisticListener());
 	}
 
 	public List<LoRaMessageDto> getMessages() {
@@ -46,12 +52,27 @@ public class LoRaStatisticService {
 				.toList();
 	}
 
-	public void reset() {
-		messages.clear();
+	public List<LoRaEventStatistic> getEventStatistics() {
+		return loraService.getNodes().stream()
+				.map(node -> {
+					var eventCounts = node.getEvents()
+							.parallelStream()
+							.collect(Collectors.groupingByConcurrent(
+									LoRaEvent::getName, Collectors.reducing(0, e -> 1, Integer::sum)));
+
+					var statsItems = eventCounts.entrySet().stream()
+							.map(entry -> new LoRaEventStatisticItem(entry.getKey(), entry.getValue()))
+							.toList();
+
+					return new LoRaEventStatistic(node.getId(), statsItems);
+				})
+				.toList();
 	}
 
-	public LoRaPortListener getPortListener() {
-		return listener;
+	public void reset() {
+		messages.clear();
+		loraService.getNodes().forEach(n -> n.getEvents().clear());
+		webSocketService.sendMessage("/topic/clear", "");
 	}
 
 	public class LoRaPortStatisticListener implements LoRaPortListener {

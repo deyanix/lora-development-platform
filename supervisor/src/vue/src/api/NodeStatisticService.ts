@@ -7,6 +7,10 @@ export interface NodeMessage {
   startDate: Date;
   endDate: Date | null;
   data: string;
+  autoMessage: boolean;
+  destinationId: string | null;
+  ackRequest: boolean;
+  ackResponse: boolean;
   successful: boolean;
   duration: number;
   finished: boolean;
@@ -41,5 +45,8 @@ export const NodeStatisticService = {
   async getMessagesBySenderId(id: string): Promise<NodeMessage[]> {
     const response: AxiosResponse<NodeMessage[]> = await api.get(`/nodes/${id}/messages`);
     return response.data.map((row) => this.deserializeMessage(row));
+  },
+  async reset(): Promise<void> {
+    await api.post('/nodes/any/reset');
   },
 };

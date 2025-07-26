@@ -47,6 +47,10 @@ export const usePlatformStore = defineStore('platform', () => {
         await fetch();
       }
     },
+    async onClear() {
+      await fetchOptions();
+      await fetch();
+    },
     async onEvent(evt) {
       const nodeId = Object.entries(evt)
         .find(([k]) => k === 'nodeId')

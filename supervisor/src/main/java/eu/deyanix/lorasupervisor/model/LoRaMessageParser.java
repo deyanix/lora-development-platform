@@ -15,6 +15,10 @@ public class LoRaMessageParser {
 		this.matcher = MESSAGE_PATTERN.matcher(data);
 	}
 
+	public String getData() {
+		return data;
+	}
+
 	public boolean isValid() {
 		return matcher.matches();
 	}

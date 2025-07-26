@@ -70,6 +70,11 @@ onLoRaEvent({
       processSerialBuffer('rx');
     }
   },
+  onClear() {
+    rxBuffer.value = '';
+    txBuffer.value = '';
+    messages.value = [];
+  },
 });
 </script>
 
