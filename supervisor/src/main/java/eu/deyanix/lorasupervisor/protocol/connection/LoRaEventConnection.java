@@ -10,6 +10,7 @@ import eu.deyanix.lorasupervisor.protocol.event.rx.LoRaRxDoneEvent;
 import eu.deyanix.lorasupervisor.protocol.event.rx.LoRaRxErrorEvent;
 import eu.deyanix.lorasupervisor.protocol.event.rx.LoRaRxStartEvent;
 import eu.deyanix.lorasupervisor.protocol.event.rx.LoRaRxTimeoutEvent;
+import eu.deyanix.lorasupervisor.protocol.event.tx.LoRaTxBusyEvent;
 import eu.deyanix.lorasupervisor.protocol.event.tx.LoRaTxDoneEvent;
 import eu.deyanix.lorasupervisor.protocol.event.tx.LoRaTxStartEvent;
 import eu.deyanix.lorasupervisor.protocol.event.tx.LoRaTxTimeoutEvent;
@@ -20,6 +21,8 @@ import java.util.Map;
 import java.util.function.BiConsumer;
 
 public class LoRaEventConnection extends LoRaConnection {
+	private static final Command RX_START = CommandFactory.createSetterArgs("RX",
+			new Argument("START"));
 	private static final Command RX_DONE = CommandFactory.createSetterArgs("RX",
 			new Argument("DONE"),
 			new Argument(),
@@ -29,20 +32,25 @@ public class LoRaEventConnection extends LoRaConnection {
 			new Argument("TIMEOUT"));
 	private static final Command RX_ERROR = CommandFactory.createSetterArgs("RX",
 			new Argument("ERROR"));
+
+	private static final Command TX_START = CommandFactory.createSetterArgs("TX",
+			new Argument("START"),
+			new ExtensibleArgument());
+	private static final Command TX_BUSY = CommandFactory.createSetterArgs("TX",
+			new Argument("BUSY"));
 	private static final Command TX_DONE = CommandFactory.createSetterArgs("TX",
 			new Argument("DONE"),
 			new Argument());
 	private static final Command TX_TIMEOUT = CommandFactory.createSetterArgs("TX",
 			new Argument("TIMEOUT"));
-	private static final Command TX_START= CommandFactory.createSetterArgs("TX",
-			new Argument("START"),
-			new ExtensibleArgument());
-	private static final Command RX_START= CommandFactory.createSetterArgs("RX",
-			new Argument("START"));
 
 	private final Map<Command, BiConsumer<LoRaPort, CommandResult>> commandHandlers = new HashMap<>();
 
 	public LoRaEventConnection() {
+		commandHandlers.put(RX_START, (port, result) -> {
+			port.invokeEvent(new LoRaRxStartEvent(port));
+		});
+
 		commandHandlers.put(RX_DONE, (port, result) -> {
 			int rssi = result.getArgument(1)
 					.flatMap(ArgumentData::getInteger)
@@ -65,6 +73,18 @@ public class LoRaEventConnection extends LoRaConnection {
 			port.invokeEvent(new LoRaRxTimeoutEvent(port));
 		});
 
+		commandHandlers.put(TX_START, (port, result) -> {
+			String eventData = result.getArgument(1)
+					.flatMap(ArgumentData::getString)
+					.orElse(null);
+
+			port.invokeEvent(new LoRaTxStartEvent(port, eventData));
+		});
+
+		commandHandlers.put(TX_BUSY, (port, result) -> {
+			port.invokeEvent(new LoRaTxBusyEvent(port));
+		});
+
 		commandHandlers.put(TX_DONE, (port, result) -> {
 			long duration = result.getArgument(1)
 					.flatMap(ArgumentData::getInteger)
@@ -75,18 +95,6 @@ public class LoRaEventConnection extends LoRaConnection {
 
 		commandHandlers.put(TX_TIMEOUT, (port, result) -> {
 			port.invokeEvent(new LoRaTxTimeoutEvent(port));
-		});
-
-		commandHandlers.put(TX_START, (port, result) -> {
-			String eventData = result.getArgument(1)
-					.flatMap(ArgumentData::getString)
-					.orElse(null);
-
-			port.invokeEvent(new LoRaTxStartEvent(port, eventData));
-		});
-
-		commandHandlers.put(RX_START, (port, result) -> {
-			port.invokeEvent(new LoRaRxStartEvent(port));
 		});
 	}
 

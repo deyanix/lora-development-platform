@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class LoRaMessageDto {
+	public long eventId;
 	private String senderId;
 	private LocalDateTime startDate;
 	private LocalDateTime endDate;
@@ -12,6 +13,15 @@ public class LoRaMessageDto {
 	private boolean successful;
 	private long duration;
 	private List<LoRaMessageReceptionDto> receptions = new ArrayList<>();
+
+	public long getEventId() {
+		return eventId;
+	}
+
+	public LoRaMessageDto setEventId(long eventId) {
+		this.eventId = eventId;
+		return this;
+	}
 
 	public String getSenderId() {
 		return senderId;

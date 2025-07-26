@@ -7,7 +7,8 @@ import eu.deyanix.lorasupervisor.protocol.event.rx.LoRaRxFinishEvent;
 import java.time.LocalDateTime;
 import java.util.Optional;
 
-public class LoRaMessageReception {
+public class LoRaMessageReception implements Comparable<LoRaMessageReception> {
+	private final long eventId;
 	private final LoRaNode receiver;
 	private final LocalDateTime date;
 	private final int rssi;
@@ -15,6 +16,7 @@ public class LoRaMessageReception {
 	private final boolean successful;
 
 	public LoRaMessageReception(LoRaRxFinishEvent event) {
+		this.eventId = event.getId();
 		this.receiver = event.getNode();
 		this.date = event.getDate();
 		this.successful = event.isSuccessful();
@@ -28,6 +30,10 @@ public class LoRaMessageReception {
 		}
 	}
 
+	public long getEventId() {
+		return eventId;
+	}
+
 	public Optional<LoRaNode> getReceiver() {
 		return Optional.ofNullable(receiver);
 	}
@@ -38,10 +44,13 @@ public class LoRaMessageReception {
 
 	public LoRaMessageReceptionDto toDto() {
 		return new LoRaMessageReceptionDto()
+				.setEventId(eventId)
 				.setReceiverId(getReceiver()
 						.map(LoRaNode::getId)
 						.orElse(null))
-				.setDate(date);
+				.setDate(date)
+				.setRssi(rssi)
+				.setSnr(snr);
 	}
 
 	public int getRssi() {
@@ -54,5 +63,14 @@ public class LoRaMessageReception {
 
 	public boolean isSuccessful() {
 		return successful;
+	}
+
+	@Override
+	public int compareTo(LoRaMessageReception o) {
+		int comparison = o.date.compareTo(this.date);
+		if (comparison != 0) {
+			return comparison;
+		}
+		return Long.compare(eventId, o.eventId);
 	}
 }

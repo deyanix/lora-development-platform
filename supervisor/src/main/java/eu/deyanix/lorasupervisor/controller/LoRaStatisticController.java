@@ -19,13 +19,18 @@ public class LoRaStatisticController {
 		this.loRaStatisticService = loRaStatisticService;
 	}
 
+	@GetMapping("/nodes/any/messages")
+	public List<LoRaMessageDto> getMessages() {
+		return loRaStatisticService.getMessages();
+	}
+
 	@GetMapping("/nodes/{id}/messages")
-	public List<LoRaMessageDto> getMessages(@PathVariable String id) {
+	public List<LoRaMessageDto> getMessagesBySenderId(@PathVariable String id) {
 		return loRaStatisticService.getMessagesBySenderId(id);
 	}
 
 	@DeleteMapping("/nodes/any/messages")
-	public void getMessages() {
+	public void reset() {
 		loRaStatisticService.reset();
 	}
 }

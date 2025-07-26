@@ -5,5 +5,5 @@
   </q-page>
 </template>
 <script setup lang="ts">
-import TimelineChart from './_components/TimelineChart.vue';
+import TimelineChart from './_components/TimelineChart2.vue';
 </script>

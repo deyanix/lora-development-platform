@@ -1,78 +1,69 @@
 <template>
   <div id="chart">
-    <apexchart type="rangeBar" height="350" :options="chartOptions" :series="series"></apexchart>
+    <apexchart
+      ref="chart"
+      type="rangeBar"
+      height="350"
+      :options="defaultChartOptions"
+      :series="defaultChartData"
+    />
   </div>
 </template>
 <script setup lang="ts">
-import { computed, onMounted, onUnmounted, ref, shallowRef, watch } from 'vue';
+import { onMounted, onUnmounted, ref, shallowRef, useTemplateRef, watch } from 'vue';
 import { usePlatformStore } from 'stores/platform';
 import { NodeStatisticService } from 'src/api/NodeStatisticService';
+import { VueApexChartsComponent } from 'vue3-apexcharts';
+import { NodeUtilities } from 'src/utilities/NodeUtilities';
+
+const defaultChartData = [{ name: 'Wiadomości', data: [] }];
 
 const platform = usePlatformStore();
 
+const chart = useTemplateRef<VueApexChartsComponent>('chart');
 const interval = ref<ReturnType<typeof setInterval>>();
 const currentTimeInterval = ref<ReturnType<typeof setInterval>>();
 
-const currentTime = shallowRef(new Date().getTime());
-const seriesData = shallowRef<{ x: string; y: number[] }[]>([]);
+type SeriesDataItem = { x: string; y?: number[]; eventId?: number; rangeName?: string };
 
-async function generateNewData() {
-  const data = [];
+const seriesData = shallowRef<SeriesDataItem[]>([]);
+
+async function refreshData() {
+  const data: SeriesDataItem[] = [];
 
   for (const node of platform.nodes) {
-    const messages = await NodeStatisticService.getMessages(node.id);
+    const id = NodeUtilities.formatId(node.id);
+    const messages = await NodeStatisticService.getMessagesBySenderId(node.id);
     for (const message of messages) {
       if (!message.endDate) continue;
 
-      data.push({ x: node.id, y: [message.startDate.getTime(), message.endDate.getTime()] });
+      const existing = seriesData.value.find((item) => item.eventId === message.eventId);
+      if (!existing) {
+        data.push({
+          x: id,
+          y: [message.startDate.getTime(), message.endDate.getTime()],
+          eventId: message.eventId,
+        });
+      }
     }
 
     if (messages.length === 0) {
-      data.push({ x: node.id, y: [] });
+      data.push({ x: id });
     }
   }
 
-  seriesData.value = data;
+  console.log(data.map((i) => i.rangeName));
+
+  seriesData.value = [...seriesData.value, ...data];
+  await chart.value?.appendData([{ data }]);
 }
 
-watch(
-  () => platform.nodes,
-  () => generateNewData(),
-  { immediate: true },
-);
-
-onMounted(() => {
-  interval.value = setInterval(async () => {
-    await generateNewData();
-  }, 900);
-
-  currentTimeInterval.value = setInterval(() => {
-    currentTime.value = new Date().getTime();
-  }, 250);
-});
-
-onUnmounted(() => {
-  if (interval.value) {
-    clearInterval(interval.value);
-  }
-  if (currentTimeInterval.value) {
-    clearInterval(currentTimeInterval.value);
-  }
-});
-
-const series = computed(() => [
-  {
-    data: seriesData.value,
-  },
-]);
-
-const chartOptions = computed(() => {
+function getChartOptions() {
   const visibleWindowSize = 60 * 1000;
-  const now = currentTime.value;
+  const now = new Date().getTime();
 
-  const dynamicMaxTime = now + 10 * 1000;
+  const dynamicMaxTime = now + 1000;
   const dynamicMinTime = dynamicMaxTime - visibleWindowSize;
-
   return {
     chart: {
       height: 400,
@@ -80,15 +71,22 @@ const chartOptions = computed(() => {
       animations: {
         enabled: true,
         easing: 'linear',
-        speed: 800,
+        speed: 500,
         animateGradually: {
           enabled: true,
           delay: 150,
         },
         dynamicAnimation: {
           enabled: true,
-          speed: 350,
+          speed: 500,
         },
+      },
+      toolbar: {
+        show: false,
+      },
+      zoom: {
+        enabled: false,
+        allowMouseWheelZoom: false,
       },
     },
     plotOptions: {
@@ -113,5 +111,45 @@ const chartOptions = computed(() => {
       max: dynamicMaxTime,
     },
   };
+}
+
+async function refreshOptions() {
+  await chart.value?.updateOptions(getChartOptions());
+}
+
+const defaultChartOptions = getChartOptions();
+
+watch(
+  () => platform.nodes,
+  () => refreshData(),
+  { immediate: true },
+);
+
+onMounted(() => {
+  interval.value = setInterval(async () => {
+    await refreshData();
+  }, 900);
+
+  currentTimeInterval.value = setInterval(async () => {
+    await refreshOptions();
+  }, 100);
 });
+
+onUnmounted(() => {
+  if (interval.value) {
+    clearInterval(interval.value);
+  }
+
+  if (currentTimeInterval.value) {
+    clearInterval(currentTimeInterval.value);
+  }
+});
+
+// const series = [
+//   {
+//     data: [],
+//   },
+// ];
+//
+// const chartOptions = computed(() => );
 </script>
