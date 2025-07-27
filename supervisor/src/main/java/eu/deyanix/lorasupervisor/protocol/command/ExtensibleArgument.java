@@ -3,6 +3,8 @@ package eu.deyanix.lorasupervisor.protocol.command;
 import eu.deyanix.lorasupervisor.protocol.buffer.BufferReader;
 import eu.deyanix.lorasupervisor.protocol.buffer.BufferWriter;
 
+import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.util.Optional;
 
 public class ExtensibleArgument extends Argument {
@@ -39,7 +41,7 @@ public class ExtensibleArgument extends Argument {
 			buffer.append(String.valueOf(0));
 			buffer.append(',');
 		} else {
-			buffer.append(String.valueOf(value.length()));
+			buffer.append(String.valueOf(value.getBytes(StandardCharsets.UTF_8).length));
 			buffer.append(',');
 			buffer.append(value);
 		}

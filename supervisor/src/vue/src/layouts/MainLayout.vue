@@ -15,7 +15,7 @@ import MainFooter from 'layouts/_components/MainFooter.vue';
 import MainHeader from 'layouts/_components/MainHeader.vue';
 import { ref } from 'vue';
 
-const opened = ref<boolean>(false);
+const opened = ref<boolean>(true);
 </script>
 <style lang="scss">
 .main-layout .q-page-container {

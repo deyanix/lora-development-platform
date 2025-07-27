@@ -16,10 +16,14 @@ import eu.deyanix.lorasupervisor.protocol.event.port.LoRaPortConnectEvent;
 import eu.deyanix.lorasupervisor.protocol.event.port.LoRaPortDisconnectEvent;
 import eu.deyanix.lorasupervisor.protocol.event.port.LoRaPortRecognizedEvent;
 
+import java.time.Duration;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
@@ -99,6 +103,10 @@ public class LoRaPort {
 
 	public void addListener(LoRaPortListener listener) {
 		listeners.add(listener);
+	}
+
+	public void addListeners(Collection<LoRaPortListener> newListeners) {
+		listeners.addAll(newListeners);
 	}
 
 	public void removeListener(LoRaPortListener listener) {

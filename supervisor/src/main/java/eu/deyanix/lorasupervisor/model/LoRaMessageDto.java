@@ -5,13 +5,27 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class LoRaMessageDto {
+	public long eventId;
 	private String senderId;
 	private LocalDateTime startDate;
 	private LocalDateTime endDate;
 	private String data;
+	private boolean autoMessage;
+	private String destinationId;
+	private boolean ackRequest;
+	private boolean ackResponse;
 	private boolean successful;
 	private long duration;
 	private List<LoRaMessageReceptionDto> receptions = new ArrayList<>();
+
+	public long getEventId() {
+		return eventId;
+	}
+
+	public LoRaMessageDto setEventId(long eventId) {
+		this.eventId = eventId;
+		return this;
+	}
 
 	public String getSenderId() {
 		return senderId;
@@ -50,6 +64,42 @@ public class LoRaMessageDto {
 
 	public LoRaMessageDto setData(String data) {
 		this.data = data;
+		return this;
+	}
+
+	public boolean isAutoMessage() {
+		return autoMessage;
+	}
+
+	public LoRaMessageDto setAutoMessage(boolean autoMessage) {
+		this.autoMessage = autoMessage;
+		return this;
+	}
+
+	public String getDestinationId() {
+		return destinationId;
+	}
+
+	public LoRaMessageDto setDestinationId(String destinationId) {
+		this.destinationId = destinationId;
+		return this;
+	}
+
+	public boolean isAckRequest() {
+		return ackRequest;
+	}
+
+	public LoRaMessageDto setAckRequest(boolean ackRequest) {
+		this.ackRequest = ackRequest;
+		return this;
+	}
+
+	public boolean isAckResponse() {
+		return ackResponse;
+	}
+
+	public LoRaMessageDto setAckResponse(boolean ackResponse) {
+		this.ackResponse = ackResponse;
 		return this;
 	}
 

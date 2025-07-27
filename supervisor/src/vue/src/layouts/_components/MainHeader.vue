@@ -4,6 +4,9 @@
       <q-btn icon="mdi-menu" flat round dense @click="opened = !opened" />
       <q-toolbar-title> LoRa Supervisor </q-toolbar-title>
 
+      <q-btn icon="mdi-playlist-remove" round flat @click="clear">
+        <q-tooltip>Czyszczenie zdarzeń</q-tooltip>
+      </q-btn>
       <q-btn icon="mdi-connection" round flat @click="openSerialConnector">
         <q-badge v-if="portConnectedCount > 0" color="positive" floating rounded align="top">
           {{ portConnectedCount }}
@@ -17,6 +20,7 @@ import { computed } from 'vue';
 import SerialConnectorDialog from 'layouts/_components/SerialConnectorDialog.vue';
 import { Dialog } from 'quasar';
 import { usePlatformStore } from 'stores/platform';
+import { NodeStatisticService } from 'src/api/NodeStatisticService';
 
 const platform = usePlatformStore();
 
@@ -27,5 +31,9 @@ function openSerialConnector() {
   Dialog.create({
     component: SerialConnectorDialog,
   });
+}
+
+async function clear() {
+  await NodeStatisticService.reset();
 }
 </script>

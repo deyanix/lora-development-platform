@@ -1,117 +1,261 @@
 <template>
-  <div id="chart">
-    <apexchart type="rangeBar" height="350" :options="chartOptions" :series="series"></apexchart>
-  </div>
+  <div ref="chartRef" style="width: 100%; height: 500px" />
 </template>
+
 <script setup lang="ts">
-import { computed, onMounted, onUnmounted, ref, shallowRef, watch } from 'vue';
+import { onBeforeMount, onMounted, onUnmounted, ref, shallowRef, watch } from 'vue';
+import * as echarts from 'echarts';
 import { usePlatformStore } from 'stores/platform';
-import { NodeStatisticService } from 'src/api/NodeStatisticService';
+import { NodeUtilities } from 'src/utilities/NodeUtilities';
+import { NodeMessage, NodeStatisticService } from 'src/api/NodeStatisticService';
+import { onLoRaEvent } from 'src/composables/onLoRaEvent';
 
-const platform = usePlatformStore();
-
-const interval = ref<ReturnType<typeof setInterval>>();
-const currentTimeInterval = ref<ReturnType<typeof setInterval>>();
-
-const currentTime = shallowRef(new Date().getTime());
-const seriesData = shallowRef<{ x: string; y: number[] }[]>([]);
-
-async function generateNewData() {
-  const data = [];
-
-  for (const node of platform.nodes) {
-    const messages = await NodeStatisticService.getMessages(node.id);
-    for (const message of messages) {
-      if (!message.endDate) continue;
-
-      data.push({ x: node.id, y: [message.startDate.getTime(), message.endDate.getTime()] });
-    }
-
-    if (messages.length === 0) {
-      data.push({ x: node.id, y: [] });
-    }
-  }
-
-  seriesData.value = data;
+interface ChartItem {
+  id: number;
+  name: string;
+  value: [string, number, number | undefined, NodeMessage];
 }
 
-watch(
-  () => platform.nodes,
-  () => generateNewData(),
-  { immediate: true },
-);
+const chartRef = ref<HTMLDivElement | null>(null);
+const chartInstance = shallowRef<echarts.ECharts | null>(null);
+const platform = usePlatformStore();
+const seriesData = shallowRef<ChartItem[]>([]);
+const updateTimer = ref<ReturnType<typeof setInterval>>();
 
-onMounted(() => {
-  interval.value = setInterval(async () => {
-    await generateNewData();
-  }, 900);
+function renderItem(
+  params: echarts.CustomSeriesRenderItemParams,
+  api: echarts.CustomSeriesRenderItemAPI,
+): echarts.CustomSeriesRenderItemReturn {
+  const categoryIndex = api.value(0);
+  const startVal = api.value(1);
+  const endVal = api.value(2);
 
-  currentTimeInterval.value = setInterval(() => {
-    currentTime.value = new Date().getTime();
-  }, 250);
-});
+  const startCoord = api.coord([startVal, categoryIndex]);
+  const endCoord = api.coord([endVal, categoryIndex]);
+  const coordSys = params.coordSys as echarts.CustomSeriesRenderItemParams['coordSys'] & {
+    x: number;
+    y: number;
+    width: number;
+    height: number;
+  };
 
-onUnmounted(() => {
-  if (interval.value) {
-    clearInterval(interval.value);
+  if (!startCoord[0] || !endCoord[0] || !startCoord[1] || !coordSys) {
+    return;
   }
-  if (currentTimeInterval.value) {
-    clearInterval(currentTimeInterval.value);
+
+  const size = api.size?.([0, 1]) ?? [];
+  if (typeof size === 'number' || !size[1]) {
+    return;
   }
-});
 
-const series = computed(() => [
-  {
-    data: seriesData.value,
-  },
-]);
+  let x = startCoord[0];
+  let width = endCoord[0] - x;
 
-const chartOptions = computed(() => {
-  const visibleWindowSize = 60 * 1000;
-  const now = currentTime.value;
+  if (x < coordSys.x) {
+    width -= coordSys.x - x;
+    x = coordSys.x;
+  }
+  if (x + width > coordSys.x + coordSys.width) {
+    width = coordSys.x + coordSys.width - x;
+  }
 
-  const dynamicMaxTime = now + 10 * 1000;
-  const dynamicMinTime = dynamicMaxTime - visibleWindowSize;
+  if (width <= 0) {
+    return;
+  }
+
+  const height = size[1] * 0.6;
 
   return {
-    chart: {
-      height: 400,
-      type: 'rangeBar',
-      animations: {
-        enabled: true,
-        easing: 'linear',
-        speed: 800,
-        animateGradually: {
-          enabled: true,
-          delay: 150,
-        },
-        dynamicAnimation: {
-          enabled: true,
-          speed: 350,
-        },
-      },
+    type: 'rect',
+    transition: ['shape'],
+    shape: {
+      x: x,
+      y: startCoord[1] - height / 2,
+      width: width,
+      height: height,
     },
-    plotOptions: {
-      bar: {
-        horizontal: true,
-      },
-    },
-    xaxis: {
-      type: 'datetime',
-      datatimeUTC: true,
-      labels: {
-        formatter: function (val: number) {
-          return new Date(val).toLocaleTimeString(undefined, {
-            hour: '2-digit',
-            minute: '2-digit',
-            second: '2-digit',
-            hour12: false,
-          });
-        },
-      },
-      min: dynamicMinTime,
-      max: dynamicMaxTime,
-    },
+    style: api.style(),
   };
+}
+
+/**
+ * Funkcja uruchamiana w stałym interwale.
+ * Odpowiada za przesuwanie osi czasu i usuwanie starych danych z pamięci.
+ */
+function updateTimeAxisAndCleanUp() {
+  const now = Date.now();
+  const timeWindow = 30 * 1000;
+  const minTime = now - timeWindow;
+  const maxTime = now + 1000;
+  const limitTime = minTime - 5000;
+
+  // OPTYMALIZACJA: Usuń elementy, które całkowicie zniknęły za lewą krawędzią
+  const currentData = seriesData.value.filter(
+    (item) => item.value[2] && item.value[2] >= limitTime,
+  );
+  if (currentData.length !== seriesData.value.length) {
+    seriesData.value = currentData;
+  }
+
+  if (chartInstance.value) {
+    chartInstance.value.setOption({
+      xAxis: {
+        min: minTime,
+        max: maxTime,
+      },
+      series: [
+        {
+          data: seriesData.value,
+        },
+      ],
+    });
+  }
+}
+
+/**
+ * Inicjalizuje wykres ECharts z początkową konfiguracją.
+ */
+function initChart() {
+  if (chartRef.value) {
+    chartInstance.value = echarts.init(chartRef.value);
+
+    const option: echarts.EChartsOption = {
+      tooltip: {
+        trigger: 'item',
+        formatter: (params) => {
+          if (Array.isArray(params)) return '';
+
+          const itemData = params.data as ChartItem;
+          const msg = itemData.value[3];
+          const duration = msg.duration.toFixed(0);
+
+          return (
+            `${msg.data}<br/>` +
+            `<b>Czas trwania:</b> ${duration} ms<br/>` +
+            `<b>Liczba odbiorów:</b> ${msg.receptions.length}`
+          );
+        },
+      },
+      grid: {
+        containLabel: true,
+        left: '20',
+        right: '20',
+        top: '60',
+        bottom: '40',
+      },
+      xAxis: {
+        type: 'time',
+        axisLabel: {
+          hideOverlap: true,
+          formatter: (value: number) => echarts.time.format(value, '{HH}:{mm}:{ss}', false),
+        },
+      },
+      yAxis: {
+        type: 'category',
+        data: platform.nodes.map((n) => NodeUtilities.formatId(n.id)),
+        inverse: true,
+        axisLabel: {
+          interval: 0,
+        },
+      },
+      series: {
+        type: 'custom',
+        renderItem,
+        itemStyle: {
+          opacity: 0.9,
+          color: '#4CAF50',
+        },
+        encode: {
+          x: [1, 2],
+          y: 0,
+        },
+        data: seriesData.value,
+      },
+      animation: true,
+      animationDuration: 500,
+      animationDurationUpdate: 500,
+      animationEasing: 'linear',
+      animationEasingUpdate: 'linear',
+    };
+
+    chartInstance.value.setOption(option);
+  }
+}
+
+// Obserwuj zmiany na liście węzłów, aby zaktualizować oś Y
+watch(
+  () => platform.nodes,
+  (newNodes) => {
+    if (chartInstance.value) {
+      chartInstance.value.setOption({
+        yAxis: {
+          data: newNodes.map((n) => NodeUtilities.formatId(n.id)),
+        },
+      });
+    }
+  },
+  { deep: true },
+);
+
+onBeforeMount(async () => {
+  const messages = await NodeStatisticService.getMessages();
+  seriesData.value = messages.map((msg) => createItem(msg)).filter((msg) => !!msg);
+});
+
+onMounted(() => {
+  initChart();
+
+  // Uruchomienie pętli aktualizującej oś czasu i czyszczącej dane
+  updateTimer.value = setInterval(updateTimeAxisAndCleanUp, 500);
+
+  const resizeObserver = new ResizeObserver(() => {
+    chartInstance.value?.resize();
+  });
+  if (chartRef.value) {
+    resizeObserver.observe(chartRef.value);
+  }
+
+  onUnmounted(() => {
+    resizeObserver.disconnect();
+    if (updateTimer.value) clearInterval(updateTimer.value);
+    chartInstance.value?.dispose();
+    chartInstance.value = null;
+  });
+});
+
+function createItem(msg: NodeMessage): ChartItem | undefined {
+  if (!msg.endDate || !msg.successful) return;
+
+  const nodeName = NodeUtilities.formatId(msg.senderId);
+  return {
+    id: msg.eventId,
+    name: nodeName,
+    value: [nodeName, msg.startDate.getTime(), msg.endDate?.getTime(), msg],
+  };
+}
+
+onLoRaEvent({
+  onMessage(msg: NodeMessage) {
+    const itemIndex = seriesData.value.findIndex((item) => item.id === msg.eventId);
+    const oldItem: ChartItem | undefined = seriesData.value[itemIndex];
+    const item = createItem(msg);
+    if (!item) return;
+
+    if (oldItem) {
+      const updatedItem: ChartItem = {
+        ...oldItem,
+        value: item.value,
+      };
+
+      const newData = [...seriesData.value];
+      newData[itemIndex] = updatedItem;
+      seriesData.value = newData;
+    } else {
+      seriesData.value = [...seriesData.value, item];
+    }
+  },
+  onClear() {
+    seriesData.value = [];
+  },
 });
 </script>

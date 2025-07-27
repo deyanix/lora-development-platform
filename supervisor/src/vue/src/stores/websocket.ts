@@ -3,6 +3,7 @@ import { onBeforeUnmount, onMounted, ref, watch } from 'vue';
 import { Client } from '@stomp/stompjs';
 import SockJS from 'sockjs-client';
 import { api } from 'boot/axios';
+import { NodeMessage, NodeStatisticService } from 'src/api/NodeStatisticService';
 
 export enum LoRaEventType {
   PORT_CONNECT = 'PORT_CONNECT',
@@ -45,6 +46,7 @@ export type LoRaPortListenerCallback<Event> = (evt: Event) => void;
 export interface LoRaPortListener {
   onWebsocketConnect?: LoRaPortListenerCallbackContextless;
   onWebsocketDisconnect?: LoRaPortListenerCallbackContextless;
+  onMessage?: LoRaPortListenerCallback<NodeMessage>;
   onEvent?: LoRaPortListenerCallback<LoRaEvent>;
   onConnect?: LoRaPortListenerCallback<LoRaEvent>;
   onDisconnect?: LoRaPortListenerCallback<LoRaEvent>;
@@ -57,6 +59,7 @@ export interface LoRaPortListener {
   onRxError?: LoRaPortListenerCallback<LoRaEvent>;
   onRxStart?: LoRaPortListenerCallback<LoRaEvent>;
   onTxStart?: LoRaPortListenerCallback<LoRaDataEvent>;
+  onClear?: LoRaPortListenerCallbackContextless;
 }
 
 export const useWebsocketStore = defineStore('websocket', () => {
@@ -133,6 +136,15 @@ export const useWebsocketStore = defineStore('websocket', () => {
             listeners.value.map((l) => l.onTxTimeout?.(evt));
             break;
         }
+      });
+
+      client.subscribe('/topic/message', (message) => {
+        const evt = NodeStatisticService.deserializeMessage(JSON.parse(message.body));
+        listeners.value.map((l) => l.onMessage?.(evt));
+      });
+
+      client.subscribe('/topic/clear', () => {
+        listeners.value.map((l) => l.onClear?.());
       });
     };
 

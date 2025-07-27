@@ -2,10 +2,15 @@ import { api } from 'boot/axios';
 import { AxiosResponse } from 'axios';
 
 export interface NodeMessage {
+  eventId: number;
   senderId: string;
   startDate: Date;
   endDate: Date | null;
   data: string;
+  autoMessage: boolean;
+  destinationId: string | null;
+  ackRequest: boolean;
+  ackResponse: boolean;
   successful: boolean;
   duration: number;
   finished: boolean;
@@ -13,14 +18,17 @@ export interface NodeMessage {
 }
 
 export interface NodeMessageReception {
+  eventId: number;
   receiverId: number;
   date: Date;
+  successful: boolean;
+  snr: number | null;
+  rssi: number | null;
 }
 
 export const NodeStatisticService = {
-  async getMessages(id: string): Promise<NodeMessage[]> {
-    const response: AxiosResponse<NodeMessage[]> = await api.get(`/nodes/${id}/messages`);
-    return response.data.map((row) => ({
+  deserializeMessage(row: NodeMessage): NodeMessage {
+    return {
       ...row,
       startDate: new Date(row.startDate),
       endDate: row.endDate ? new Date(row.endDate) : null,
@@ -28,6 +36,17 @@ export const NodeStatisticService = {
         ...r,
         date: new Date(r.date),
       })),
-    }));
+    };
+  },
+  async getMessages(): Promise<NodeMessage[]> {
+    const response: AxiosResponse<NodeMessage[]> = await api.get(`/nodes/any/messages`);
+    return response.data.map((row) => this.deserializeMessage(row));
+  },
+  async getMessagesBySenderId(id: string): Promise<NodeMessage[]> {
+    const response: AxiosResponse<NodeMessage[]> = await api.get(`/nodes/${id}/messages`);
+    return response.data.map((row) => this.deserializeMessage(row));
+  },
+  async reset(): Promise<void> {
+    await api.post('/nodes/any/reset');
   },
 };
