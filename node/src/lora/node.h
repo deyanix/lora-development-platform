@@ -6,6 +6,7 @@
 #include "RandomGenerator.h"
 #include "validation.h"
 #include "stopwatch.h"
+#include "CharPointerQueue.h"
 
 #define MAX_MSG_BUFFER_LENGTH 128
 #define COLOR_FIND 0xff00ff

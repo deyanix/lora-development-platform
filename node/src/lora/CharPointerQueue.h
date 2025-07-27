@@ -45,6 +45,16 @@ public:
     bool enqueue(const char* item);
 
     /**
+     * @brief Enqueues a new string into the queue using printf-style formatting.
+     * Formats the arguments into a string and then enqueues that string.
+     * @param format A printf-style format string.
+     * @param ... Variable arguments to be formatted according to 'format'.
+     * @return True if the formatted string was successfully enqueued, false if the queue is full,
+     * memory allocation failed, or the formatted string exceeded MAX_STRING_LENGTH.
+     */
+    bool enqueue_printf(const char* format, ...);
+
+    /**
      * @brief Dequeues an item from the front of the queue.
      * Prints the dequeued string to Serial and frees its allocated memory.
      * If the queue is empty, this function does nothing.
@@ -86,5 +96,7 @@ private:
     volatile size_t _tail;       // Index where the next element will be added
     volatile size_t _count;      // Current number of elements
 };
+
+extern CharPointerQueue serialPrintQueue;
 
 #endif // CHAR_POINTER_QUEUE_H

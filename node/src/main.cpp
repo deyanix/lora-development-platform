@@ -16,10 +16,9 @@ uint64_t chipID = getID();
 CharPointerQueue serialPrintQueue;
 
 void OnRxDone(uint8_t *payload, uint16_t size, int16_t rssi, int8_t snr) {
-    Serial.print("RX=DONE,");
-    Serial.printf("%d,%d,%d,", rssi, snr, size);
-    Serial.write(payload, size);
-    Serial.println();
+    //TODO: Implement serial.write type functionality
+    //Serial.write(payload, size);
+    serialPrintQueue.enqueue_printf("RX=DONE,%d,%d,%d,%s", rssi, snr, size, payload);
 
     payload[size] = '\0';
 
@@ -39,8 +38,8 @@ void OnRxError() {
 void OnTxDone() {
     uint32_t duration = LoRaNode.SendStopwatch.getElapsed();
 
-    Serial.print("TX=DONE,");
-    Serial.println(duration);
+    serialPrintQueue.enqueue_printf("TX=DONE,%lu", duration);
+
     LoRaNode.OnTxDone();
 }
 
@@ -64,17 +63,14 @@ void processTerminal() {
         if (len > 0) {
             LoRaTerminal.request(len);
         } else {
-            Serial.print("TX=OK,");
-            Serial.println(payload.length());
+            serialPrintQueue.enqueue_printf("TX=OK,%d", payload.length());
             LoRaNode.Send((uint8_t*) payload.c_str(), payload.length());
             LoRaTerminal.clear();
         }
     } else if (LoRaTerminal.isFinished()) {
         if (reader.with("ID")) {
             if (reader.with('?')) {
-                Serial.print("ID=");
-                Serial.printf("%04X%08X", (uint32_t) (chipID>>32), (uint32_t) chipID);
-                Serial.println();
+                serialPrintQueue.enqueue_printf("ID=%04X%08X", (uint32_t)(chipID >> 32), (uint32_t)chipID);
             }
         } else if (reader.with("FRQ")) {
             if (reader.with('=')) {
@@ -86,8 +82,7 @@ void processTerminal() {
                     serialPrintQueue.enqueue("FRQ=ERR");
                 }
             } else if (reader.with('?')) {
-                Serial.print("FRQ=");
-                Serial.println(LoRaNode.Params.Frequency);
+                serialPrintQueue.enqueue_printf("FRQ=%d", LoRaNode.Params.Frequency);
             }
         } else if (reader.with("BW")) {
             if (reader.with('=')) {
@@ -99,8 +94,7 @@ void processTerminal() {
                     serialPrintQueue.enqueue("BW=ERR");
                 }
             } else if (reader.with('?')) {
-                Serial.print("BW=");
-                Serial.println(LoRaNode.Params.Bandwidth);
+                serialPrintQueue.enqueue_printf("BW=%d", LoRaNode.Params.Bandwidth);
             }
         } else if (reader.with("SF")) {
             if (reader.with('=')) {
@@ -112,8 +106,7 @@ void processTerminal() {
                     serialPrintQueue.enqueue("SF=ERR");
                 }
             } else if (reader.with('?')) {
-                Serial.print("SF=");
-                Serial.println(LoRaNode.Params.SpreadingFactor);
+                serialPrintQueue.enqueue_printf("SF=%d", LoRaNode.Params.SpreadingFactor);
             }
         } else if (reader.with("PWR")) {
             if (reader.with('=')) {
@@ -125,8 +118,7 @@ void processTerminal() {
                     serialPrintQueue.enqueue("PWR=ERR");
                 }
             } else if (reader.with('?')) {
-                Serial.print("PWR=");
-                Serial.println(LoRaNode.Params.Power);
+                serialPrintQueue.enqueue_printf("PWR=%d", LoRaNode.Params.Power);
             }
         } else if (reader.with("CRT")) {
             if (reader.with('=')) {
@@ -138,8 +130,7 @@ void processTerminal() {
                     serialPrintQueue.enqueue("CRT=ERR");
                 }
             } else if (reader.with('?')) {
-                Serial.print("CRT=");
-                Serial.println(LoRaNode.Params.CodeRate);
+                serialPrintQueue.enqueue_printf("CRT=%d", LoRaNode.Params.CodeRate);
             }
         } else if (reader.with("PRLEN")) {
             if (reader.with('=')) {
@@ -151,8 +142,7 @@ void processTerminal() {
                     serialPrintQueue.enqueue("PRLEN=ERR");
                 }
             } else if (reader.with('?')) {
-                Serial.print("PRLEN=");
-                Serial.println(LoRaNode.Params.PreambleLength);
+                serialPrintQueue.enqueue_printf("PRLEN=%d", LoRaNode.Params.PreambleLength);
             }
         } else if (reader.with("PYLEN")) {
             if (reader.with('=')) {
@@ -164,8 +154,7 @@ void processTerminal() {
                     serialPrintQueue.enqueue("PYLEN=ERR");
                 }
             } else if (reader.with('?')) {
-                Serial.print("PYLEN=");
-                Serial.println(LoRaNode.Params.PayloadLength);
+                serialPrintQueue.enqueue_printf("PYLEN=%d", LoRaNode.Params.PayloadLength);
             }
         } else if (reader.with("CRC")) {
             if (reader.with('=')) {
@@ -177,8 +166,7 @@ void processTerminal() {
                     serialPrintQueue.enqueue("CRC=ERR");
                 }
             } else if (reader.with('?')) {
-                Serial.print("CRC=");
-                Serial.println(LoRaNode.Params.EnableCrc ? 1 : 0);
+                serialPrintQueue.enqueue_printf("CRC=%d", LoRaNode.Params.EnableCrc ? 1 : 0);
             }
         } else if (reader.with("IIQ")) {
             if (reader.with('=')) {
@@ -190,8 +178,7 @@ void processTerminal() {
                     serialPrintQueue.enqueue("IIQ=ERR");
                 }
             } else if (reader.with('?')) {
-                Serial.print("IIQ=");
-                Serial.println(LoRaNode.Params.EnableIqInverted ? 1 : 0);
+                serialPrintQueue.enqueue_printf("IIQ=%d", LoRaNode.Params.EnableIqInverted ? 1 : 0);
             }
         } else if (reader.with("TXTO")) {
             if (reader.with('=')) {
@@ -203,8 +190,7 @@ void processTerminal() {
                     serialPrintQueue.enqueue("TXTO=ERR");
                 }
             } else if (reader.with('?')) {
-                Serial.print("TXTO=");
-                Serial.println(LoRaNode.Params.TxTimeout);
+                serialPrintQueue.enqueue_printf("TXTO=%d", LoRaNode.Params.TxTimeout);
             }
         } else if (reader.with("STO")) {
             if (reader.with('=')) {
@@ -216,8 +202,7 @@ void processTerminal() {
                     serialPrintQueue.enqueue("STO=ERR");
                 }
             } else if (reader.with('?')) {
-                Serial.print("STO=");
-                Serial.println(LoRaNode.Params.RxSymbolTimeout);
+                serialPrintQueue.enqueue_printf("STO=%d", LoRaNode.Params.RxSymbolTimeout);
             }
         } else if (reader.with("MODE")) {
             if (reader.with('=')) {
@@ -231,51 +216,50 @@ void processTerminal() {
                     serialPrintQueue.enqueue("MODE=ERR");
                 }
             } else if (reader.with('?')) {
-                Serial.print("MODE=");
+                const char* modeName;
                 switch (LoRaNode.Mode) {
                     case SNK:
-                        serialPrintQueue.enqueue("SNK");
+                        modeName = "SNK";
                         break;
-
                     case SRC:
-                        serialPrintQueue.enqueue("SRC");
+                        modeName = "SRC";
                         break;
-
                     default:
-                        serialPrintQueue.enqueue("UNKNOWN");
+                        modeName = "UNKNOWN";
                         break;
                 }
+                serialPrintQueue.enqueue_printf("MODE=%s", modeName);
             }
         } else if (reader.with("PUSH")) {
             LoRaNode.Configure();
             serialPrintQueue.enqueue("PUSH=OK");
         } else if (reader.with("STA")) {
             if (reader.with('?')) {
-                Serial.print("STA=");
+                const char* stateName;
                 switch (Radio.GetStatus()) {
                     case RF_IDLE:
-                        serialPrintQueue.enqueue("IDLE");
+                        stateName = "IDLE";
                         break;
                     case RF_RX_RUNNING:
-                        serialPrintQueue.enqueue("RX");
+                        stateName = "RX";
                         break;
                     case RF_TX_RUNNING:
-                        serialPrintQueue.enqueue("TX");
+                        stateName = "TX";
                         break;
                     case RF_CAD:
-                        serialPrintQueue.enqueue("CAD");
+                        stateName = "CAD";
                         break;
                     default:
-                        serialPrintQueue.enqueue("UNKNOWN");
+                        stateName = "UNKNOWN";
                         break;
                 }
+                serialPrintQueue.enqueue_printf("STA=%s", stateName);
             }
         } else if (reader.with("TOA")) {
             if (reader.with('=')) {
                 uint32_t len = reader.until('?').toInt();
 
-                Serial.print("TOA=");
-                Serial.println(Radio.TimeOnAir(MODEM_LORA, len));
+                serialPrintQueue.enqueue_printf("TOA=%u", len);
             }
         } else if (reader.with("AUTO")) {
             if (reader.with('=')) {
@@ -299,22 +283,23 @@ void processTerminal() {
                     serialPrintQueue.enqueue("AUTO=ERR");
                 }
             } else if (reader.with('?')) {
-                Serial.print("AUTO=");
+                const char* autoModeName;
                 switch (LoRaNode.Auto) {
-                case OFF:
-                    serialPrintQueue.enqueue("OFF");
-                    break;
-                case RANDOM:
-                    serialPrintQueue.enqueue("RANDOM");
-                    break;
-                case TURNBASED:
-                    serialPrintQueue.enqueue("TURNBASED");
-                    break;
-                default:
-                    serialPrintQueue.enqueue("UNKNOWN");
-                    break;
+                    case OFF:
+                        autoModeName = "OFF";
+                        break;
+                    case RANDOM:
+                        autoModeName = "RANDOM";
+                        break;
+                    case TURNBASED:
+                        autoModeName = "TURNBASED";
+                        break;
+                    default:
+                        autoModeName = "UNKNOWN";
+                        break;
                 }
-            }
+                serialPrintQueue.enqueue_printf("AUTO=%s", autoModeName);
+             }
         } else if (reader.with("INV")) {
             if (reader.with('=')) {
                 long value = reader.untilEnd().toInt();
@@ -325,9 +310,7 @@ void processTerminal() {
                     serialPrintQueue.enqueue("INV=ERR");
                 }
             } else if (reader.with('?')) {
-                char buffer[10];
-                snprintf(buffer, sizeof(buffer), "INV=%d", LoRaNode.msgDelay);
-                serialPrintQueue.enqueue(buffer);
+                serialPrintQueue.enqueue_printf("INV=%d", LoRaNode.msgDelay);
             }
         } else if (reader.with("IBM"))
         {
@@ -342,9 +325,7 @@ void processTerminal() {
                 }
             } else if (reader.with('?'))
             {
-                char buffer[10];
-                snprintf(buffer, sizeof(buffer), "IBM=%d", LoRaNode.backoffMaxInit);
-                serialPrintQueue.enqueue(buffer);
+                serialPrintQueue.enqueue_printf("IBM=%d", LoRaNode.backOffIncrease);
             }
         } else if (reader.with("ACKLT")) {
             if (reader.with('=')) {
@@ -356,9 +337,7 @@ void processTerminal() {
                     serialPrintQueue.enqueue("ACKLT=ERR");
                 }
             } else if (reader.with('?')) {
-                char buffer[10];
-                snprintf(buffer, sizeof(buffer), "ACKLT=%d", LoRaNode.ackLifetimeInit);
-                serialPrintQueue.enqueue(buffer);
+                serialPrintQueue.enqueue_printf("ACKLT=%d", LoRaNode.ackLifetimeInit);
             }
         } else if (reader.with("ACKRQ")) {
             if (reader.with('=')) {
@@ -370,9 +349,7 @@ void processTerminal() {
                     serialPrintQueue.enqueue("ACKRQ=ERR");
                 }
             } else if (reader.with('?')) {
-                char buffer[10];
-                snprintf(buffer, sizeof(buffer), "ACKRQ=%d", LoRaNode.ackReq ? 1 : 0);
-                serialPrintQueue.enqueue(buffer);
+                serialPrintQueue.enqueue_printf("ACKRQ=%d", LoRaNode.ackReq ? 1 : 0);
             }
         } else if (reader.with("BIN")) {
             if (reader.with('=')) {
@@ -384,9 +361,7 @@ void processTerminal() {
                     serialPrintQueue.enqueue("BIN=ERR");
                 }
             } else if (reader.with('?')) {
-                char buffer[10];
-                snprintf(buffer, sizeof(buffer), "BIN=%d", LoRaNode.backOffIncrease ? 1 : 0);
-                serialPrintQueue.enqueue(buffer);
+                serialPrintQueue.enqueue_printf("BIN=%d", LoRaNode.backOffIncrease ? 1: 0);
             }
         } else if (reader.with("LED")) {
             if (reader.with('=')) {
@@ -398,9 +373,7 @@ void processTerminal() {
                     serialPrintQueue.enqueue("LED=ERR");
                 }
             } else if (reader.with('?')) {
-                char buffer[10];
-                snprintf(buffer, sizeof(buffer), "LED=%d", LoRaNode.ledState ? 1 : 0);
-                serialPrintQueue.enqueue(buffer);
+                serialPrintQueue.enqueue_printf("LED=%d", LoRaNode.ledState ? 1 : 0);
             }
         } else
         {

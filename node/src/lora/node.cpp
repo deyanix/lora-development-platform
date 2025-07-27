@@ -1,6 +1,7 @@
 #include "node.h"
 
 LoRaNodeClass LoRaNode;
+CharPointerQueue serialPrintQueue;
 
 void LoRaNodeClass::Init()
 {
@@ -233,7 +234,7 @@ void LoRaNodeClass::SwitchLed(bool state, uint32_t color)
 
 void LoRaNodeClass::OnRxStart()
 {
-    Serial.println("RX=START");
+    serialPrintQueue.enqueue("RX=START");
 }
 
 void LoRaNodeClass::OnTxStart(uint8_t* data, size_t length)
@@ -242,7 +243,7 @@ void LoRaNodeClass::OnTxStart(uint8_t* data, size_t length)
     {
         turnOnRGB(COLOR_SACK, 0);
     }
-    else if (this->Mode == SNK && this->)
+    else if (this->Mode == SNK)
     {
 
     }
@@ -250,15 +251,10 @@ void LoRaNodeClass::OnTxStart(uint8_t* data, size_t length)
     {
         turnOnRGB(COLOR_SEND, 0);
     }
-
-    Serial.print("TX=START,");
-    Serial.print(length);
-    Serial.print(",");
-    Serial.write(data, length);
-    Serial.println();
+    serialPrintQueue.enqueue_printf("TX=START,%d,%s", length, data);
 }
 
 void LoRaNodeClass::OnTxBusy()
 {
-    Serial.println("TX=BUSY");
+    serialPrintQueue.enqueue("TX=BUSY");
 }

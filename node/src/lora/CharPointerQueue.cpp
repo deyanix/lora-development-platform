@@ -59,6 +59,47 @@ bool CharPointerQueue::enqueue(const char* item) {
     return true;
 }
 
+bool CharPointerQueue::enqueue_printf(const char* format, ...) {
+    if (isFull()) {
+        Serial.println("Queue is full. Cannot enqueue formatted string.");
+        return false;
+    }
+
+    // Declare a temporary buffer on the stack for formatting.
+    // Its size is MAX_STRING_LENGTH to ensure the formatted string
+    // will fit into the dynamically allocated memory later.
+    char tempBuffer[MAX_STRING_LENGTH];
+    va_list args; // Declare a variable argument list
+
+    va_start(args, format); // Initialize va_list with the variable arguments
+
+    // Use vsnprintf to safely format the string into tempBuffer.
+    // MAX_STRING_LENGTH is used as the buffer size, ensuring null termination
+    // if the formatted string is exactly MAX_STRING_LENGTH-1 characters long.
+    int charsWritten = vsnprintf(tempBuffer, MAX_STRING_LENGTH, format, args);
+
+    va_end(args); // Clean up the va_list
+
+    if (charsWritten < 0) {
+        // vsnprintf returns a negative value on encoding error
+        Serial.println("Error formatting string.");
+        return false;
+    }
+    if (charsWritten >= MAX_STRING_LENGTH) {
+        // This means the formatted string was truncated because it exceeded
+        // the MAX_STRING_LENGTH buffer. A warning is printed, but the truncated
+        // string is still enqueued. You might choose to return false here
+        // if truncated strings are not acceptable.
+        Serial.print("Formatted string truncated (length >= ");
+        Serial.print(MAX_STRING_LENGTH);
+        Serial.println(").");
+    }
+
+    // Now, enqueue the formatted string using the existing enqueue method.
+    // This handles memory allocation and queue management for the formatted string.
+    return enqueue(tempBuffer);
+}
+
 /**
  * @brief Dequeues an item from the front of the queue.
  * Prints the dequeued string to Serial and frees its allocated memory.
