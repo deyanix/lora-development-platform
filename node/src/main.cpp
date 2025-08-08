@@ -216,15 +216,15 @@ void processTerminal() {
             } else if (reader.with('?')) {
                 const char* modeName;
                 switch (LoRaNode.Mode) {
-                    case SNK:
-                        modeName = "SNK";
-                        break;
-                    case SRC:
-                        modeName = "SRC";
-                        break;
-                    default:
-                        modeName = "UNKNOWN";
-                        break;
+                case SNK:
+                    modeName = "SNK";
+                    break;
+                case SRC:
+                    modeName = "SRC";
+                    break;
+                default:
+                    modeName = "UNKNOWN";
+                    break;
                 }
                 serialPrintQueue.enqueue_printf("MODE=%s", modeName);
             }
@@ -297,7 +297,7 @@ void processTerminal() {
                         break;
                 }
                 serialPrintQueue.enqueue_printf("AUTO=%s", autoModeName);
-             }
+            }
         } else if (reader.with("INV")) {
             if (reader.with('=')) {
                 long value = reader.untilEnd().toInt();
@@ -350,17 +350,45 @@ void processTerminal() {
                 serialPrintQueue.enqueue_printf("ACKRQ=%d", LoRaNode.ackReq ? 1 : 0);
             }
         } else if (reader.with("RNDST")) {
-            if (reader.with('=')) {
-                long value = reader.untilEnd().toInt();
-                if (value >= 0 && value <= 2) {
-                    LoRaNode.rndDist = value;
+            if (reader.with('='))
+            {
+                if (reader.with("UNI"))
+                {
+                    g_randomGenerator.setDistribution(DistributionType::UNIFORM);
                     serialPrintQueue.enqueue("RNDST=OK");
-                } else {
+                }
+                else if (reader.with("EXP"))
+                {
+                    g_randomGenerator.setDistribution(DistributionType::EXPONENTIAL);
+                    serialPrintQueue.enqueue("RNDST=OK");
+                }
+                else if (reader.with("NOR"))
+                {
+                    g_randomGenerator.setDistribution(DistributionType::NORMAL);
+                    serialPrintQueue.enqueue("RNDST=OK");
+                }
+                else {
                     serialPrintQueue.enqueue("RNDST=ERR");
                 }
             } else if (reader.with('?')) {
-                serialPrintQueue.enqueue_printf("RNDST=%d", LoRaNode.rndDist);
+            const char* randomDistributionName;
+            switch (g_randomGenerator.getDistribution()) {
+            case DistributionType::UNIFORM:
+                randomDistributionName = "UNI";
+                break;
+            case DistributionType::EXPONENTIAL:
+                randomDistributionName = "EXP";
+                break;
+            case DistributionType::NORMAL:
+                randomDistributionName = "NOR";
+                break;
+            default:
+                randomDistributionName = "UNKNOWN";
+                break;
             }
+            serialPrintQueue.enqueue_printf("RNDST=%s", randomDistributionName);
+        }
+        }
         } else if (reader.with("BIN")) {
             if (reader.with('=')) {
                 long value = reader.untilEnd().toInt();
@@ -390,7 +418,6 @@ void processTerminal() {
             serialPrintQueue.enqueue("ERR");
         }
         LoRaTerminal.clear();
-    }
 }
 
 void setup() {

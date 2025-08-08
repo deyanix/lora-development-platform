@@ -28,6 +28,7 @@ class RandomGenerator {
 public:
     RandomGenerator();
     void setDistribution(DistributionType type);
+    DistributionType getDistribution();
     long getRandomValue(long min, long max);
 
 private:

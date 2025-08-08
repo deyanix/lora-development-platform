@@ -84,3 +84,8 @@ void RandomGenerator::setDistribution(DistributionType distribution)
 {
     _currentDistribution = distribution;
 }
+
+DistributionType RandomGenerator::getDistribution()
+{
+    return _currentDistribution;
+}
