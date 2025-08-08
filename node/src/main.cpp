@@ -257,7 +257,7 @@ void processTerminal() {
             if (reader.with('=')) {
                 uint32_t len = reader.until('?').toInt();
 
-                serialPrintQueue.enqueue_printf("TOA=%u", len);
+                serialPrintQueue.enqueue_printf("TOA=%u", Radio.TimeOnAir(MODEM_LORA, len));
             }
         } else if (reader.with("AUTO")) {
             if (reader.with('=')) {
