@@ -111,6 +111,19 @@
               :disable="isSinkMode"
             />
           </div>
+          <div class="col-12 col-md-6">
+            <q-select
+              v-model="configuration.randomDistribution"
+              label="Rozkład losowania odstępu"
+              :options="platform.options?.randomDistribution"
+              emit-value
+              map-options
+              dense
+              outlined
+              clearable
+              :disable="isSinkMode"
+            />
+          </div>
         </q-card-section>
         <q-card-actions align="right">
           <q-btn type="submit" label="Zapisz" color="primary" rounded unelevated />

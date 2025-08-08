@@ -1,10 +1,6 @@
 package eu.deyanix.lorasupervisor.model;
 
-import eu.deyanix.lorasupervisor.protocol.config.LoRaAuto;
-import eu.deyanix.lorasupervisor.protocol.config.LoRaBandwidth;
-import eu.deyanix.lorasupervisor.protocol.config.LoRaCodingRate;
-import eu.deyanix.lorasupervisor.protocol.config.LoRaMode;
-import eu.deyanix.lorasupervisor.protocol.config.LoRaRadioConfiguration;
+import eu.deyanix.lorasupervisor.protocol.config.*;
 
 import java.util.Arrays;
 import java.util.List;
@@ -39,6 +35,9 @@ public class LoRaNodeOptions {
 			.map(Enum::name)
 			.toList();
 	public List<String> auto = Arrays.stream(LoRaAuto.values())
+			.map(Enum::name)
+			.toList();
+	public List<String> randomDistribution = Arrays.stream(LoRaRandomDistribution.values())
 			.map(Enum::name)
 			.toList();
 

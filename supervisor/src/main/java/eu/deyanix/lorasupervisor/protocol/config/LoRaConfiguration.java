@@ -10,6 +10,7 @@ public class LoRaConfiguration {
 	private Boolean ackRequired;
 	private Integer ackLifetime;
 	private Boolean backoffIncrease;
+	private LoRaRandomDistribution randomDistribution;
 
 	public Optional<LoRaMode> getMode() {
 		return Optional.ofNullable(mode);
@@ -71,6 +72,15 @@ public class LoRaConfiguration {
 
 	public LoRaConfiguration setBackoffIncrease(Boolean backoffIncrease) {
 		this.backoffIncrease = backoffIncrease;
+		return this;
+	}
+
+	public Optional<LoRaRandomDistribution> getRandomDistribution() {
+		return Optional.ofNullable(randomDistribution);
+	}
+
+	public LoRaConfiguration setRandomDistribution(LoRaRandomDistribution randomDistribution) {
+		this.randomDistribution = randomDistribution;
 		return this;
 	}
 }

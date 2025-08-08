@@ -18,6 +18,7 @@ export interface NodeConfiguration {
   ackRequired: boolean;
   ackLifetime: number;
   backoffIncrease: boolean;
+  randomDistribution: string;
 }
 
 export interface NodeRadioConfiguration {
@@ -49,6 +50,7 @@ export interface NodeOptions {
   codingRate: NodeOption<string>[];
   mode: string[];
   auto: string[];
+  randomDistribution: string[];
 }
 
 export const NodeService = {

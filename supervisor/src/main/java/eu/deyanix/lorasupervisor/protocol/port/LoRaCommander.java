@@ -5,12 +5,7 @@ import eu.deyanix.lorasupervisor.protocol.command.ArgumentData;
 import eu.deyanix.lorasupervisor.protocol.command.Command;
 import eu.deyanix.lorasupervisor.protocol.command.CommandFactory;
 import eu.deyanix.lorasupervisor.protocol.command.ExtensibleArgument;
-import eu.deyanix.lorasupervisor.protocol.config.LoRaBandwidth;
-import eu.deyanix.lorasupervisor.protocol.config.LoRaCodingRate;
-import eu.deyanix.lorasupervisor.protocol.config.LoRaConfiguration;
-import eu.deyanix.lorasupervisor.protocol.config.LoRaRadioConfiguration;
-import eu.deyanix.lorasupervisor.protocol.config.LoRaMode;
-import eu.deyanix.lorasupervisor.protocol.config.LoRaAuto;
+import eu.deyanix.lorasupervisor.protocol.config.*;
 
 import java.util.List;
 import java.util.Optional;
@@ -25,7 +20,8 @@ public class LoRaCommander {
 			LoRaCommanderPropertyFactor.of(LoRaConfiguration::isAckRequired, LoRaConfiguration::setAckRequired, LoRaCommander::getAckRequired, LoRaCommander::setAckRequired),
 			LoRaCommanderPropertyFactor.of(LoRaConfiguration::getAckLifetime, LoRaConfiguration::setAckLifetime, LoRaCommander::getAckLifetime, LoRaCommander::setAckLifetime),
 			LoRaCommanderPropertyFactor.of(LoRaConfiguration::getInterval, LoRaConfiguration::setInterval, LoRaCommander::getInterval, LoRaCommander::setInterval),
-			LoRaCommanderPropertyFactor.of(LoRaConfiguration::isBackoffIncrease, LoRaConfiguration::setBackoffIncrease, LoRaCommander::isBackoffIncrease, LoRaCommander::setBackoffIncrease)
+			LoRaCommanderPropertyFactor.of(LoRaConfiguration::isBackoffIncrease, LoRaConfiguration::setBackoffIncrease, LoRaCommander::isBackoffIncrease, LoRaCommander::setBackoffIncrease),
+			LoRaCommanderPropertyFactor.of(LoRaConfiguration::getRandomDistribution, LoRaConfiguration::setRandomDistribution, LoRaCommander::getRandomDistribution, LoRaCommander::setRandomDistribution)
 	);
 
 	public static final List<LoRaCommanderPropertyFactor<LoRaRadioConfiguration, ?>> RADIO_CONFIGURATION_PROPERTY_FACTORS = List.of(
@@ -355,6 +351,18 @@ public class LoRaCommander {
 		return sendDataGetter("TOA", new ArgumentData().setInteger(length))
 				.getLong()
 				.orElseThrow();
+	}
+
+	public LoRaRandomDistribution getRandomDistribution() {
+		return sendDataGetter("RNDST")
+				.getString()
+				.map(LoRaRandomDistribution::getEnum)
+				.orElseThrow();
+	}
+
+	public void setRandomDistribution(LoRaRandomDistribution value) {
+		sendDataSetter("RNDST",
+				new ArgumentData().setString(value.getValue()));
 	}
 
 	public void transmit(String data) {
