@@ -76,6 +76,7 @@ public:
     long ackLifetime;
     bool ackReq;
     bool backOffIncrease;
+    int rndDist;
 
     bool ledState = false;
     bool isSendingAck = false;

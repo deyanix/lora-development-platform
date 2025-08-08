@@ -13,8 +13,6 @@
 
 uint64_t chipID = getID();
 
-CharPointerQueue serialPrintQueue;
-
 void OnRxDone(uint8_t *payload, uint16_t size, int16_t rssi, int8_t snr) {
     //TODO: Implement serial.write type functionality
     //Serial.write(payload, size);
@@ -267,7 +265,7 @@ void processTerminal() {
                     LoRaNode.Auto = OFF;
                     serialPrintQueue.enqueue("AUTO=OK");
                 } else if (reader.with("RANDOM")) {
-                    LoRaNode.randomMsgDelay = RandomGenerator::uniformRand(0, LoRaNode.backoffMax);
+                    LoRaNode.randomMsgDelay = g_randomGenerator.getRandomValue(0, LoRaNode.backoffMax);
                     LoRaNode.Auto = RANDOM;
                     serialPrintQueue.enqueue("AUTO=OK");
                 } else if (reader.with("TURNBASED")) {
@@ -325,7 +323,7 @@ void processTerminal() {
                 }
             } else if (reader.with('?'))
             {
-                serialPrintQueue.enqueue_printf("IBM=%d", LoRaNode.backOffIncrease);
+                serialPrintQueue.enqueue_printf("IBM=%d", LoRaNode.backoffMaxInit);
             }
         } else if (reader.with("ACKLT")) {
             if (reader.with('=')) {
@@ -350,6 +348,18 @@ void processTerminal() {
                 }
             } else if (reader.with('?')) {
                 serialPrintQueue.enqueue_printf("ACKRQ=%d", LoRaNode.ackReq ? 1 : 0);
+            }
+        } else if (reader.with("RNDST")) {
+            if (reader.with('=')) {
+                long value = reader.untilEnd().toInt();
+                if (value >= 0 && value <= 2) {
+                    LoRaNode.rndDist = value;
+                    serialPrintQueue.enqueue("RNDST=OK");
+                } else {
+                    serialPrintQueue.enqueue("RNDST=ERR");
+                }
+            } else if (reader.with('?')) {
+                serialPrintQueue.enqueue_printf("RNDST=%d", LoRaNode.rndDist);
             }
         } else if (reader.with("BIN")) {
             if (reader.with('=')) {
@@ -394,38 +404,6 @@ void setup() {
     LoRaNode.Events.RxTimeout = OnRxTimeout;
     LoRaNode.Events.RxError = OnRxError;
     LoRaNode.Init();
-
-    if (false)
-    {
-        int max = 10000;
-
-        Serial.print("max: ");
-        Serial.println(max);
-
-        Serial.print("\n\n Normal: ");
-        for (int i = 0; i < 5000; ++i)
-        {
-            Serial.print(RandomGenerator::normalRandInt(max/2, max/2/3, 0, max));
-            Serial.print(' ');
-        }
-        Serial.println();
-
-        Serial.print("\n\n Uniform: ");
-        for (int i = 0; i < 5000; ++i)
-        {
-            Serial.print(RandomGenerator::uniformRand(0, max));
-            Serial.print(' ');
-        }
-        Serial.println();
-
-        Serial.print("\n\n Exponential: ");
-        for (int i = 0; i < 5000; ++i)
-        {
-            Serial.print(RandomGenerator::exponentialRandInt(5.0 / max, 0, max));
-            Serial.print(' ');
-        }
-        Serial.println();
-    }
 }
 
 

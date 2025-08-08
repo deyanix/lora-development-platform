@@ -91,7 +91,7 @@ void LoRaNodeClass::Loop()
                     {
                         this->backoffMax = this->backoffMax * 2;
                     }
-                    this->randomMsgDelay = RandomGenerator::uniformRand(0, this->backoffMax);
+                    this->randomMsgDelay = g_randomGenerator.getRandomValue(0, this->backoffMax);
                     this->permanentDelta = false;
                 }
             }

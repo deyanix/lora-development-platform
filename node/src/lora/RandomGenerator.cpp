@@ -4,9 +4,12 @@
 
 #include "RandomGenerator.h"
 
+RandomGenerator g_randomGenerator;
+
 RandomGenerator::RandomGenerator()
 {
     srand(time(NULL));
+    _currentDistribution = DistributionType::UNIFORM;
 }
 
 long RandomGenerator::uniformRand(long min, long max)
@@ -61,4 +64,23 @@ long RandomGenerator::normalRandInt(double mean, double stddev, long min, long m
     if (val > max) val = max;
 
     return (long)(val + 0.5);
+}
+
+long RandomGenerator::getRandomValue(long min, long max)
+{
+    switch (_currentDistribution) {
+    case DistributionType::UNIFORM:
+        return uniformRand(min, max);
+    case DistributionType::NORMAL:
+        return normalRandInt(max/2, max/6, min, max);
+    case DistributionType::EXPONENTIAL:
+        return exponentialRandInt(5.0 / max, min, max);
+    default:
+        return uniformRand(min, max);
+    }
+}
+
+void RandomGenerator::setDistribution(DistributionType distribution)
+{
+    _currentDistribution = distribution;
 }
