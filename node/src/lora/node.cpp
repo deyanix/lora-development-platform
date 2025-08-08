@@ -135,7 +135,8 @@ void LoRaNodeClass::Receive()
 
 void LoRaNodeClass::Send(uint8_t* data, size_t length)
 {
-    if (Radio.GetStatus() == RF_TX_RUNNING){
+    if (Radio.GetStatus() == RF_TX_RUNNING)
+    {
         this->OnTxBusy();
         return;
     }
@@ -179,7 +180,9 @@ void LoRaNodeClass::OnRxDone(uint8_t* payload, uint16_t size, int16_t rssi, int8
                 {
                     message[msgLen - 2] = '\0';
                 }
+                this->isSendingAck = true;
                 this->Send((uint8_t*)message, strlen(message));
+                this->isSendingAck = false;
             }
         }
         else if (this->Mode == SRC)
@@ -243,9 +246,9 @@ void LoRaNodeClass::OnTxStart(uint8_t* data, size_t length)
     {
         turnOnRGB(COLOR_SACK, 0);
     }
-    else if (this->Mode == SNK)
+    else if (this->Mode == SNK && this->isSendingAck)
     {
-
+        turnOnRGB(COLOR_RACK, 0);
     }
     else
     {
