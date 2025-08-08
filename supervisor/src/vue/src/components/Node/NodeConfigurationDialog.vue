@@ -55,6 +55,7 @@
               dense
               outlined
               suffix="ms"
+              :disable="isSinkMode"
             />
           </div>
           <div class="col-12 col-md-6">
@@ -70,6 +71,7 @@
               dense
               outlined
               clearable
+              :disable="isSinkMode"
             />
           </div>
           <div class="col-12 col-md-6">
@@ -80,6 +82,7 @@
               dense
               outlined
               suffix="ms"
+              :disable="isSinkMode"
             />
           </div>
           <div class="col-12 col-md-6">
@@ -100,10 +103,12 @@
           <div class="col-12 col-md-6">
             <q-input
               v-model.number="configuration.ackLifetime"
-              label="Długość życia ACK"
+              label="Długość trwania potwierdzenia"
               type="number"
               dense
               outlined
+              suffix="wiad."
+              :disable="isSinkMode"
             />
           </div>
         </q-card-section>
@@ -116,7 +121,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue';
+import { ref, computed } from 'vue';
 import { NodeModel, NodeConfiguration, NodeService } from 'src/api/NodeService';
 import { usePlatformStore } from 'stores/platform';
 import { Loading, useDialogPluginComponent } from 'quasar';
@@ -130,6 +135,8 @@ const props = defineProps<{ nodes: NodeModel[] }>();
 const configuration = ref<Partial<NodeConfiguration>>(
   ObjectUtilities.common(props.nodes.map((n) => n.configuration)),
 );
+
+const isSinkMode = computed(() => configuration.value.mode === 'SINK');
 
 async function onSubmit() {
   Loading.show({ group: 'node-configuration' });
