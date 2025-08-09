@@ -30,6 +30,13 @@
               dense
               outlined
               suffix="Hz"
+              :min="platform.options?.frequency.min"
+              :max="platform.options?.frequency.max"
+              :rules="[
+                (val) => val === null || val >= platform.options?.frequency.min || `Częstotliwość musi być większa od ${platform.options?.frequency.min}`,
+                (val) => val === null || val <= platform.options?.frequency.max || `Częstotliwość musi być mniejsza od ${platform.options?.frequency.max}`,
+              ]"
+              hide-bottom-space
             />
           </div>
           <div class="col-12 col-md-6">
@@ -47,7 +54,20 @@
             />
           </div>
           <div class="col-12 col-md-6">
-            <q-input v-model.number="configuration.power" label="Moc" dense outlined suffix="dBm" />
+            <q-input
+              v-model.number="configuration.power"
+              label="Moc"
+              dense
+              outlined
+              suffix="dBm"
+              :min="platform.options?.power.min"
+              :max="platform.options?.power.max"
+              :rules="[
+                (val) => val === null || val >= platform.options?.power.min || `Moc musi być większa od ${platform.options?.power.min}`,
+                (val) => val === null || val <= platform.options?.power.max || `Moc musi być mniejsza od ${platform.options?.power.max}`,
+              ]"
+              hide-bottom-space
+            />
           </div>
           <div class="col-12 col-md-6">
             <q-select
@@ -95,10 +115,17 @@
           <div class="col-12 col-md-6">
             <q-input
               v-model.number="configuration.payloadLength"
-              label="Rozmiar ładunku"
+              label="Rozmiar preambuły"
               dense
               outlined
               suffix="B"
+              :min="platform.options?.payloadLength.min"
+              :max="platform.options?.payloadLength.max"
+              :rules="[
+                (val) => val === null || val >= platform.options?.payloadLength.min || `Rozmiar preambuły musi być większy od ${platform.options?.payloadLength.min}`,
+                (val) => val === null || val <= platform.options?.payloadLength.max || `Rozmiar preambuły musi być mniejszy od ${platform.options?.payloadLength.max}`,
+              ]"
+              hide-bottom-space
             />
           </div>
           <div class="col-12 col-md-6">
@@ -108,6 +135,13 @@
               dense
               outlined
               suffix="symb."
+              :min="platform.options?.preambleLength.min"
+              :max="platform.options?.preambleLength.max"
+              :rules="[
+                (val) => val === null || val >= platform.options?.preambleLength.min || `Rozmiar preambuły musi być większy od ${platform.options?.preambleLength.min}`,
+                (val) => val === null || val <= platform.options?.preambleLength.max || `Rozmiar preambuły musi być mniejszy od ${platform.options?.preambleLength.max}`,
+              ]"
+              hide-bottom-space
             />
           </div>
           <div class="col-12 col-md-6">
@@ -117,6 +151,13 @@
               dense
               outlined
               suffix="symb."
+              :min="platform.options?.rxSymbolTimeout.min"
+              :max="platform.options?.rxSymbolTimeout.max"
+              :rules="[
+                (val) => val === null || val >= platform.options?.rxSymbolTimeout.min || `Limit czasu RX musi być większa od ${platform.options?.rxSymbolTimeout.min}`,
+                (val) => val === null || val <= platform.options?.rxSymbolTimeout.max || `Limit czasu RX musi być mniejsza od ${platform.options?.rxSymbolTimeout.max}`,
+              ]"
+              hide-bottom-space
             />
           </div>
           <div class="col-12 col-md-6">
@@ -126,6 +167,11 @@
               dense
               outlined
               suffix="ms"
+              :min="platform.options?.txTimeout.min"
+              :rules="[
+                (val) => val === null || val >= platform.options?.txTimeout.min || `Limit czasu TX musi być większy od ${platform.options?.txTimeout.min}`,
+              ]"
+              hide-bottom-space
             />
           </div>
           <div class="col-12 col-md-6">
