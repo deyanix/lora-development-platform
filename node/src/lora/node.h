@@ -101,6 +101,7 @@ public:
     void OnRxStart();
     void OnTxStart(uint8_t* data, size_t length);
     void OnTxBusy();
+    void OnBackOffGenerated();
 
     void SwitchLed(bool state, uint32_t color);
 };

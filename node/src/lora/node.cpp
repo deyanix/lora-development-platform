@@ -84,6 +84,12 @@ void LoRaNodeClass::Loop()
             char message[128];
             if (this->ackReq && this->ackLifetime <= 0)
             {
+                if (this->randomMsgDelay == -1 && !this->permanentDelta)
+                {
+                    this->randomMsgDelay = g_randomGenerator.getRandomValue(0, this->backoffMax);
+                    this->OnBackOffGenerated();
+                    return;
+                }
                 snprintf(message, sizeof(message), "%012llx-%d-?", getID(), msgCounter);
                 if (ackLifetime < 0)
                 {
@@ -91,8 +97,8 @@ void LoRaNodeClass::Loop()
                     {
                         this->backoffMax = this->backoffMax * 2;
                     }
-                    this->randomMsgDelay = g_randomGenerator.getRandomValue(0, this->backoffMax);
                     this->permanentDelta = false;
+                    this->randomMsgDelay = -1;
                 }
             }
             else
@@ -260,4 +266,9 @@ void LoRaNodeClass::OnTxStart(uint8_t* data, size_t length)
 void LoRaNodeClass::OnTxBusy()
 {
     serialPrintQueue.enqueue("TX=BUSY");
+}
+
+void LoRaNodeClass::OnBackOffGenerated()
+{
+    serialPrintQueue.enqueue_printf("BO=%d", this->randomMsgDelay);
 }

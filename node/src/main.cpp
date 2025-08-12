@@ -395,6 +395,7 @@ void processTerminal()
                 else if (reader.with("RANDOM"))
                 {
                     LoRaNode.randomMsgDelay = g_randomGenerator.getRandomValue(0, LoRaNode.backoffMax);
+                    LoRaNode.OnBackOffGenerated();
                     LoRaNode.Auto = RANDOM;
                     serialPrintQueue.enqueue("AUTO=OK");
                 }
