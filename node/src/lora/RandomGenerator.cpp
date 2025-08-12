@@ -31,13 +31,17 @@ long RandomGenerator::exponentialRandInt(double lambda, int min, int max)
     double u;
     double x;
 
-    do {
-        do {
+    do
+    {
+        do
+        {
             u = static_cast<double>(rand()) / RAND_MAX;
-        } while (u == 0.0);
+        }
+        while (u == 0.0);
 
         x = -log(1.0 - u) / lambda;
-    } while (x > range_size);
+    }
+    while (x > range_size);
 
     return min + static_cast<long>(x + 0.5);
 }
@@ -45,15 +49,18 @@ long RandomGenerator::exponentialRandInt(double lambda, int min, int max)
 double RandomGenerator::normalRand()
 {
     double u1, u2;
-    do {
+    do
+    {
         u1 = (double)rand() / RAND_MAX;
         u2 = (double)rand() / RAND_MAX;
-    } while (u1 <= 1e-10);
+    }
+    while (u1 <= 1e-10);
 
     return sqrt(-2.0 * log(u1)) * cos(2 * M_PI * u2);
 }
 
-long RandomGenerator::normalRandInt(double mean, double stddev, long min, long max){
+long RandomGenerator::normalRandInt(double mean, double stddev, long min, long max)
+{
     if (min >= max)
     {
         return min;
